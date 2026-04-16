@@ -9,38 +9,206 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as FeedRouteImport } from './routes/feed'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PhysioIndexRouteImport } from './routes/physio.index'
+import { Route as CoachIndexRouteImport } from './routes/coach.index'
+import { Route as AthleteIndexRouteImport } from './routes/athlete.index'
+import { Route as PhysioLogRouteImport } from './routes/physio.log'
+import { Route as CoachProgramRouteImport } from './routes/coach.program'
+import { Route as AthleteWorkoutRouteImport } from './routes/athlete.workout'
+import { Route as AthleteProgressRouteImport } from './routes/athlete.progress'
+import { Route as AthleteInjuryRouteImport } from './routes/athlete.injury'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaderboardRoute = LeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedRoute = FeedRouteImport.update({
+  id: '/feed',
+  path: '/feed',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PhysioIndexRoute = PhysioIndexRouteImport.update({
+  id: '/physio/',
+  path: '/physio/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoachIndexRoute = CoachIndexRouteImport.update({
+  id: '/coach/',
+  path: '/coach/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AthleteIndexRoute = AthleteIndexRouteImport.update({
+  id: '/athlete/',
+  path: '/athlete/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PhysioLogRoute = PhysioLogRouteImport.update({
+  id: '/physio/log',
+  path: '/physio/log',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoachProgramRoute = CoachProgramRouteImport.update({
+  id: '/coach/program',
+  path: '/coach/program',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AthleteWorkoutRoute = AthleteWorkoutRouteImport.update({
+  id: '/athlete/workout',
+  path: '/athlete/workout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AthleteProgressRoute = AthleteProgressRouteImport.update({
+  id: '/athlete/progress',
+  path: '/athlete/progress',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AthleteInjuryRoute = AthleteInjuryRouteImport.update({
+  id: '/athlete/injury',
+  path: '/athlete/injury',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/feed': typeof FeedRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/login': typeof LoginRoute
+  '/athlete/injury': typeof AthleteInjuryRoute
+  '/athlete/progress': typeof AthleteProgressRoute
+  '/athlete/workout': typeof AthleteWorkoutRoute
+  '/coach/program': typeof CoachProgramRoute
+  '/physio/log': typeof PhysioLogRoute
+  '/athlete/': typeof AthleteIndexRoute
+  '/coach/': typeof CoachIndexRoute
+  '/physio/': typeof PhysioIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/feed': typeof FeedRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/login': typeof LoginRoute
+  '/athlete/injury': typeof AthleteInjuryRoute
+  '/athlete/progress': typeof AthleteProgressRoute
+  '/athlete/workout': typeof AthleteWorkoutRoute
+  '/coach/program': typeof CoachProgramRoute
+  '/physio/log': typeof PhysioLogRoute
+  '/athlete': typeof AthleteIndexRoute
+  '/coach': typeof CoachIndexRoute
+  '/physio': typeof PhysioIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/feed': typeof FeedRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/login': typeof LoginRoute
+  '/athlete/injury': typeof AthleteInjuryRoute
+  '/athlete/progress': typeof AthleteProgressRoute
+  '/athlete/workout': typeof AthleteWorkoutRoute
+  '/coach/program': typeof CoachProgramRoute
+  '/physio/log': typeof PhysioLogRoute
+  '/athlete/': typeof AthleteIndexRoute
+  '/coach/': typeof CoachIndexRoute
+  '/physio/': typeof PhysioIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/feed'
+    | '/leaderboard'
+    | '/login'
+    | '/athlete/injury'
+    | '/athlete/progress'
+    | '/athlete/workout'
+    | '/coach/program'
+    | '/physio/log'
+    | '/athlete/'
+    | '/coach/'
+    | '/physio/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/feed'
+    | '/leaderboard'
+    | '/login'
+    | '/athlete/injury'
+    | '/athlete/progress'
+    | '/athlete/workout'
+    | '/coach/program'
+    | '/physio/log'
+    | '/athlete'
+    | '/coach'
+    | '/physio'
+  id:
+    | '__root__'
+    | '/'
+    | '/feed'
+    | '/leaderboard'
+    | '/login'
+    | '/athlete/injury'
+    | '/athlete/progress'
+    | '/athlete/workout'
+    | '/coach/program'
+    | '/physio/log'
+    | '/athlete/'
+    | '/coach/'
+    | '/physio/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  FeedRoute: typeof FeedRoute
+  LeaderboardRoute: typeof LeaderboardRoute
+  LoginRoute: typeof LoginRoute
+  AthleteInjuryRoute: typeof AthleteInjuryRoute
+  AthleteProgressRoute: typeof AthleteProgressRoute
+  AthleteWorkoutRoute: typeof AthleteWorkoutRoute
+  CoachProgramRoute: typeof CoachProgramRoute
+  PhysioLogRoute: typeof PhysioLogRoute
+  AthleteIndexRoute: typeof AthleteIndexRoute
+  CoachIndexRoute: typeof CoachIndexRoute
+  PhysioIndexRoute: typeof PhysioIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leaderboard': {
+      id: '/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feed': {
+      id: '/feed'
+      path: '/feed'
+      fullPath: '/feed'
+      preLoaderRoute: typeof FeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +216,78 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/physio/': {
+      id: '/physio/'
+      path: '/physio'
+      fullPath: '/physio/'
+      preLoaderRoute: typeof PhysioIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coach/': {
+      id: '/coach/'
+      path: '/coach'
+      fullPath: '/coach/'
+      preLoaderRoute: typeof CoachIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/athlete/': {
+      id: '/athlete/'
+      path: '/athlete'
+      fullPath: '/athlete/'
+      preLoaderRoute: typeof AthleteIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/physio/log': {
+      id: '/physio/log'
+      path: '/physio/log'
+      fullPath: '/physio/log'
+      preLoaderRoute: typeof PhysioLogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coach/program': {
+      id: '/coach/program'
+      path: '/coach/program'
+      fullPath: '/coach/program'
+      preLoaderRoute: typeof CoachProgramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/athlete/workout': {
+      id: '/athlete/workout'
+      path: '/athlete/workout'
+      fullPath: '/athlete/workout'
+      preLoaderRoute: typeof AthleteWorkoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/athlete/progress': {
+      id: '/athlete/progress'
+      path: '/athlete/progress'
+      fullPath: '/athlete/progress'
+      preLoaderRoute: typeof AthleteProgressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/athlete/injury': {
+      id: '/athlete/injury'
+      path: '/athlete/injury'
+      fullPath: '/athlete/injury'
+      preLoaderRoute: typeof AthleteInjuryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  FeedRoute: FeedRoute,
+  LeaderboardRoute: LeaderboardRoute,
+  LoginRoute: LoginRoute,
+  AthleteInjuryRoute: AthleteInjuryRoute,
+  AthleteProgressRoute: AthleteProgressRoute,
+  AthleteWorkoutRoute: AthleteWorkoutRoute,
+  CoachProgramRoute: CoachProgramRoute,
+  PhysioLogRoute: PhysioLogRoute,
+  AthleteIndexRoute: AthleteIndexRoute,
+  CoachIndexRoute: CoachIndexRoute,
+  PhysioIndexRoute: PhysioIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

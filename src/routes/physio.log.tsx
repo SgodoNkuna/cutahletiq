@@ -23,7 +23,7 @@ const SEVERITIES = ["Mild", "Moderate", "Severe"];
 
 function PhysioLogPage() {
   const navigate = useNavigate();
-  const [athleteId, setAthleteId] = React.useState(roster[0].id);
+  const [athleteId, setAthleteId] = React.useState<string>(roster[0].id);
   const [region, setRegion] = React.useState("Right Hamstring");
   const [pain, setPain] = React.useState(5);
   const [mechanism, setMechanism] = React.useState("Non-contact");
