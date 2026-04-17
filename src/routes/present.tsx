@@ -5,9 +5,10 @@ import { Pause, Play, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import logoUrl from "@/assets/cut-logo.png";
-import { StatCard, SectionHeader, SportTag, StatusPill } from "@/components/primitives";
+import { StatCard, SectionHeader, SportTag, StatusPill, PRBadge } from "@/components/primitives";
+import { BodyMap } from "@/components/BodyMap";
 import { currentAthlete, todaysWorkout, leaderboard, roster, injuries } from "@/data/mock";
-import { Trophy, Flame, Dumbbell, HeartPulse, ShieldCheck, TrendingUp } from "lucide-react";
+import { Trophy, Flame, Dumbbell, HeartPulse, ShieldCheck, TrendingUp, Check } from "lucide-react";
 
 export const Route = createFileRoute("/present")({
   head: () => ({
@@ -89,6 +90,83 @@ const SLIDES: Slide[] = [
             <StatCard label="Sleep" value="7.4h" accent="success" />
             <StatCard label="Sore" value="2/10" accent="navy" />
           </div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    title: "Real-time PR moments",
+    caption: "Beat your previous best mid-set and a 🔥 NEW PR badge auto-fires. Coaches see it live.",
+    render: () => {
+      const ex = todaysWorkout.exercises[0];
+      const sets = [
+        { reps: 5, weight: 100, done: true },
+        { reps: 5, weight: 110, done: true },
+        { reps: 3, weight: 120, done: true },
+        { reps: 3, weight: 125, done: true }, // PR!
+      ];
+      return (
+        <div className="h-full overflow-hidden px-5 pt-5">
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold">In session · 16:24</div>
+          <h2 className="font-display text-3xl">{todaysWorkout.title}</h2>
+          <div className="bg-card rounded-xl border p-3 mt-3">
+            <div className="flex items-center justify-between text-xs mb-1.5">
+              <span className="font-bold uppercase tracking-wider">Session progress</span>
+              <span className="text-muted-foreground">9/10 sets</span>
+            </div>
+            <div className="h-2 bg-secondary rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-gold to-success" style={{ width: "90%" }} />
+            </div>
+          </div>
+          <div className="bg-card rounded-2xl border shadow-sm overflow-hidden mt-3">
+            <div className="flex items-center justify-between p-3 border-b bg-secondary/40">
+              <div>
+                <div className="font-display text-lg leading-none">{ex.name}</div>
+                <div className="text-[11px] text-muted-foreground mt-1">
+                  Old PR: <span className="font-bold line-through">{ex.pr} {ex.unit}</span> · New: <span className="font-bold text-gold">125 kg</span>
+                </div>
+              </div>
+              <PRBadge />
+            </div>
+            <div className="p-3 space-y-1.5">
+              {sets.map((s, si) => (
+                <div key={si} className="flex items-center gap-2 rounded-lg border p-2 bg-success/10 border-success/40">
+                  <div className="w-7 h-7 rounded-md bg-navy/10 text-navy text-xs font-bold flex items-center justify-center">
+                    {si + 1}
+                  </div>
+                  <div className="text-xs font-bold tabular-nums">{s.reps} × {s.weight}kg</div>
+                  {s.weight > (ex.pr ?? 0) && <span className="text-[9px] font-bold text-gold uppercase">PR</span>}
+                  <div className="ml-auto h-7 w-7 rounded-full bg-success text-white flex items-center justify-center">
+                    <Check className="h-3.5 w-3.5" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    },
+  },
+  {
+    title: "Tap-to-log injury map",
+    caption: "Athletes flag pain on a body silhouette — physio sees it before the next session.",
+    render: () => (
+      <div className="h-full overflow-hidden px-5 pt-5">
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold">Body check-in</div>
+        <h2 className="font-display text-3xl">Where does it hurt?</h2>
+        <div className="bg-card rounded-2xl border p-3 mt-3">
+          <BodyMap selected={{ "knee-r": 6, "ankle-l": 3 }} onToggle={() => {}} />
+          <div className="mt-2 flex flex-wrap gap-1.5 justify-center">
+            <span className="inline-flex items-center gap-1 rounded-full bg-warn/15 text-warn border border-warn/40 px-2 py-0.5 text-[10px] font-bold">
+              R Knee · 6/10
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-warn/15 text-warn border border-warn/40 px-2 py-0.5 text-[10px] font-bold">
+              L Ankle · 3/10
+            </span>
+          </div>
+        </div>
+        <div className="mt-3 bg-success/10 border border-success/40 rounded-xl p-3 text-sm">
+          ✅ Sent to Physio Naidoo · response &lt; 24h
         </div>
       </div>
     ),

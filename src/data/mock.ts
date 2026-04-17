@@ -195,3 +195,47 @@ export const feedPosts = [
     body: "Sleep < 7h doubles soft-tissue injury risk. Log your sleep in-app — it counts toward readiness.",
   },
 ];
+
+export type EventKind = "gym" | "physio" | "game" | "tournament" | "team" | "misc";
+export type CalEvent = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  time: string;
+  kind: EventKind;
+  title: string;
+  location: string;
+  who: string; // audience or attendee
+  notes?: string;
+};
+
+// Anchor the demo "today" so the calendar always looks alive
+export const TODAY_ISO = "2025-04-21";
+
+export const calendarEvents: CalEvent[] = [
+  { id: "c1", date: "2025-04-21", time: "06:00", kind: "gym", title: "Lower body strength", location: "HPC Weight Room", who: "Rugby squad", notes: "Bring lifting belts" },
+  { id: "c2", date: "2025-04-21", time: "16:00", kind: "team", title: "Tactical session", location: "Field 2", who: "Rugby 1st XV" },
+  { id: "c3", date: "2025-04-22", time: "07:30", kind: "physio", title: "Knee assessment — Naledi", location: "Physio Room A", who: "Physio Naidoo" },
+  { id: "c4", date: "2025-04-22", time: "15:00", kind: "gym", title: "Upper push", location: "HPC Weight Room", who: "Athletics squad" },
+  { id: "c5", date: "2025-04-23", time: "17:00", kind: "team", title: "Recovery + mobility", location: "Studio 1", who: "All squads" },
+  { id: "c6", date: "2025-04-24", time: "06:30", kind: "gym", title: "Speed + plyo", location: "Track", who: "Athletics + Rugby backs" },
+  { id: "c7", date: "2025-04-24", time: "14:00", kind: "physio", title: "Hamstring rehab — Sipho", location: "Physio Room B", who: "Physio Naidoo" },
+  { id: "c8", date: "2025-04-25", time: "18:00", kind: "game", title: "vs UFS Shimlas", location: "CUT Stadium", who: "Rugby 1st XV", notes: "Warm-up 17:00" },
+  { id: "c9", date: "2025-04-26", time: "07:30", kind: "tournament", title: "Inter-Faculty Champs · Day 1", location: "HPC Complex", who: "All squads" },
+  { id: "c10", date: "2025-04-26", time: "12:00", kind: "misc", title: "Sponsor lunch — Standard Bank", location: "Boardroom", who: "Captains + Admin" },
+  { id: "c11", date: "2025-04-27", time: "08:00", kind: "tournament", title: "Inter-Faculty Champs · Day 2", location: "HPC Complex", who: "All squads" },
+  { id: "c12", date: "2025-04-28", time: "06:00", kind: "gym", title: "Recovery lift", location: "HPC Weight Room", who: "Rugby squad" },
+  { id: "c13", date: "2025-04-28", time: "13:00", kind: "misc", title: "Athlete dietitian workshop", location: "Lecture Hall 4", who: "All athletes" },
+  { id: "c14", date: "2025-04-29", time: "16:00", kind: "team", title: "Netball training", location: "Court 3", who: "Netball squad" },
+  { id: "c15", date: "2025-04-30", time: "10:00", kind: "physio", title: "Squad screening day", location: "Physio Suite", who: "Football squad" },
+  { id: "c16", date: "2025-05-02", time: "18:30", kind: "game", title: "vs TUT Vikings (away)", location: "Pretoria", who: "Football 1st XI" },
+  { id: "c17", date: "2025-05-03", time: "09:00", kind: "tournament", title: "USSA Athletics Trials", location: "Bloemfontein", who: "Athletics squad" },
+];
+
+export const EVENT_KIND_META: Record<EventKind, { label: string; emoji: string; color: string; ring: string }> = {
+  gym: { label: "Gym", emoji: "🏋️", color: "bg-navy text-white", ring: "ring-navy" },
+  physio: { label: "Physio", emoji: "🩺", color: "bg-success text-white", ring: "ring-success" },
+  game: { label: "Game", emoji: "🏉", color: "bg-destructive text-white", ring: "ring-destructive" },
+  tournament: { label: "Tourney", emoji: "🏆", color: "bg-gold text-navy-deep", ring: "ring-gold" },
+  team: { label: "Team", emoji: "👥", color: "bg-navy/80 text-white", ring: "ring-navy" },
+  misc: { label: "Misc", emoji: "📌", color: "bg-foreground/70 text-white", ring: "ring-foreground" },
+};
