@@ -22,9 +22,11 @@ const SCREENS: { to: string; label: string; group: string }[] = [
 ];
 
 export function DemoPanel() {
-  const { role, setRole } = useRole();
+  const { role, setRole, presentMode, resetTours } = useRole();
   const [open, setOpen] = React.useState(false);
   const groups = Array.from(new Set(SCREENS.map((s) => s.group)));
+
+  if (presentMode) return null;
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -41,6 +43,21 @@ export function DemoPanel() {
           <SheetTitle className="font-display text-2xl">Demo controls</SheetTitle>
           <SheetDescription>Jump to any screen · Switch the active role</SheetDescription>
         </SheetHeader>
+
+        <Link
+          to="/present"
+          onClick={() => setOpen(false)}
+          className="mt-4 flex items-center justify-center gap-2 rounded-full bg-gold text-navy-deep font-bold uppercase tracking-wider py-2.5 text-xs hover:scale-[1.02] transition-transform"
+        >
+          <Play className="h-3.5 w-3.5" /> Launch Present mode
+        </Link>
+
+        <button
+          onClick={() => { resetTours(); setOpen(false); }}
+          className="mt-2 w-full flex items-center justify-center gap-1.5 text-[11px] uppercase tracking-wider font-bold text-muted-foreground hover:text-foreground py-1.5"
+        >
+          <RotateCcw className="h-3 w-3" /> Reset guided tours
+        </button>
 
         <div className="mt-5">
           <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Role</div>
