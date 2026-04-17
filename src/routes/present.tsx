@@ -5,9 +5,10 @@ import { Pause, Play, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import logoUrl from "@/assets/cut-logo.png";
-import { StatCard, SectionHeader, SportTag, StatusPill } from "@/components/primitives";
+import { StatCard, SectionHeader, SportTag, StatusPill, PRBadge } from "@/components/primitives";
+import { BodyMap } from "@/components/BodyMap";
 import { currentAthlete, todaysWorkout, leaderboard, roster, injuries } from "@/data/mock";
-import { Trophy, Flame, Dumbbell, HeartPulse, ShieldCheck, TrendingUp } from "lucide-react";
+import { Trophy, Flame, Dumbbell, HeartPulse, ShieldCheck, TrendingUp, Check } from "lucide-react";
 
 export const Route = createFileRoute("/present")({
   head: () => ({
