@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MobileFrame } from "@/components/MobileFrame";
 import { StatCard, SectionHeader, SportTag } from "@/components/primitives";
+import { TourOverlay } from "@/components/TourOverlay";
 import { currentAthlete, todaysWorkout, leaderboard } from "@/data/mock";
 import { Dumbbell, HeartPulse, Trophy, Flame, ChevronRight } from "lucide-react";
 
