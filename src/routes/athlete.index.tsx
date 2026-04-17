@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MobileFrame } from "@/components/MobileFrame";
 import { StatCard, SectionHeader, SportTag } from "@/components/primitives";
+import { TourOverlay } from "@/components/TourOverlay";
 import { currentAthlete, todaysWorkout, leaderboard } from "@/data/mock";
 import { Dumbbell, HeartPulse, Trophy, Flame, ChevronRight } from "lucide-react";
 
@@ -93,6 +94,13 @@ function AthleteHome() {
           </p>
         </div>
       </div>
+      <TourOverlay
+        tourKey="athlete.home"
+        steps={[
+          { title: "This is your locker", body: "Readiness, today's session and your streak — your daily home base.", position: "top" },
+          { title: "Tap the gold card", body: "It opens today's workout where you log every set in real time.", position: "center" },
+        ]}
+      />
     </MobileFrame>
   );
 }

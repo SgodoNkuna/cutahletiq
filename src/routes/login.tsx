@@ -22,7 +22,7 @@ const ROLE_DEST: Record<Role, string> = {
   athlete: "/athlete",
   coach: "/coach",
   physio: "/physio",
-  admin: "/leaderboard",
+  admin: "/admin",
 };
 
 function LoginPage() {

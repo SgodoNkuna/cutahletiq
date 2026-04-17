@@ -2,7 +2,7 @@ import * as React from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useRole } from "@/lib/role-context";
 import { ROLES, type Role } from "@/data/mock";
-import { Home, Dumbbell, LineChart, HeartPulse, Users, Trophy, Newspaper, ClipboardList } from "lucide-react";
+import { Home, Dumbbell, LineChart, HeartPulse, Users, Trophy, Newspaper, ClipboardList, ShieldCheck } from "lucide-react";
 import { DemoPanel } from "./DemoPanel";
 import { cn } from "@/lib/utils";
 
@@ -28,10 +28,11 @@ const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { to: "/feed", label: "Feed", icon: Newspaper },
   ],
   admin: [
+    { to: "/admin", label: "Dept", icon: ShieldCheck },
     { to: "/leaderboard", label: "Ranks", icon: Trophy },
-    { to: "/feed", label: "Feed", icon: Newspaper },
     { to: "/coach", label: "Squad", icon: Users },
     { to: "/physio", label: "Health", icon: HeartPulse },
+    { to: "/feed", label: "Feed", icon: Newspaper },
   ],
 };
 

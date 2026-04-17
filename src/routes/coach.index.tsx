@@ -2,6 +2,7 @@ import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MobileFrame } from "@/components/MobileFrame";
 import { SectionHeader, StatCard, StatusPill, SportTag } from "@/components/primitives";
+import { TourOverlay } from "@/components/TourOverlay";
 import { roster, leaderboard, SPORTS } from "@/data/mock";
 import { cn } from "@/lib/utils";
 import { ChevronRight } from "lucide-react";
@@ -93,6 +94,12 @@ function CoachHome() {
           ))}
         </div>
       </div>
+      <TourOverlay
+        tourKey="coach.home"
+        steps={[
+          { title: "Whole squad at a glance", body: "Green = ready, amber = fatigued, red = injured. Filter by sport with the pills.", position: "center" },
+        ]}
+      />
     </MobileFrame>
   );
 }
