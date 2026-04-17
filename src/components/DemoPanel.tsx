@@ -4,7 +4,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescri
 import { useRole } from "@/lib/role-context";
 import { ROLES, type Role } from "@/data/mock";
 import { cn } from "@/lib/utils";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, Play, RotateCcw } from "lucide-react";
 
 const SCREENS: { to: string; label: string; group: string }[] = [
   { to: "/", label: "Splash", group: "Entry" },
