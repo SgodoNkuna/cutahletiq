@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import confetti from "canvas-confetti";
 import { MobileFrame } from "@/components/MobileFrame";
 import { PRBadge } from "@/components/primitives";
+import { TourOverlay } from "@/components/TourOverlay";
 import { todaysWorkout } from "@/data/mock";
 import { cn } from "@/lib/utils";
 import { Check, Plus, Minus } from "lucide-react";
@@ -140,6 +141,13 @@ function WorkoutPage() {
           🏁 Finish session
         </button>
       </div>
+      <TourOverlay
+        tourKey="athlete.workout"
+        steps={[
+          { title: "Tap ✓ on each set", body: "Sets turn green when done. Beat your PR and a 🔥 NEW PR badge auto-fires.", position: "center" },
+          { title: "Finish for confetti 🎉", body: "Hitting Finish saves your session and bumps your progress chart.", position: "bottom" },
+        ]}
+      />
     </MobileFrame>
   );
 }

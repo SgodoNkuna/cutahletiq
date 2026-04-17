@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MobileFrame } from "@/components/MobileFrame";
 import { SectionHeader, StatCard, StatusPill, SportTag } from "@/components/primitives";
+import { TourOverlay } from "@/components/TourOverlay";
 import { injuries } from "@/data/mock";
 import { Calendar, Plus } from "lucide-react";
 
@@ -85,6 +86,12 @@ function PhysioHome() {
           ))}
         </div>
       </div>
+      <TourOverlay
+        tourKey="physio.home"
+        steps={[
+          { title: "Live injury cases", body: "Pain, severity and Return-to-Play % update as athletes log check-ins.", position: "center" },
+        ]}
+      />
     </MobileFrame>
   );
 }

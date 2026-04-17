@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { MobileFrame } from "@/components/MobileFrame";
 import { BodyMap, BODY_LABELS, type BodyRegion } from "@/components/BodyMap";
 import { SectionHeader } from "@/components/primitives";
+import { TourOverlay } from "@/components/TourOverlay";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 
@@ -151,6 +152,12 @@ function InjuryPage() {
           </div>
         </div>
       )}
+      <TourOverlay
+        tourKey="athlete.injury"
+        steps={[
+          { title: "Tap a body part to log pain", body: "Hit any joint or muscle on the silhouette — slide the pain scale, send it to your physio.", position: "center" },
+        ]}
+      />
     </MobileFrame>
   );
 }

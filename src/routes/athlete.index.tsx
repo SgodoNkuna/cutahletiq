@@ -94,6 +94,13 @@ function AthleteHome() {
           </p>
         </div>
       </div>
+      <TourOverlay
+        tourKey="athlete.home"
+        steps={[
+          { title: "This is your locker", body: "Readiness, today's session and your streak — your daily home base.", position: "top" },
+          { title: "Tap the gold card", body: "It opens today's workout where you log every set in real time.", position: "center" },
+        ]}
+      />
     </MobileFrame>
   );
 }
