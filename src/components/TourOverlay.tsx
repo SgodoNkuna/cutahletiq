@@ -17,17 +17,18 @@ export function TourOverlay({
   tourKey: string;
   steps: TourStep[];
 }) {
-  const { isTourSeen, markTourSeen, presentMode } = useRole();
+  const { isTourSeen, markTourSeen, presentMode, tourNonce } = useRole();
   const [open, setOpen] = React.useState(false);
   const [i, setI] = React.useState(0);
 
   React.useEffect(() => {
     if (presentMode) return;
     if (!isTourSeen(tourKey)) {
-      const t = setTimeout(() => setOpen(true), 350);
+      setI(0);
+      const t = setTimeout(() => setOpen(true), 250);
       return () => clearTimeout(t);
     }
-  }, [tourKey, isTourSeen, presentMode]);
+  }, [tourKey, isTourSeen, presentMode, tourNonce]);
 
   if (!open || presentMode) return null;
   const step = steps[i];
