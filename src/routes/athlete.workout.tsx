@@ -4,6 +4,7 @@ import confetti from "canvas-confetti";
 import { MobileFrame } from "@/components/MobileFrame";
 import { PRBadge } from "@/components/primitives";
 import { TourOverlay } from "@/components/TourOverlay";
+import { RPEModal } from "@/components/RPEModal";
 import { todaysWorkout } from "@/data/mock";
 import { cn } from "@/lib/utils";
 import { Check, Plus, Minus } from "lucide-react";
@@ -26,6 +27,7 @@ function WorkoutPage() {
   const [state, setState] = React.useState(() =>
     todaysWorkout.exercises.map((ex) => ex.sets.map<SetState>((s) => ({ ...s, done: false }))),
   );
+  const [askRPE, setAskRPE] = React.useState(false);
 
   const totalSets = state.flat().length;
   const doneSets = state.flat().filter((s) => s.done).length;
@@ -45,15 +47,18 @@ function WorkoutPage() {
     );
   };
 
-  const finish = () => {
+  const finish = () => setAskRPE(true);
+
+  const submitRPE = (rpe: number) => {
+    setAskRPE(false);
     confetti({
       particleCount: 120,
       spread: 80,
       origin: { y: 0.4 },
       colors: ["#F5A800", "#003478", "#ffffff"],
     });
-    toast.success(`Session saved · ${doneSets}/${totalSets} sets · +${newPRs.length} PR${newPRs.length === 1 ? "" : "s"}`);
-    setTimeout(() => navigate({ to: "/athlete/progress" }), 800);
+    toast.success(`Session saved · ${doneSets}/${totalSets} sets · RPE ${rpe}/10 · +${newPRs.length} PR${newPRs.length === 1 ? "" : "s"}`);
+    setTimeout(() => navigate({ to: "/athlete/progress" }), 900);
   };
 
   return (
@@ -145,9 +150,10 @@ function WorkoutPage() {
         tourKey="athlete.workout"
         steps={[
           { title: "Tap ✓ on each set", body: "Sets turn green when done. Beat your PR and a 🔥 NEW PR badge auto-fires.", position: "center" },
-          { title: "Finish for confetti 🎉", body: "Hitting Finish saves your session and bumps your progress chart.", position: "bottom" },
+          { title: "Finish for confetti 🎉", body: "Hit Finish, rate the session (RPE 1-10), and your progress chart updates.", position: "bottom" },
         ]}
       />
+      <RPEModal open={askRPE} onSubmit={submitRPE} />
     </MobileFrame>
   );
 }
