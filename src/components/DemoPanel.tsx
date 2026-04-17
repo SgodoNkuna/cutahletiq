@@ -17,6 +17,8 @@ const SCREENS: { to: string; label: string; group: string }[] = [
   { to: "/coach/program", label: "Coach · Program builder", group: "Coach" },
   { to: "/physio", label: "Physio · Dashboard", group: "Physio" },
   { to: "/physio/log", label: "Physio · Injury log", group: "Physio" },
+  { to: "/admin", label: "Admin · Department", group: "Admin" },
+  { to: "/calendar", label: "Calendar", group: "Shared" },
   { to: "/leaderboard", label: "Leaderboard", group: "Shared" },
   { to: "/feed", label: "Team Feed", group: "Shared" },
 ];
@@ -33,7 +35,7 @@ export function DemoPanel() {
       <SheetTrigger asChild>
         <button
           aria-label="Open demo panel"
-          className="absolute top-12 right-3 z-30 bg-gold text-navy-deep rounded-full px-3 py-1.5 text-xs font-bold shadow-lg flex items-center gap-1.5 hover:scale-105 transition-transform"
+          className="absolute bottom-20 right-3 z-30 bg-gold text-navy-deep rounded-full px-3 py-2 text-xs font-bold shadow-lg flex items-center gap-1.5 hover:scale-105 transition-transform"
         >
           <ClipboardList className="h-3.5 w-3.5" /> Demo
         </button>
