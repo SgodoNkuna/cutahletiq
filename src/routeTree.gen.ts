@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PresentRouteImport } from './routes/present'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as FeedRouteImport } from './routes/feed'
@@ -16,12 +17,18 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PhysioIndexRouteImport } from './routes/physio.index'
 import { Route as CoachIndexRouteImport } from './routes/coach.index'
 import { Route as AthleteIndexRouteImport } from './routes/athlete.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as PhysioLogRouteImport } from './routes/physio.log'
 import { Route as CoachProgramRouteImport } from './routes/coach.program'
 import { Route as AthleteWorkoutRouteImport } from './routes/athlete.workout'
 import { Route as AthleteProgressRouteImport } from './routes/athlete.progress'
 import { Route as AthleteInjuryRouteImport } from './routes/athlete.injury'
 
+const PresentRoute = PresentRouteImport.update({
+  id: '/present',
+  path: '/present',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -57,6 +64,11 @@ const AthleteIndexRoute = AthleteIndexRouteImport.update({
   path: '/athlete/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PhysioLogRoute = PhysioLogRouteImport.update({
   id: '/physio/log',
   path: '/physio/log',
@@ -88,11 +100,13 @@ export interface FileRoutesByFullPath {
   '/feed': typeof FeedRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
+  '/present': typeof PresentRoute
   '/athlete/injury': typeof AthleteInjuryRoute
   '/athlete/progress': typeof AthleteProgressRoute
   '/athlete/workout': typeof AthleteWorkoutRoute
   '/coach/program': typeof CoachProgramRoute
   '/physio/log': typeof PhysioLogRoute
+  '/admin/': typeof AdminIndexRoute
   '/athlete/': typeof AthleteIndexRoute
   '/coach/': typeof CoachIndexRoute
   '/physio/': typeof PhysioIndexRoute
@@ -102,11 +116,13 @@ export interface FileRoutesByTo {
   '/feed': typeof FeedRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
+  '/present': typeof PresentRoute
   '/athlete/injury': typeof AthleteInjuryRoute
   '/athlete/progress': typeof AthleteProgressRoute
   '/athlete/workout': typeof AthleteWorkoutRoute
   '/coach/program': typeof CoachProgramRoute
   '/physio/log': typeof PhysioLogRoute
+  '/admin': typeof AdminIndexRoute
   '/athlete': typeof AthleteIndexRoute
   '/coach': typeof CoachIndexRoute
   '/physio': typeof PhysioIndexRoute
@@ -117,11 +133,13 @@ export interface FileRoutesById {
   '/feed': typeof FeedRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
+  '/present': typeof PresentRoute
   '/athlete/injury': typeof AthleteInjuryRoute
   '/athlete/progress': typeof AthleteProgressRoute
   '/athlete/workout': typeof AthleteWorkoutRoute
   '/coach/program': typeof CoachProgramRoute
   '/physio/log': typeof PhysioLogRoute
+  '/admin/': typeof AdminIndexRoute
   '/athlete/': typeof AthleteIndexRoute
   '/coach/': typeof CoachIndexRoute
   '/physio/': typeof PhysioIndexRoute
@@ -133,11 +151,13 @@ export interface FileRouteTypes {
     | '/feed'
     | '/leaderboard'
     | '/login'
+    | '/present'
     | '/athlete/injury'
     | '/athlete/progress'
     | '/athlete/workout'
     | '/coach/program'
     | '/physio/log'
+    | '/admin/'
     | '/athlete/'
     | '/coach/'
     | '/physio/'
@@ -147,11 +167,13 @@ export interface FileRouteTypes {
     | '/feed'
     | '/leaderboard'
     | '/login'
+    | '/present'
     | '/athlete/injury'
     | '/athlete/progress'
     | '/athlete/workout'
     | '/coach/program'
     | '/physio/log'
+    | '/admin'
     | '/athlete'
     | '/coach'
     | '/physio'
@@ -161,11 +183,13 @@ export interface FileRouteTypes {
     | '/feed'
     | '/leaderboard'
     | '/login'
+    | '/present'
     | '/athlete/injury'
     | '/athlete/progress'
     | '/athlete/workout'
     | '/coach/program'
     | '/physio/log'
+    | '/admin/'
     | '/athlete/'
     | '/coach/'
     | '/physio/'
@@ -176,11 +200,13 @@ export interface RootRouteChildren {
   FeedRoute: typeof FeedRoute
   LeaderboardRoute: typeof LeaderboardRoute
   LoginRoute: typeof LoginRoute
+  PresentRoute: typeof PresentRoute
   AthleteInjuryRoute: typeof AthleteInjuryRoute
   AthleteProgressRoute: typeof AthleteProgressRoute
   AthleteWorkoutRoute: typeof AthleteWorkoutRoute
   CoachProgramRoute: typeof CoachProgramRoute
   PhysioLogRoute: typeof PhysioLogRoute
+  AdminIndexRoute: typeof AdminIndexRoute
   AthleteIndexRoute: typeof AthleteIndexRoute
   CoachIndexRoute: typeof CoachIndexRoute
   PhysioIndexRoute: typeof PhysioIndexRoute
@@ -188,6 +214,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/present': {
+      id: '/present'
+      path: '/present'
+      fullPath: '/present'
+      preLoaderRoute: typeof PresentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -237,6 +270,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AthleteIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/physio/log': {
       id: '/physio/log'
       path: '/physio/log'
@@ -280,11 +320,13 @@ const rootRouteChildren: RootRouteChildren = {
   FeedRoute: FeedRoute,
   LeaderboardRoute: LeaderboardRoute,
   LoginRoute: LoginRoute,
+  PresentRoute: PresentRoute,
   AthleteInjuryRoute: AthleteInjuryRoute,
   AthleteProgressRoute: AthleteProgressRoute,
   AthleteWorkoutRoute: AthleteWorkoutRoute,
   CoachProgramRoute: CoachProgramRoute,
   PhysioLogRoute: PhysioLogRoute,
+  AdminIndexRoute: AdminIndexRoute,
   AthleteIndexRoute: AthleteIndexRoute,
   CoachIndexRoute: CoachIndexRoute,
   PhysioIndexRoute: PhysioIndexRoute,
@@ -292,3 +334,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
