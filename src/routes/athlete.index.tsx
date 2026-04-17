@@ -1,9 +1,12 @@
+import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MobileFrame } from "@/components/MobileFrame";
 import { StatCard, SectionHeader, SportTag } from "@/components/primitives";
 import { TourOverlay } from "@/components/TourOverlay";
-import { currentAthlete, todaysWorkout, leaderboard } from "@/data/mock";
-import { Dumbbell, HeartPulse, Trophy, Flame, ChevronRight } from "lucide-react";
+import { DailyCheckIn } from "@/components/DailyCheckIn";
+import { SkipPracticeSheet } from "@/components/SkipPracticeSheet";
+import { currentAthlete, todaysWorkout, leaderboard, calendarEvents, EVENT_KIND_META, TODAY_ISO } from "@/data/mock";
+import { Dumbbell, HeartPulse, Trophy, Flame, ChevronRight, Calendar, BellRing, XCircle, Moon } from "lucide-react";
 
 export const Route = createFileRoute("/athlete/")({
   head: () => ({
@@ -17,6 +20,23 @@ export const Route = createFileRoute("/athlete/")({
 
 function AthleteHome() {
   const myRank = leaderboard.find((l) => l.name === currentAthlete.name)?.rank ?? "—";
+  const [readiness, setReadiness] = React.useState(currentAthlete.readiness);
+  const [sleep, setSleep] = React.useState(7.4);
+  const [soreness, setSoreness] = React.useState(2);
+  const [checkedIn, setCheckedIn] = React.useState(false);
+  const [showCheckIn, setShowCheckIn] = React.useState(false);
+  const [showSkip, setShowSkip] = React.useState(false);
+
+  // Soft auto-prompt for the daily check-in
+  React.useEffect(() => {
+    if (checkedIn) return;
+    const t = setTimeout(() => setShowCheckIn(true), 1800);
+    return () => clearTimeout(t);
+  }, [checkedIn]);
+
+  const upcoming = calendarEvents
+    .filter((e) => e.date >= TODAY_ISO && (e.who.includes("Rugby") || e.who.includes("All")))
+    .slice(0, 3);
 
   return (
     <MobileFrame>
@@ -32,7 +52,7 @@ function AthleteHome() {
             </div>
           </div>
           <div className="text-right">
-            <div className="font-display text-4xl text-gold leading-none">{currentAthlete.readiness}</div>
+            <div className="font-display text-4xl text-gold leading-none">{readiness}</div>
             <div className="text-[10px] uppercase tracking-wider text-white/60">Readiness</div>
           </div>
         </div>
@@ -45,6 +65,31 @@ function AthleteHome() {
       </div>
 
       <div className="px-5 -mt-4 relative z-10">
+        {/* Daily check-in nudge */}
+        {!checkedIn && (
+          <button
+            onClick={() => setShowCheckIn(true)}
+            className="w-full text-left bg-gold/15 border-2 border-dashed border-gold/60 rounded-2xl p-3 flex items-center gap-3 mb-3 hover:bg-gold/20 transition-colors"
+          >
+            <div className="bg-gold text-navy-deep rounded-full p-2 shrink-0">
+              <BellRing className="h-4 w-4" />
+            </div>
+            <div className="flex-1">
+              <div className="text-[11px] uppercase tracking-wider text-gold font-bold">Morning check-in</div>
+              <div className="text-sm font-bold">Log sleep, soreness & readiness</div>
+              <div className="text-[11px] text-muted-foreground">Takes 20 seconds · counts toward your readiness score</div>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </button>
+        )}
+        {checkedIn && (
+          <div className="bg-success/10 border border-success/40 rounded-2xl p-2.5 flex items-center gap-2 mb-3 text-xs">
+            <Moon className="h-3.5 w-3.5 text-success" />
+            <span><span className="font-bold">{sleep.toFixed(1)}h sleep</span> · soreness <span className="font-bold">{soreness}/10</span></span>
+            <button onClick={() => setShowCheckIn(true)} className="ml-auto text-[10px] uppercase tracking-wider font-bold text-navy">Update</button>
+          </div>
+        )}
+
         {/* Today's session */}
         <Link to="/athlete/workout" className="block bg-card rounded-2xl shadow-md border p-4 hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
@@ -57,15 +102,49 @@ function AthleteHome() {
               <Dumbbell className="h-5 w-5" />
             </div>
           </div>
-          <div className="mt-3 flex items-center gap-1 text-xs font-bold text-navy">
-            Start session <ChevronRight className="h-4 w-4" />
+          <div className="mt-3 flex items-center justify-between">
+            <span className="flex items-center gap-1 text-xs font-bold text-navy">
+              Start session <ChevronRight className="h-4 w-4" />
+            </span>
+            <button
+              onClick={(e) => { e.preventDefault(); setShowSkip(true); }}
+              className="text-[10px] uppercase tracking-wider font-bold text-destructive flex items-center gap-1 hover:underline"
+            >
+              <XCircle className="h-3 w-3" /> Can't make it
+            </button>
           </div>
         </Link>
 
         <div className="grid grid-cols-3 gap-2 mt-4">
           <StatCard label="My Rank" value={`#${myRank}`} accent="gold" hint="Squad" />
-          <StatCard label="Sleep" value="7.4h" accent="success" hint="Last night" />
-          <StatCard label="Soreness" value="2/10" accent="navy" hint="Self report" />
+          <StatCard label="Sleep" value={`${sleep.toFixed(1)}h`} accent="success" hint="Last night" />
+          <StatCard label="Soreness" value={`${soreness}/10`} accent="navy" hint="Self report" />
+        </div>
+
+        {/* Up next from calendar */}
+        <SectionHeader
+          title="Up next"
+          action={<Link to="/calendar" className="text-[11px] font-bold text-navy uppercase tracking-wider">Calendar →</Link>}
+        />
+        <div className="bg-card rounded-xl border divide-y">
+          {upcoming.map((e) => {
+            const meta = EVENT_KIND_META[e.kind];
+            return (
+              <Link to="/calendar" key={e.id} className="flex items-center gap-3 p-2.5 hover:bg-secondary/40">
+                <div className={`h-9 w-9 rounded-lg flex items-center justify-center text-base shrink-0 ${meta.color}`}>
+                  {meta.emoji}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold truncate">{e.title}</div>
+                  <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {new Date(e.date).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · {e.time}
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </Link>
+            );
+          })}
         </div>
 
         <SectionHeader title="Quick actions" />
@@ -94,11 +173,25 @@ function AthleteHome() {
           </p>
         </div>
       </div>
+
+      <DailyCheckIn
+        open={showCheckIn}
+        onClose={() => setShowCheckIn(false)}
+        onSubmit={(d) => {
+          setSleep(d.sleep);
+          setSoreness(d.soreness);
+          setReadiness(d.readiness);
+          setCheckedIn(true);
+        }}
+      />
+      <SkipPracticeSheet open={showSkip} onClose={() => setShowSkip(false)} />
+
       <TourOverlay
         tourKey="athlete.home"
         steps={[
-          { title: "This is your locker", body: "Readiness, today's session and your streak — your daily home base.", position: "top" },
-          { title: "Tap the gold card", body: "It opens today's workout where you log every set in real time.", position: "center" },
+          { title: "Morning check-in first", body: "Log sleep, soreness and readiness — it powers your gold readiness score and tells your coach how to push you.", position: "top" },
+          { title: "Tap the gold card", body: "Opens today's workout. Or hit 'Can't make it' to notify Coach instantly.", position: "center" },
+          { title: "Calendar at a glance", body: "Up next shows your gym, games and physio appointments — full view in the Calendar tab.", position: "bottom" },
         ]}
       />
     </MobileFrame>
