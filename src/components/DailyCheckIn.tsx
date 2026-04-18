@@ -13,12 +13,6 @@ type Props = {
   onSubmit: (data: CheckInData) => void;
 };
 
-const MOODS = [
-  { id: "fired", label: "Fired up", emoji: "🔥" },
-  { id: "good", label: "Good", emoji: "😊" },
-  { id: "ok", label: "Okay", emoji: "😐" },
-  { id: "tired", label: "Tired", emoji: "🥱" },
-  { id: "off", label: "Off", emoji: "😣" },
 const MOODS: { id: CheckInData["mood"]; label: string; emoji: string }[] = [
   { id: "fired", label: "Fired up", emoji: "🔥" },
   { id: "good", label: "Good", emoji: "😊" },
@@ -26,9 +20,6 @@ const MOODS: { id: CheckInData["mood"]; label: string; emoji: string }[] = [
   { id: "tired", label: "Tired", emoji: "🥱" },
   { id: "off", label: "Off", emoji: "😣" },
 ];
-
-// (placeholder removed below)
-const _UNUSED = null;
 
 export function DailyCheckIn({ open, onClose, onSubmit }: Props) {
   const [sleep, setSleep] = React.useState(7.5);
