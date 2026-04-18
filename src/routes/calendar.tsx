@@ -4,7 +4,7 @@ import { MobileFrame } from "@/components/MobileFrame";
 import { TourOverlay } from "@/components/TourOverlay";
 import { calendarEvents, EVENT_KIND_META, TODAY_ISO, type EventKind, type CalEvent } from "@/data/mock";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, MapPin, Clock, Users, X, Plus, Calendar as CalIcon, Download, GripVertical } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Clock, Users, X, Plus, Calendar as CalIcon, Download, GripVertical, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useRole } from "@/lib/role-context";
 import { downloadICS, googleCalendarUrl } from "@/lib/calendar-export";
