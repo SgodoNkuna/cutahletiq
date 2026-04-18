@@ -98,6 +98,13 @@ function CalendarPage() {
   // --- Drag state for week view (coach only) ---
   const [dragId, setDragId] = React.useState<string | null>(null);
   const [dragOverIso, setDragOverIso] = React.useState<string | null>(null);
+  const [conflict, setConflict] = React.useState<{ ev: CalEvent; iso: string; clashes: CalEvent[] } | null>(null);
+
+  const commitMove = (id: string, iso: string, time: string) => {
+    rescheduleEvent(id, iso, time);
+    const ev = events.find((e) => e.id === id);
+    toast.success(`${ev?.title ?? "Session"} moved to ${new Date(iso).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}`);
+  };
 
   const handleDrop = (iso: string) => {
     if (!dragId) return;
@@ -106,8 +113,16 @@ function CalendarPage() {
     setDragOverIso(null);
     if (!ev) return;
     if (ev.date === iso) return;
-    rescheduleEvent(ev.id, iso, ev.time);
-    toast.success(`${ev.title} moved to ${new Date(iso).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}`);
+
+    // Block clashes with games / tournaments — needs explicit confirm
+    const clashes = events.filter(
+      (x) => x.id !== ev.id && x.date === iso && (x.kind === "game" || x.kind === "tournament"),
+    );
+    if (clashes.length > 0) {
+      setConflict({ ev, iso, clashes });
+      return;
+    }
+    commitMove(ev.id, iso, ev.time);
   };
 
   return (
