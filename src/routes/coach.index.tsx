@@ -2,10 +2,12 @@ import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MobileFrame } from "@/components/MobileFrame";
 import { SectionHeader, StatCard, StatusPill, SportTag } from "@/components/primitives";
+import { Sparkline, type SparkPoint } from "@/components/Sparkline";
 import { TourOverlay } from "@/components/TourOverlay";
 import { roster, leaderboard, SPORTS } from "@/data/mock";
 import { cn } from "@/lib/utils";
-import { ChevronRight, BellRing, Activity, Moon, AlertCircle } from "lucide-react";
+import { ChevronRight, BellRing, Activity, Moon, AlertCircle, Bell, TrendingUp } from "lucide-react";
+import { toast } from "sonner";
 import { useRole } from "@/lib/role-context";
 
 export const Route = createFileRoute("/coach/")({
