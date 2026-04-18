@@ -93,7 +93,33 @@ function CoachHome() {
           <StatCard label="Absences" value={skipNotices.length} hint="Notified" accent="danger" />
         </div>
 
-        {/* Skip notifications */}
+        {/* 7-day squad RPE trend */}
+        <div className="mt-3 bg-card rounded-2xl border p-3.5">
+          <div className="flex items-end justify-between mb-1">
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Squad RPE · 7-day</div>
+              <div className="font-display text-2xl leading-none mt-0.5 flex items-baseline gap-1.5">
+                {sparkData[6].value.toFixed(1)}
+                <span className={cn(
+                  "text-[11px] flex items-center gap-0.5 font-bold",
+                  trendDelta > 0 ? "text-destructive" : trendDelta < 0 ? "text-success" : "text-muted-foreground",
+                )}>
+                  <TrendingUp className={cn("h-3 w-3", trendDelta < 0 && "rotate-180")} />
+                  {trendDelta > 0 ? "+" : ""}{trendDelta}
+                </span>
+              </div>
+            </div>
+            <div className="text-[10px] text-muted-foreground text-right">
+              vs yesterday<br />
+              <span className="font-bold text-foreground">{trendDelta > 0 ? "Higher load" : trendDelta < 0 ? "Lighter day" : "Steady"}</span>
+            </div>
+          </div>
+          <Sparkline data={sparkData} height={64} yMin={5} yMax={10} />
+          <div className="flex justify-between mt-1 text-[9px] uppercase tracking-wider text-muted-foreground font-bold">
+            {sparkData.map((p) => <span key={p.label}>{p.label}</span>)}
+          </div>
+        </div>
+
         {skipNotices.length > 0 && (
           <>
             <SectionHeader title="Can't make it" />
