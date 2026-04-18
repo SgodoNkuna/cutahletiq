@@ -21,7 +21,7 @@ export function StatCard({
     accent === "danger" ? "border-l-destructive" : "border-l-border";
 
   return (
-    <div className={cn("bg-card rounded-xl border-l-4 border border-border p-3 shadow-sm", accentClass, className)}>
+    <div className={cn("bg-card rounded-2xl border-l-4 border border-border p-3 shadow-sm/50 hover:shadow-md transition-shadow", accentClass, className)}>
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</div>
       <div className="font-display text-2xl text-foreground leading-tight mt-0.5">{value}</div>
       {hint && <div className="text-[11px] text-muted-foreground mt-0.5">{hint}</div>}
