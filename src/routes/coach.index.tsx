@@ -220,10 +220,20 @@ function CoachHome() {
           {filtered.map((r) => {
             const ci = checkIns.find((c) => c.athlete === r.name);
             const lastRpe = rpeLogs.find((x) => x.athlete === r.name);
+            const missing = !checkedInNames.has(r.name) && r.status !== "injured";
+            const wasNudged = nudged.has(r.name);
             return (
-              <div key={r.id} className="bg-card rounded-xl border p-3 flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-navy to-navy-deep text-white font-bold flex items-center justify-center text-sm">
-                  {r.name.split(" ").map((n) => n[0]).join("")}
+              <div key={r.id} className="bg-card rounded-2xl border p-3 flex items-center gap-3">
+                <div className="relative shrink-0">
+                  <div className="h-11 w-11 rounded-full bg-gradient-to-br from-navy to-navy-deep text-white font-bold flex items-center justify-center text-sm">
+                    {r.name.split(" ").map((n) => n[0]).join("")}
+                  </div>
+                  {ci && (
+                    <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-success border-2 border-card" aria-label="Checked in" />
+                  )}
+                  {missing && (
+                    <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-warn border-2 border-card" aria-label="No check-in" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-bold truncate">{r.name}</div>
@@ -238,9 +248,28 @@ function CoachHome() {
                     {lastRpe && (
                       <span className="text-[10px] text-gold font-bold">RPE {lastRpe.rpe}</span>
                     )}
+                    {missing && !wasNudged && (
+                      <span className="text-[10px] text-warn font-bold">No check-in</span>
+                    )}
                   </div>
                 </div>
-                <StatusPill status={r.status} />
+                {missing ? (
+                  <button
+                    onClick={() => handleNudge(r.name)}
+                    disabled={wasNudged}
+                    className={cn(
+                      "shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider border transition-all",
+                      wasNudged
+                        ? "bg-success/10 text-success border-success/30"
+                        : "bg-gold text-navy-deep border-gold hover:scale-105 active:scale-95",
+                    )}
+                  >
+                    <Bell className="h-3 w-3" />
+                    {wasNudged ? "Sent" : "Nudge"}
+                  </button>
+                ) : (
+                  <StatusPill status={r.status} />
+                )}
               </div>
             );
           })}
