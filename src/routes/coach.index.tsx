@@ -2,10 +2,12 @@ import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MobileFrame } from "@/components/MobileFrame";
 import { SectionHeader, StatCard, StatusPill, SportTag } from "@/components/primitives";
+import { Sparkline, type SparkPoint } from "@/components/Sparkline";
 import { TourOverlay } from "@/components/TourOverlay";
 import { roster, leaderboard, SPORTS } from "@/data/mock";
 import { cn } from "@/lib/utils";
-import { ChevronRight, BellRing, Activity, Moon, AlertCircle } from "lucide-react";
+import { ChevronRight, BellRing, Activity, Moon, AlertCircle, Bell, TrendingUp } from "lucide-react";
+import { toast } from "sonner";
 import { useRole } from "@/lib/role-context";
 
 export const Route = createFileRoute("/coach/")({
@@ -54,6 +56,26 @@ function CoachHome() {
       : Math.round((checkIns.reduce((a, c) => a + c.sleep, 0) / checkIns.length) * 10) / 10;
   const flagged = checkIns.filter((c) => c.soreness >= 5 || c.readiness < 60);
 
+  // 7-day rolling average squad RPE — last 6 days are demo baseline,
+  // today's value reflects whatever the live rpeLogs say.
+  const sparkData = React.useMemo<SparkPoint[]>(() => {
+    const baseline = [6.4, 7.1, 6.8, 7.5, 8.0, 7.3];
+    const today = avgRPE > 0 ? avgRPE : 7.4;
+    const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Today"];
+    return [...baseline, today].map((value, i) => ({ label: labels[i], value }));
+  }, [avgRPE]);
+  const trendDelta = +(sparkData[6].value - sparkData[5].value).toFixed(1);
+
+  // Athletes who haven't checked in yet — show Nudge button (demo: anyone after 09:00)
+  const checkedInNames = React.useMemo(() => new Set(checkIns.map((c) => c.athlete)), [checkIns]);
+  const [nudged, setNudged] = React.useState<Set<string>>(new Set());
+  const handleNudge = (name: string) => {
+    setNudged((prev) => new Set(prev).add(name));
+    toast.success(`Nudge sent to ${name.split(" ")[0]}`, {
+      description: "Push reminder: complete your morning check-in",
+    });
+  };
+
   return (
     <MobileFrame title="Coach Mensah">
       <div className="px-5">
@@ -71,7 +93,33 @@ function CoachHome() {
           <StatCard label="Absences" value={skipNotices.length} hint="Notified" accent="danger" />
         </div>
 
-        {/* Skip notifications */}
+        {/* 7-day squad RPE trend */}
+        <div className="mt-3 bg-card rounded-2xl border p-3.5">
+          <div className="flex items-end justify-between mb-1">
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Squad RPE · 7-day</div>
+              <div className="font-display text-2xl leading-none mt-0.5 flex items-baseline gap-1.5">
+                {sparkData[6].value.toFixed(1)}
+                <span className={cn(
+                  "text-[11px] flex items-center gap-0.5 font-bold",
+                  trendDelta > 0 ? "text-destructive" : trendDelta < 0 ? "text-success" : "text-muted-foreground",
+                )}>
+                  <TrendingUp className={cn("h-3 w-3", trendDelta < 0 && "rotate-180")} />
+                  {trendDelta > 0 ? "+" : ""}{trendDelta}
+                </span>
+              </div>
+            </div>
+            <div className="text-[10px] text-muted-foreground text-right">
+              vs yesterday<br />
+              <span className="font-bold text-foreground">{trendDelta > 0 ? "Higher load" : trendDelta < 0 ? "Lighter day" : "Steady"}</span>
+            </div>
+          </div>
+          <Sparkline data={sparkData} height={64} yMin={5} yMax={10} />
+          <div className="flex justify-between mt-1 text-[9px] uppercase tracking-wider text-muted-foreground font-bold">
+            {sparkData.map((p) => <span key={p.label}>{p.label}</span>)}
+          </div>
+        </div>
+
         {skipNotices.length > 0 && (
           <>
             <SectionHeader title="Can't make it" />
@@ -172,10 +220,20 @@ function CoachHome() {
           {filtered.map((r) => {
             const ci = checkIns.find((c) => c.athlete === r.name);
             const lastRpe = rpeLogs.find((x) => x.athlete === r.name);
+            const missing = !checkedInNames.has(r.name) && r.status !== "injured";
+            const wasNudged = nudged.has(r.name);
             return (
-              <div key={r.id} className="bg-card rounded-xl border p-3 flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-navy to-navy-deep text-white font-bold flex items-center justify-center text-sm">
-                  {r.name.split(" ").map((n) => n[0]).join("")}
+              <div key={r.id} className="bg-card rounded-2xl border p-3 flex items-center gap-3">
+                <div className="relative shrink-0">
+                  <div className="h-11 w-11 rounded-full bg-gradient-to-br from-navy to-navy-deep text-white font-bold flex items-center justify-center text-sm">
+                    {r.name.split(" ").map((n) => n[0]).join("")}
+                  </div>
+                  {ci && (
+                    <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-success border-2 border-card" aria-label="Checked in" />
+                  )}
+                  {missing && (
+                    <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-warn border-2 border-card" aria-label="No check-in" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-bold truncate">{r.name}</div>
@@ -190,9 +248,28 @@ function CoachHome() {
                     {lastRpe && (
                       <span className="text-[10px] text-gold font-bold">RPE {lastRpe.rpe}</span>
                     )}
+                    {missing && !wasNudged && (
+                      <span className="text-[10px] text-warn font-bold">No check-in</span>
+                    )}
                   </div>
                 </div>
-                <StatusPill status={r.status} />
+                {missing ? (
+                  <button
+                    onClick={() => handleNudge(r.name)}
+                    disabled={wasNudged}
+                    className={cn(
+                      "shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider border transition-all",
+                      wasNudged
+                        ? "bg-success/10 text-success border-success/30"
+                        : "bg-gold text-navy-deep border-gold hover:scale-105 active:scale-95",
+                    )}
+                  >
+                    <Bell className="h-3 w-3" />
+                    {wasNudged ? "Sent" : "Nudge"}
+                  </button>
+                ) : (
+                  <StatusPill status={r.status} />
+                )}
               </div>
             );
           })}
@@ -221,7 +298,8 @@ function CoachHome() {
         tourKey="coach.home"
         steps={[
           { title: "Live squad pulse", body: "Today's check-ins, average RPE and absence notifications update in real time as athletes submit them.", position: "top" },
-          { title: "Watch list", body: "Anyone reporting high soreness or low readiness shows up here so you can adjust the session.", position: "center" },
+          { title: "7-day load trend", body: "Sparkline shows the squad's average RPE over the last week — spot overload before it becomes injury.", position: "center" },
+          { title: "Nudge stragglers", body: "Anyone without a check-in by 09:00 gets a gold Nudge button — one tap sends a reminder push.", position: "center" },
         ]}
       />
     </MobileFrame>
