@@ -533,3 +533,76 @@ function DetailSheet({ event, onClose }: { event: CalEvent; onClose: () => void 
     </div>
   );
 }
+
+function ConflictDialog({
+  ev,
+  iso,
+  clashes,
+  onCancel,
+  onConfirm,
+}: {
+  ev: CalEvent;
+  iso: string;
+  clashes: CalEvent[];
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const dayLabel = new Date(iso).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "short" });
+  return (
+    <div className="absolute inset-0 z-50 bg-black/50 flex items-center justify-center p-5" onClick={onCancel}>
+      <div
+        className="w-full max-w-sm bg-card rounded-2xl p-5 animate-fade-up shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start gap-3">
+          <div className="h-10 w-10 rounded-full bg-destructive/15 text-destructive flex items-center justify-center shrink-0">
+            <AlertTriangle className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <div className="font-display text-xl leading-tight">Schedule clash</div>
+            <p className="text-sm text-muted-foreground mt-1">
+              <span className="font-bold text-foreground">{dayLabel}</span> already has a fixture:
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3 space-y-1.5">
+          {clashes.map((c) => {
+            const meta = EVENT_KIND_META[c.kind];
+            return (
+              <div key={c.id} className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-2">
+                <div className={cn("h-8 w-8 rounded-md flex items-center justify-center text-sm shrink-0", meta.color)}>
+                  {meta.emoji}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold truncate">{c.title}</div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{c.time} · {meta.label}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <p className="text-[11px] text-muted-foreground mt-3">
+          Moving <span className="font-bold text-foreground">{ev.title}</span> here may overload the squad on game day.
+        </p>
+
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <button
+            onClick={onCancel}
+            className="rounded-full border-2 border-border hover:border-foreground/30 font-bold uppercase tracking-wider py-2.5 text-xs"
+          >
+            Keep original
+          </button>
+          <button
+            onClick={onConfirm}
+            className="rounded-full bg-destructive text-destructive-foreground font-bold uppercase tracking-wider py-2.5 text-xs hover:opacity-90"
+          >
+            Move anyway
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
