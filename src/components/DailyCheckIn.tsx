@@ -3,14 +3,17 @@ import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Moon, Activity, Zap, X } from "lucide-react";
+import { checkInSchema, type CheckInData } from "@/lib/sanitize";
+import { useRole } from "@/lib/role-context";
+import { currentAthlete } from "@/data/mock";
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: { sleep: number; soreness: number; readiness: number; mood: string }) => void;
+  onSubmit: (data: CheckInData) => void;
 };
 
-const MOODS = [
+const MOODS: { id: CheckInData["mood"]; label: string; emoji: string }[] = [
   { id: "fired", label: "Fired up", emoji: "🔥" },
   { id: "good", label: "Good", emoji: "😊" },
   { id: "ok", label: "Okay", emoji: "😐" },
@@ -22,12 +25,19 @@ export function DailyCheckIn({ open, onClose, onSubmit }: Props) {
   const [sleep, setSleep] = React.useState(7.5);
   const [soreness, setSoreness] = React.useState(2);
   const [readiness, setReadiness] = React.useState(80);
-  const [mood, setMood] = React.useState("good");
+  const [mood, setMood] = React.useState<CheckInData["mood"]>("good");
+  const { addCheckIn } = useRole();
 
   if (!open) return null;
 
   const submit = () => {
-    onSubmit({ sleep, soreness, readiness, mood });
+    const parsed = checkInSchema.safeParse({ sleep, soreness, readiness, mood });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Invalid input");
+      return;
+    }
+    addCheckIn({ athlete: currentAthlete.name, ...parsed.data });
+    onSubmit(parsed.data);
     toast.success("Daily check-in saved · readiness updated");
     onClose();
   };

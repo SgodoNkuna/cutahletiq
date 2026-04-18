@@ -2,6 +2,9 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { X, AlertCircle } from "lucide-react";
+import { useRole } from "@/lib/role-context";
+import { skipPracticeSchema } from "@/lib/sanitize";
+import { currentAthlete } from "@/data/mock";
 
 type Props = {
   open: boolean;
@@ -15,19 +18,34 @@ const REASONS = [
   { id: "personal", label: "Personal", emoji: "🏠" },
   { id: "transport", label: "Transport", emoji: "🚌" },
   { id: "other", label: "Other", emoji: "❓" },
-];
+] as const;
+
+const NOTE_MAX = 500;
 
 export function SkipPracticeSheet({ open, onClose }: Props) {
-  const [reason, setReason] = React.useState("injury");
+  const [reason, setReason] = React.useState<(typeof REASONS)[number]["id"]>("injury");
   const [notes, setNotes] = React.useState("");
   const [session, setSession] = React.useState("Today · 16:00 Tactical");
+  const { addSkip } = useRole();
 
   if (!open) return null;
 
   const submit = () => {
+    const parsed = skipPracticeSchema.safeParse({ session, reason, notes });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Please check your inputs");
+      return;
+    }
+    addSkip({
+      athlete: currentAthlete.name,
+      session: parsed.data.session,
+      reason: parsed.data.reason,
+      notes: parsed.data.notes,
+    });
     toast.success("Coach Mensah notified", {
       description: `Reason: ${REASONS.find((r) => r.id === reason)?.label} · marked excused`,
     });
+    setNotes("");
     onClose();
   };
 
@@ -87,11 +105,15 @@ export function SkipPracticeSheet({ open, onClose }: Props) {
         </div>
 
         <div className="mt-3">
-          <label className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold">Notes (optional)</label>
+          <label className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold flex items-center justify-between">
+            <span>Notes (optional)</span>
+            <span className="text-muted-foreground/70 normal-case tracking-normal">{notes.length}/{NOTE_MAX}</span>
+          </label>
           <textarea
             value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            onChange={(e) => setNotes(e.target.value.slice(0, NOTE_MAX))}
             rows={3}
+            maxLength={NOTE_MAX}
             placeholder="Anything coach should know…"
             className="mt-1 w-full rounded-lg border bg-background p-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-gold"
           />

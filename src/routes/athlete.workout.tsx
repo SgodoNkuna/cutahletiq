@@ -5,10 +5,12 @@ import { MobileFrame } from "@/components/MobileFrame";
 import { PRBadge } from "@/components/primitives";
 import { TourOverlay } from "@/components/TourOverlay";
 import { RPEModal } from "@/components/RPEModal";
-import { todaysWorkout } from "@/data/mock";
+import { todaysWorkout, currentAthlete } from "@/data/mock";
 import { cn } from "@/lib/utils";
 import { Check, Plus, Minus } from "lucide-react";
 import { toast } from "sonner";
+import { useRole } from "@/lib/role-context";
+import { rpeSchema } from "@/lib/sanitize";
 
 export const Route = createFileRoute("/athlete/workout")({
   head: () => ({
@@ -49,15 +51,22 @@ function WorkoutPage() {
 
   const finish = () => setAskRPE(true);
 
+  const { addRPE } = useRole();
   const submitRPE = (rpe: number) => {
+    const parsed = rpeSchema.safeParse(rpe);
+    if (!parsed.success) {
+      toast.error("Invalid RPE value");
+      return;
+    }
     setAskRPE(false);
+    addRPE({ athlete: currentAthlete.name, rpe: parsed.data, session: todaysWorkout.title });
     confetti({
       particleCount: 120,
       spread: 80,
       origin: { y: 0.4 },
       colors: ["#F5A800", "#003478", "#ffffff"],
     });
-    toast.success(`Session saved · ${doneSets}/${totalSets} sets · RPE ${rpe}/10 · +${newPRs.length} PR${newPRs.length === 1 ? "" : "s"}`);
+    toast.success(`Session saved · ${doneSets}/${totalSets} sets · RPE ${parsed.data}/10 · +${newPRs.length} PR${newPRs.length === 1 ? "" : "s"}`);
     setTimeout(() => navigate({ to: "/athlete/progress" }), 900);
   };
 
