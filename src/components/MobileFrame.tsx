@@ -67,12 +67,13 @@ export function MobileFrame({
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary via-background to-secondary/40 flex items-center justify-center py-4 px-2">
       <div className="relative w-full max-w-[430px] min-h-[calc(100vh-2rem)] sm:min-h-[860px] bg-background rounded-[2.25rem] sm:border-[10px] border-navy-deep shadow-2xl overflow-hidden flex flex-col">
-        {/* Status bar / role tag */}
-        <div className="flex items-center justify-between px-4 py-2 bg-navy text-primary-foreground text-[11px] font-medium tracking-wide">
+        {/* Status bar / role tag — iOS-style, frosted */}
+        <div className="flex items-center justify-between px-4 py-2 bg-navy/95 backdrop-blur text-primary-foreground text-[11px] font-medium tracking-wide">
           <span className="opacity-80">CUT ATHLETIQ</span>
           <span className="flex items-center gap-1.5">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-gold animate-pulse" />
-            Viewing as: <span className="font-bold uppercase">{roleMeta.emoji} {roleMeta.label}</span>
+            <span className="opacity-70">Viewing as</span>
+            <span className="font-bold uppercase">{roleMeta.emoji} {roleMeta.label}</span>
           </span>
         </div>
 
@@ -82,7 +83,7 @@ export function MobileFrame({
             {tourKey && (
               <button
                 onClick={() => resetTour(tourKey)}
-                className="shrink-0 inline-flex items-center gap-1 rounded-full border border-gold/50 bg-gold/10 text-navy-deep hover:bg-gold/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider"
+                className="shrink-0 inline-flex items-center gap-1 rounded-full border border-gold/50 bg-gold/10 text-navy-deep hover:bg-gold/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors"
                 aria-label="Replay tour"
                 title="Replay quick tour"
               >
@@ -100,7 +101,7 @@ export function MobileFrame({
         </div>
 
         {!hideNav && (
-          <nav className="border-t bg-card/95 backdrop-blur px-1 py-1.5 flex items-center justify-around">
+          <nav className="border-t bg-card/95 backdrop-blur-md px-1 py-1.5 flex items-center justify-around">
             {items.map((item) => {
               const active = location.pathname === item.to;
               const Icon = item.icon;
@@ -109,11 +110,13 @@ export function MobileFrame({
                   key={item.to}
                   to={item.to}
                   className={cn(
-                    "flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors min-w-[52px]",
-                    active ? "text-navy" : "text-muted-foreground hover:text-foreground",
+                    "flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-2xl transition-all min-w-[52px]",
+                    active
+                      ? "text-navy bg-gold/15"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
                   )}
                 >
-                  <Icon className={cn("h-5 w-5", active && "text-gold")} />
+                  <Icon className={cn("h-5 w-5 transition-transform", active && "text-navy scale-110")} />
                   <span className={cn("text-[10px] font-medium", active && "font-bold")}>{item.label}</span>
                 </Link>
               );
