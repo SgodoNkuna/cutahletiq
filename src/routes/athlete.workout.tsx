@@ -5,10 +5,12 @@ import { MobileFrame } from "@/components/MobileFrame";
 import { PRBadge } from "@/components/primitives";
 import { TourOverlay } from "@/components/TourOverlay";
 import { RPEModal } from "@/components/RPEModal";
-import { todaysWorkout } from "@/data/mock";
+import { todaysWorkout, currentAthlete } from "@/data/mock";
 import { cn } from "@/lib/utils";
 import { Check, Plus, Minus } from "lucide-react";
 import { toast } from "sonner";
+import { useRole } from "@/lib/role-context";
+import { rpeSchema } from "@/lib/sanitize";
 
 export const Route = createFileRoute("/athlete/workout")({
   head: () => ({
