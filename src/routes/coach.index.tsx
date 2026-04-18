@@ -298,7 +298,8 @@ function CoachHome() {
         tourKey="coach.home"
         steps={[
           { title: "Live squad pulse", body: "Today's check-ins, average RPE and absence notifications update in real time as athletes submit them.", position: "top" },
-          { title: "Watch list", body: "Anyone reporting high soreness or low readiness shows up here so you can adjust the session.", position: "center" },
+          { title: "7-day load trend", body: "Sparkline shows the squad's average RPE over the last week — spot overload before it becomes injury.", position: "center" },
+          { title: "Nudge stragglers", body: "Anyone without a check-in by 09:00 gets a gold Nudge button — one tap sends a reminder push.", position: "center" },
         ]}
       />
     </MobileFrame>
