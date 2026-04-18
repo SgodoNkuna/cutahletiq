@@ -56,6 +56,26 @@ function CoachHome() {
       : Math.round((checkIns.reduce((a, c) => a + c.sleep, 0) / checkIns.length) * 10) / 10;
   const flagged = checkIns.filter((c) => c.soreness >= 5 || c.readiness < 60);
 
+  // 7-day rolling average squad RPE — last 6 days are demo baseline,
+  // today's value reflects whatever the live rpeLogs say.
+  const sparkData = React.useMemo<SparkPoint[]>(() => {
+    const baseline = [6.4, 7.1, 6.8, 7.5, 8.0, 7.3];
+    const today = avgRPE > 0 ? avgRPE : 7.4;
+    const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Today"];
+    return [...baseline, today].map((value, i) => ({ label: labels[i], value }));
+  }, [avgRPE]);
+  const trendDelta = +(sparkData[6].value - sparkData[5].value).toFixed(1);
+
+  // Athletes who haven't checked in yet — show Nudge button (demo: anyone after 09:00)
+  const checkedInNames = React.useMemo(() => new Set(checkIns.map((c) => c.athlete)), [checkIns]);
+  const [nudged, setNudged] = React.useState<Set<string>>(new Set());
+  const handleNudge = (name: string) => {
+    setNudged((prev) => new Set(prev).add(name));
+    toast.success(`Nudge sent to ${name.split(" ")[0]}`, {
+      description: "Push reminder: complete your morning check-in",
+    });
+  };
+
   return (
     <MobileFrame title="Coach Mensah">
       <div className="px-5">
