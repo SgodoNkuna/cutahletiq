@@ -277,6 +277,20 @@ function CalendarPage() {
       {/* Detail sheet */}
       {detail && <DetailSheet event={detail} onClose={() => setDetail(null)} />}
 
+      {/* Conflict warning */}
+      {conflict && (
+        <ConflictDialog
+          ev={conflict.ev}
+          iso={conflict.iso}
+          clashes={conflict.clashes}
+          onCancel={() => setConflict(null)}
+          onConfirm={() => {
+            commitMove(conflict.ev.id, conflict.iso, conflict.ev.time);
+            setConflict(null);
+          }}
+        />
+      )}
+
       <TourOverlay
         tourKey="calendar.home"
         steps={[
