@@ -26,6 +26,14 @@ export type SkipNotice = {
   at: number;
 };
 
+export type DailyCheckInState = {
+  sleep: number;
+  soreness: number;
+  readiness: number;
+  mood: string;
+  at: number;
+};
+
 type RoleContextType = {
   role: Role;
   setRole: (role: Role) => void;
@@ -48,6 +56,10 @@ type RoleContextType = {
   // Calendar overrides for drag-to-reschedule
   eventOverrides: Record<string, { date: string; time: string }>;
   rescheduleEvent: (id: string, date: string, time: string) => void;
+
+  // Persisted daily check-in for the current athlete (survives navigation)
+  dailyCheckIn: DailyCheckInState | null;
+  setDailyCheckIn: (s: DailyCheckInState | null) => void;
 };
 
 const RoleContext = React.createContext<RoleContextType | null>(null);
@@ -87,6 +99,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   const [rpeLogs, setRpeLogs] = React.useState<RPELog[]>(SEED_RPE);
   const [skipNotices, setSkipNotices] = React.useState<SkipNotice[]>(SEED_SKIPS);
   const [eventOverrides, setEventOverrides] = React.useState<Record<string, { date: string; time: string }>>({});
+  const [dailyCheckIn, setDailyCheckInState] = React.useState<DailyCheckInState | null>(null);
 
   React.useEffect(() => {
     try {
@@ -159,6 +172,9 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   const rescheduleEvent = React.useCallback((id: string, date: string, time: string) => {
     setEventOverrides((prev) => ({ ...prev, [id]: { date, time } }));
   }, []);
+  const setDailyCheckIn = React.useCallback((s: DailyCheckInState | null) => {
+    setDailyCheckInState(s);
+  }, []);
 
   return (
     <RoleContext.Provider
@@ -180,6 +196,8 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
         addSkip,
         eventOverrides,
         rescheduleEvent,
+        dailyCheckIn,
+        setDailyCheckIn,
       }}
     >
       {children}
