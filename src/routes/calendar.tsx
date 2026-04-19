@@ -214,6 +214,7 @@ function CalendarPage() {
             setDragOverIso={setDragOverIso}
             handleDrop={handleDrop}
             onOpen={setDetail}
+            dragEvent={dragId ? events.find((e) => e.id === dragId) ?? null : null}
           />
         )}
 
@@ -371,6 +372,7 @@ function WeekStrip({
   setDragOverIso,
   handleDrop,
   onOpen,
+  dragEvent,
 }: {
   week: { date: Date; iso: string }[];
   eventsByDay: Map<string, CalEvent[]>;
@@ -381,13 +383,21 @@ function WeekStrip({
   setDragOverIso: (iso: string | null) => void;
   handleDrop: (iso: string) => void;
   onOpen: (e: CalEvent) => void;
+  dragEvent: CalEvent | null;
 }) {
+  const dragging = !!dragEvent;
   return (
     <div className="mt-2 space-y-2">
       {week.map(({ date, iso }) => {
         const evs = eventsByDay.get(iso) ?? [];
         const isToday = iso === TODAY_ISO;
         const isOver = dragOverIso === iso;
+        const wouldClash =
+          dragging &&
+          dragEvent!.date !== iso &&
+          evs.some((x) => x.id !== dragEvent!.id && (x.kind === "game" || x.kind === "tournament"));
+        const isSourceDay = dragging && dragEvent!.date === iso;
+        const isSafeTarget = dragging && !wouldClash && !isSourceDay;
         return (
           <div
             key={iso}
@@ -395,9 +405,14 @@ function WeekStrip({
             onDragLeave={() => setDragOverIso(null)}
             onDrop={() => handleDrop(iso)}
             className={cn(
-              "bg-card rounded-xl border p-2 transition-colors",
-              isToday && "ring-2 ring-gold",
-              isOver && "border-navy bg-navy/5",
+              "bg-card rounded-xl border-2 p-2 transition-all",
+              !dragging && "border-border",
+              !dragging && isToday && "ring-2 ring-gold border-border",
+              dragging && isSourceDay && "border-dashed border-muted-foreground/40 opacity-60",
+              dragging && wouldClash && "border-destructive bg-destructive/5",
+              dragging && isSafeTarget && "border-success/60 bg-success/5",
+              isOver && wouldClash && "bg-destructive/15 scale-[1.01]",
+              isOver && isSafeTarget && "bg-success/15 scale-[1.01]",
             )}
           >
             <div className="flex items-baseline justify-between mb-1.5">
@@ -408,8 +423,18 @@ function WeekStrip({
                 <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
                   {date.toLocaleDateString(undefined, { weekday: "short" })}
                 </span>
+                {dragging && wouldClash && (
+                  <span className="text-[9px] uppercase tracking-wider font-bold text-destructive flex items-center gap-0.5">
+                    <AlertTriangle className="h-2.5 w-2.5" /> Clash
+                  </span>
+                )}
+                {dragging && isSafeTarget && (
+                  <span className="text-[9px] uppercase tracking-wider font-bold text-success">
+                    ✓ Safe
+                  </span>
+                )}
               </div>
-              {isToday && <span className="text-[9px] uppercase tracking-wider font-bold text-gold">Today</span>}
+              {isToday && !dragging && <span className="text-[9px] uppercase tracking-wider font-bold text-gold">Today</span>}
             </div>
             {evs.length === 0 ? (
               <div className="text-[11px] text-muted-foreground py-2 italic">— Open day —</div>

@@ -56,23 +56,47 @@ function CoachHome() {
       : Math.round((checkIns.reduce((a, c) => a + c.sleep, 0) / checkIns.length) * 10) / 10;
   const flagged = checkIns.filter((c) => c.soreness >= 5 || c.readiness < 60);
 
-  // 7-day rolling average squad RPE — last 6 days are demo baseline,
-  // today's value reflects whatever the live rpeLogs say.
-  const sparkData = React.useMemo<SparkPoint[]>(() => {
+  // 7-day rolling averages — last 6 days are demo baseline,
+  // today's value reflects whatever the live logs say.
+  const rpeSpark = React.useMemo<SparkPoint[]>(() => {
     const baseline = [6.4, 7.1, 6.8, 7.5, 8.0, 7.3];
     const today = avgRPE > 0 ? avgRPE : 7.4;
     const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Today"];
     return [...baseline, today].map((value, i) => ({ label: labels[i], value }));
   }, [avgRPE]);
-  const trendDelta = +(sparkData[6].value - sparkData[5].value).toFixed(1);
+  const sleepSpark = React.useMemo<SparkPoint[]>(() => {
+    const baseline = [7.2, 6.8, 7.5, 6.4, 7.0, 7.8];
+    const today = avgSleep > 0 ? avgSleep : 7.1;
+    const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Today"];
+    return [...baseline, today].map((value, i) => ({ label: labels[i], value }));
+  }, [avgSleep]);
+  const rpeDelta = +(rpeSpark[6].value - rpeSpark[5].value).toFixed(1);
+  const sleepDelta = +(sleepSpark[6].value - sleepSpark[5].value).toFixed(1);
 
   // Athletes who haven't checked in yet — show Nudge button (demo: anyone after 09:00)
   const checkedInNames = React.useMemo(() => new Set(checkIns.map((c) => c.athlete)), [checkIns]);
+  const missingAthletes = React.useMemo(
+    () => roster.filter((r) => !checkedInNames.has(r.name) && r.status !== "injured"),
+    [checkedInNames],
+  );
   const [nudged, setNudged] = React.useState<Set<string>>(new Set());
   const handleNudge = (name: string) => {
     setNudged((prev) => new Set(prev).add(name));
     toast.success(`Nudge sent to ${name.split(" ")[0]}`, {
       description: "Push reminder: complete your morning check-in",
+    });
+  };
+  const pendingNudgeCount = missingAthletes.filter((r) => !nudged.has(r.name)).length;
+  const handleNudgeAll = () => {
+    const targets = missingAthletes.filter((r) => !nudged.has(r.name));
+    if (targets.length === 0) return;
+    setNudged((prev) => {
+      const next = new Set(prev);
+      targets.forEach((r) => next.add(r.name));
+      return next;
+    });
+    toast.success(`Nudged ${targets.length} athlete${targets.length === 1 ? "" : "s"}`, {
+      description: "Push reminders: complete your morning check-in",
     });
   };
 
@@ -93,31 +117,26 @@ function CoachHome() {
           <StatCard label="Absences" value={skipNotices.length} hint="Notified" accent="danger" />
         </div>
 
-        {/* 7-day squad RPE trend */}
-        <div className="mt-3 bg-card rounded-2xl border p-3.5">
-          <div className="flex items-end justify-between mb-1">
-            <div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Squad RPE · 7-day</div>
-              <div className="font-display text-2xl leading-none mt-0.5 flex items-baseline gap-1.5">
-                {sparkData[6].value.toFixed(1)}
-                <span className={cn(
-                  "text-[11px] flex items-center gap-0.5 font-bold",
-                  trendDelta > 0 ? "text-destructive" : trendDelta < 0 ? "text-success" : "text-muted-foreground",
-                )}>
-                  <TrendingUp className={cn("h-3 w-3", trendDelta < 0 && "rotate-180")} />
-                  {trendDelta > 0 ? "+" : ""}{trendDelta}
-                </span>
-              </div>
-            </div>
-            <div className="text-[10px] text-muted-foreground text-right">
-              vs yesterday<br />
-              <span className="font-bold text-foreground">{trendDelta > 0 ? "Higher load" : trendDelta < 0 ? "Lighter day" : "Steady"}</span>
-            </div>
-          </div>
-          <Sparkline data={sparkData} height={64} yMin={5} yMax={10} />
-          <div className="flex justify-between mt-1 text-[9px] uppercase tracking-wider text-muted-foreground font-bold">
-            {sparkData.map((p) => <span key={p.label}>{p.label}</span>)}
-          </div>
+        {/* 7-day load + recovery trends — side by side */}
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <TrendCard
+            title="Squad RPE"
+            unit=""
+            data={rpeSpark}
+            delta={rpeDelta}
+            yMin={5}
+            yMax={10}
+            higherIsBad
+          />
+          <TrendCard
+            title="Avg sleep"
+            unit="h"
+            data={sleepSpark}
+            delta={sleepDelta}
+            yMin={5}
+            yMax={9}
+            higherIsBad={false}
+          />
         </div>
 
         {skipNotices.length > 0 && (
@@ -200,6 +219,33 @@ function CoachHome() {
             </Link>
           }
         />
+
+        {/* Bulk Nudge banner */}
+        {pendingNudgeCount > 0 && (
+          <div className="bg-gold/10 border border-gold/40 rounded-xl p-3 mb-2 flex items-center gap-3">
+            <div className="h-9 w-9 rounded-full bg-gold text-navy-deep flex items-center justify-center shrink-0">
+              <Bell className="h-4 w-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold leading-tight">
+                {pendingNudgeCount} athlete{pendingNudgeCount === 1 ? "" : "s"} haven't checked in
+              </div>
+              <div className="text-[11px] text-muted-foreground">Send a one-tap reminder push</div>
+            </div>
+            <button
+              onClick={handleNudgeAll}
+              className="shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider bg-gold text-navy-deep border border-gold hover:scale-105 active:scale-95 transition-transform"
+            >
+              <Bell className="h-3 w-3" />
+              Nudge all
+            </button>
+          </div>
+        )}
+        {pendingNudgeCount === 0 && missingAthletes.length > 0 && (
+          <div className="bg-success/10 border border-success/30 rounded-xl p-2.5 mb-2 text-[11px] text-success font-bold flex items-center gap-2">
+            <Bell className="h-3.5 w-3.5" /> All pending athletes nudged
+          </div>
+        )}
 
         <div className="flex gap-1.5 overflow-x-auto pb-2 -mx-1 px-1">
           {["All", ...SPORTS].map((s) => (
@@ -303,5 +349,41 @@ function CoachHome() {
         ]}
       />
     </MobileFrame>
+  );
+}
+
+function TrendCard({
+  title,
+  unit,
+  data,
+  delta,
+  yMin,
+  yMax,
+  higherIsBad,
+}: {
+  title: string;
+  unit: string;
+  data: SparkPoint[];
+  delta: number;
+  yMin: number;
+  yMax: number;
+  higherIsBad: boolean;
+}) {
+  const today = data[data.length - 1].value;
+  const isBad = higherIsBad ? delta > 0 : delta < 0;
+  const isGood = higherIsBad ? delta < 0 : delta > 0;
+  const deltaColor = isBad ? "text-destructive" : isGood ? "text-success" : "text-muted-foreground";
+  return (
+    <div className="bg-card rounded-2xl border p-3">
+      <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold">{title} · 7d</div>
+      <div className="font-display text-xl leading-none mt-0.5 flex items-baseline gap-1">
+        {today.toFixed(1)}{unit && <span className="text-[11px] text-muted-foreground font-sans">{unit}</span>}
+        <span className={cn("text-[10px] flex items-center gap-0.5 font-bold ml-auto", deltaColor)}>
+          <TrendingUp className={cn("h-2.5 w-2.5", delta < 0 && "rotate-180")} />
+          {delta > 0 ? "+" : ""}{delta}
+        </span>
+      </div>
+      <Sparkline data={data} height={44} yMin={yMin} yMax={yMax} showLastLabel={false} />
+    </div>
   );
 }
