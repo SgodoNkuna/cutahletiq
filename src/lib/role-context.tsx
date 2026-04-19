@@ -99,6 +99,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   const [rpeLogs, setRpeLogs] = React.useState<RPELog[]>(SEED_RPE);
   const [skipNotices, setSkipNotices] = React.useState<SkipNotice[]>(SEED_SKIPS);
   const [eventOverrides, setEventOverrides] = React.useState<Record<string, { date: string; time: string }>>({});
+  const [dailyCheckIn, setDailyCheckInState] = React.useState<DailyCheckInState | null>(null);
 
   React.useEffect(() => {
     try {
@@ -171,6 +172,9 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   const rescheduleEvent = React.useCallback((id: string, date: string, time: string) => {
     setEventOverrides((prev) => ({ ...prev, [id]: { date, time } }));
   }, []);
+  const setDailyCheckIn = React.useCallback((s: DailyCheckInState | null) => {
+    setDailyCheckInState(s);
+  }, []);
 
   return (
     <RoleContext.Provider
@@ -192,6 +196,8 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
         addSkip,
         eventOverrides,
         rescheduleEvent,
+        dailyCheckIn,
+        setDailyCheckIn,
       }}
     >
       {children}
