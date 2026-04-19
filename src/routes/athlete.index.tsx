@@ -41,30 +41,30 @@ function AthleteHome() {
   return (
     <MobileFrame>
       {/* Hero */}
-      <div className="bg-gradient-to-br from-navy to-navy-deep text-white px-5 pt-5 pb-8 rounded-b-3xl">
+      <div className="bg-gradient-to-br from-navy to-navy-deep text-white px-5 pt-5 pb-6 rounded-b-3xl">
         <div className="flex items-center justify-between">
-          <div>
+          <div className="min-w-0 flex-1 pr-3">
             <div className="text-[11px] uppercase tracking-wider text-white/60">Good morning</div>
-            <div className="font-display text-3xl">{currentAthlete.name.split(" ")[0]} 👋</div>
+            <div className="font-display text-3xl truncate">{currentAthlete.name.split(" ")[0]} 👋</div>
             <div className="flex items-center gap-2 mt-1">
               <SportTag sport={currentAthlete.sport} />
-              <span className="text-[11px] text-white/70">{currentAthlete.position}</span>
+              <span className="text-[11px] text-white/70 truncate">{currentAthlete.position}</span>
             </div>
           </div>
-          <div className="text-right">
+          <div className="text-right shrink-0">
             <div className="font-display text-4xl text-gold leading-none">{readiness}</div>
             <div className="text-[10px] uppercase tracking-wider text-white/60">Readiness</div>
           </div>
         </div>
 
-        <div className="mt-5 flex items-center gap-2 bg-white/10 rounded-full px-3 py-2 text-xs">
-          <Flame className="h-4 w-4 text-gold" />
+        <div className="mt-4 flex items-center gap-2 bg-white/10 rounded-full px-3 py-2 text-xs">
+          <Flame className="h-4 w-4 text-gold shrink-0" />
           <span className="font-bold">{currentAthlete.streak}-day streak</span>
-          <span className="text-white/60 ml-auto">Attendance {currentAthlete.attendance}%</span>
+          <span className="text-white/60 ml-auto truncate">Attendance {currentAthlete.attendance}%</span>
         </div>
       </div>
 
-      <div className="px-5 -mt-4 relative z-10">
+      <div className="px-5 pt-3 relative z-10">
         {/* Daily check-in nudge */}
         {!checkedIn && (
           <button
@@ -74,19 +74,28 @@ function AthleteHome() {
             <div className="bg-gold text-navy-deep rounded-full p-2 shrink-0">
               <BellRing className="h-4 w-4" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="text-[11px] uppercase tracking-wider text-gold font-bold">Morning check-in</div>
               <div className="text-sm font-bold">Log sleep, soreness & readiness</div>
               <div className="text-[11px] text-muted-foreground">Takes 20 seconds · counts toward your readiness score</div>
             </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
           </button>
         )}
         {checkedIn && (
-          <div className="bg-success/10 border border-success/40 rounded-2xl p-2.5 flex items-center gap-2 mb-3 text-xs">
-            <Moon className="h-3.5 w-3.5 text-success" />
-            <span><span className="font-bold">{sleep.toFixed(1)}h sleep</span> · soreness <span className="font-bold">{soreness}/10</span></span>
-            <button onClick={() => setShowCheckIn(true)} className="ml-auto text-[10px] uppercase tracking-wider font-bold text-navy">Update</button>
+          <div className="bg-success/10 border border-success/40 rounded-2xl p-3 flex items-center gap-2 mb-3 text-xs">
+            <Moon className="h-3.5 w-3.5 text-success shrink-0" />
+            <span className="truncate">
+              <span className="font-bold">{sleep.toFixed(1)}h sleep</span>
+              <span className="text-muted-foreground"> · soreness </span>
+              <span className="font-bold">{soreness}/10</span>
+            </span>
+            <button
+              onClick={() => setShowCheckIn(true)}
+              className="ml-auto text-[10px] uppercase tracking-wider font-bold text-navy hover:text-gold shrink-0"
+            >
+              Update
+            </button>
           </div>
         )}
 
