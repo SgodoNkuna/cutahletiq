@@ -118,7 +118,7 @@ function CoachHome() {
         </div>
 
         {/* 7-day load + recovery trends — side by side */}
-        <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="mt-3 grid grid-cols-2 gap-1.5">
           <TrendCard
             title="Squad RPE"
             unit=""
@@ -222,19 +222,19 @@ function CoachHome() {
 
         {/* Bulk Nudge banner */}
         {pendingNudgeCount > 0 && (
-          <div className="bg-gold/10 border border-gold/40 rounded-xl p-3 mb-2 flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-gold text-navy-deep flex items-center justify-center shrink-0">
-              <Bell className="h-4 w-4" />
+          <div className="bg-gold/10 border border-gold/40 rounded-xl p-2.5 mb-2 flex items-center gap-2">
+            <div className="h-8 w-8 rounded-full bg-gold text-navy-deep flex items-center justify-center shrink-0">
+              <Bell className="h-3.5 w-3.5" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-bold leading-tight">
-                {pendingNudgeCount} athlete{pendingNudgeCount === 1 ? "" : "s"} haven't checked in
+              <div className="text-[13px] font-bold leading-tight">
+                {pendingNudgeCount} need{pendingNudgeCount === 1 ? "s" : ""} a check-in
               </div>
-              <div className="text-[11px] text-muted-foreground">Send a one-tap reminder push</div>
+              <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">One-tap reminder push</div>
             </div>
             <button
               onClick={handleNudgeAll}
-              className="shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider bg-gold text-navy-deep border border-gold hover:scale-105 active:scale-95 transition-transform"
+              className="shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider bg-gold text-navy-deep border border-gold hover:scale-105 active:scale-95 transition-transform"
             >
               <Bell className="h-3 w-3" />
               Nudge all
@@ -374,16 +374,16 @@ function TrendCard({
   const isGood = higherIsBad ? delta < 0 : delta > 0;
   const deltaColor = isBad ? "text-destructive" : isGood ? "text-success" : "text-muted-foreground";
   return (
-    <div className="bg-card rounded-2xl border p-3">
-      <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold">{title} · 7d</div>
-      <div className="font-display text-xl leading-none mt-0.5 flex items-baseline gap-1">
-        {today.toFixed(1)}{unit && <span className="text-[11px] text-muted-foreground font-sans">{unit}</span>}
-        <span className={cn("text-[10px] flex items-center gap-0.5 font-bold ml-auto", deltaColor)}>
+    <div className="bg-card rounded-2xl border p-2.5">
+      <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold truncate">{title} · 7d</div>
+      <div className="font-display text-lg leading-none mt-1 flex items-baseline gap-1">
+        <span className="truncate">{today.toFixed(1)}{unit && <span className="text-[10px] text-muted-foreground font-sans ml-0.5">{unit}</span>}</span>
+        <span className={cn("text-[10px] flex items-center gap-0.5 font-bold ml-auto shrink-0", deltaColor)}>
           <TrendingUp className={cn("h-2.5 w-2.5", delta < 0 && "rotate-180")} />
           {delta > 0 ? "+" : ""}{delta}
         </span>
       </div>
-      <Sparkline data={data} height={44} yMin={yMin} yMax={yMax} showLastLabel={false} />
+      <Sparkline data={data} height={40} yMin={yMin} yMax={yMax} showLastLabel={false} />
     </div>
   );
 }
