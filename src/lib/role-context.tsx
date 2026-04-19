@@ -26,6 +26,14 @@ export type SkipNotice = {
   at: number;
 };
 
+export type DailyCheckInState = {
+  sleep: number;
+  soreness: number;
+  readiness: number;
+  mood: string;
+  at: number;
+};
+
 type RoleContextType = {
   role: Role;
   setRole: (role: Role) => void;
@@ -48,6 +56,10 @@ type RoleContextType = {
   // Calendar overrides for drag-to-reschedule
   eventOverrides: Record<string, { date: string; time: string }>;
   rescheduleEvent: (id: string, date: string, time: string) => void;
+
+  // Persisted daily check-in for the current athlete (survives navigation)
+  dailyCheckIn: DailyCheckInState | null;
+  setDailyCheckIn: (s: DailyCheckInState | null) => void;
 };
 
 const RoleContext = React.createContext<RoleContextType | null>(null);

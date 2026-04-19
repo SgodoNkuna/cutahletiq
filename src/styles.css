@@ -165,4 +165,11 @@
     to { opacity: 1; transform: translateY(0); }
   }
   .animate-fade-up { animation: fade-up 0.4s ease-out both; }
+
+  @keyframes slide-down-soft {
+    0% { opacity: 0; transform: translateY(-10px) scale(0.98); max-height: 0; margin-bottom: 0; }
+    60% { opacity: 1; }
+    100% { opacity: 1; transform: translateY(0) scale(1); max-height: 80px; margin-bottom: 0.75rem; }
+  }
+  .animate-slide-down-soft { animation: slide-down-soft 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
 }
