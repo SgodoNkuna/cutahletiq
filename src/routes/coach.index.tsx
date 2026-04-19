@@ -220,6 +220,33 @@ function CoachHome() {
           }
         />
 
+        {/* Bulk Nudge banner */}
+        {pendingNudgeCount > 0 && (
+          <div className="bg-gold/10 border border-gold/40 rounded-xl p-3 mb-2 flex items-center gap-3">
+            <div className="h-9 w-9 rounded-full bg-gold text-navy-deep flex items-center justify-center shrink-0">
+              <Bell className="h-4 w-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold leading-tight">
+                {pendingNudgeCount} athlete{pendingNudgeCount === 1 ? "" : "s"} haven't checked in
+              </div>
+              <div className="text-[11px] text-muted-foreground">Send a one-tap reminder push</div>
+            </div>
+            <button
+              onClick={handleNudgeAll}
+              className="shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider bg-gold text-navy-deep border border-gold hover:scale-105 active:scale-95 transition-transform"
+            >
+              <Bell className="h-3 w-3" />
+              Nudge all
+            </button>
+          </div>
+        )}
+        {pendingNudgeCount === 0 && missingAthletes.length > 0 && (
+          <div className="bg-success/10 border border-success/30 rounded-xl p-2.5 mb-2 text-[11px] text-success font-bold flex items-center gap-2">
+            <Bell className="h-3.5 w-3.5" /> All pending athletes nudged
+          </div>
+        )}
+
         <div className="flex gap-1.5 overflow-x-auto pb-2 -mx-1 px-1">
           {["All", ...SPORTS].map((s) => (
             <button
