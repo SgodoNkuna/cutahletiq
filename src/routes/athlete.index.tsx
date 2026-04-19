@@ -7,6 +7,7 @@ import { DailyCheckIn } from "@/components/DailyCheckIn";
 import { SkipPracticeSheet } from "@/components/SkipPracticeSheet";
 import { currentAthlete, todaysWorkout, leaderboard, calendarEvents, EVENT_KIND_META, TODAY_ISO } from "@/data/mock";
 import { Dumbbell, HeartPulse, Trophy, Flame, ChevronRight, Calendar, BellRing, XCircle, Moon } from "lucide-react";
+import { useRole } from "@/lib/role-context";
 
 export const Route = createFileRoute("/athlete/")({
   head: () => ({
@@ -20,16 +21,20 @@ export const Route = createFileRoute("/athlete/")({
 
 function AthleteHome() {
   const myRank = leaderboard.find((l) => l.name === currentAthlete.name)?.rank ?? "—";
-  const [readiness, setReadiness] = React.useState(currentAthlete.readiness);
-  const [sleep, setSleep] = React.useState(7.4);
-  const [soreness, setSoreness] = React.useState(2);
-  const [checkedIn, setCheckedIn] = React.useState(false);
+  const { dailyCheckIn, setDailyCheckIn } = useRole();
+  const checkedIn = !!dailyCheckIn;
+  const sleep = dailyCheckIn?.sleep ?? 7.4;
+  const soreness = dailyCheckIn?.soreness ?? 2;
+  const readiness = dailyCheckIn?.readiness ?? currentAthlete.readiness;
   const [showCheckIn, setShowCheckIn] = React.useState(false);
   const [showSkip, setShowSkip] = React.useState(false);
+  const [justCheckedIn, setJustCheckedIn] = React.useState(false);
 
-  // Soft auto-prompt for the daily check-in
+  // Soft auto-prompt for the daily check-in (only once per session, only if not yet done)
+  const promptedRef = React.useRef(false);
   React.useEffect(() => {
-    if (checkedIn) return;
+    if (checkedIn || promptedRef.current) return;
+    promptedRef.current = true;
     const t = setTimeout(() => setShowCheckIn(true), 1800);
     return () => clearTimeout(t);
   }, [checkedIn]);
@@ -83,7 +88,9 @@ function AthleteHome() {
           </button>
         )}
         {checkedIn && (
-          <div className="bg-success/10 border border-success/40 rounded-2xl p-3 flex items-center gap-2 mb-3 text-xs">
+          <div
+            className={`bg-success/10 border border-success/40 rounded-2xl p-3 flex items-center gap-2 mb-3 text-xs ${justCheckedIn ? "animate-slide-down-soft" : ""}`}
+          >
             <Moon className="h-3.5 w-3.5 text-success shrink-0" />
             <span className="truncate">
               <span className="font-bold">{sleep.toFixed(1)}h sleep</span>
@@ -187,10 +194,9 @@ function AthleteHome() {
         open={showCheckIn}
         onClose={() => setShowCheckIn(false)}
         onSubmit={(d) => {
-          setSleep(d.sleep);
-          setSoreness(d.soreness);
-          setReadiness(d.readiness);
-          setCheckedIn(true);
+          setDailyCheckIn({ ...d, at: Date.now() });
+          setJustCheckedIn(true);
+          window.setTimeout(() => setJustCheckedIn(false), 600);
         }}
       />
       <SkipPracticeSheet open={showSkip} onClose={() => setShowSkip(false)} />
