@@ -351,3 +351,39 @@ function CoachHome() {
     </MobileFrame>
   );
 }
+
+function TrendCard({
+  title,
+  unit,
+  data,
+  delta,
+  yMin,
+  yMax,
+  higherIsBad,
+}: {
+  title: string;
+  unit: string;
+  data: SparkPoint[];
+  delta: number;
+  yMin: number;
+  yMax: number;
+  higherIsBad: boolean;
+}) {
+  const today = data[data.length - 1].value;
+  const isBad = higherIsBad ? delta > 0 : delta < 0;
+  const isGood = higherIsBad ? delta < 0 : delta > 0;
+  const deltaColor = isBad ? "text-destructive" : isGood ? "text-success" : "text-muted-foreground";
+  return (
+    <div className="bg-card rounded-2xl border p-3">
+      <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold">{title} · 7d</div>
+      <div className="font-display text-xl leading-none mt-0.5 flex items-baseline gap-1">
+        {today.toFixed(1)}{unit && <span className="text-[11px] text-muted-foreground font-sans">{unit}</span>}
+        <span className={cn("text-[10px] flex items-center gap-0.5 font-bold ml-auto", deltaColor)}>
+          <TrendingUp className={cn("h-2.5 w-2.5", delta < 0 && "rotate-180")} />
+          {delta > 0 ? "+" : ""}{delta}
+        </span>
+      </div>
+      <Sparkline data={data} height={44} yMin={yMin} yMax={yMax} showLastLabel={false} />
+    </div>
+  );
+}
