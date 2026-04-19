@@ -214,6 +214,7 @@ function CalendarPage() {
             setDragOverIso={setDragOverIso}
             handleDrop={handleDrop}
             onOpen={setDetail}
+            dragEvent={dragId ? events.find((e) => e.id === dragId) ?? null : null}
           />
         )}
 
