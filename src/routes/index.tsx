@@ -5,7 +5,7 @@ import { DemoPanel } from "@/components/DemoPanel";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "CUT Athletiq — Splash" },
+      { title: "CUT Athletiq" },
       { name: "description", content: "Welcome to CUT Athletiq, the unified sport-performance platform for the Central University of Technology." },
     ],
   }),
