@@ -35,9 +35,9 @@ export function DemoPanel() {
       <SheetTrigger asChild>
         <button
           aria-label="Open demo panel"
-          className="absolute bottom-20 right-3 z-30 bg-gold text-navy-deep rounded-full px-3 py-2 text-xs font-bold shadow-lg flex items-center gap-1.5 hover:scale-105 transition-transform"
+          className="absolute bottom-24 right-4 z-30 bg-gold text-navy-deep rounded-full px-4 py-3 text-sm font-bold uppercase tracking-wider shadow-2xl ring-2 ring-gold/40 ring-offset-2 ring-offset-background/0 flex items-center gap-2 hover:scale-110 transition-transform animate-pulse-gold"
         >
-          <ClipboardList className="h-3.5 w-3.5" /> Demo
+          <ClipboardList className="h-4 w-4" /> Demo
         </button>
       </SheetTrigger>
       <SheetContent side="right" className="w-[300px] sm:w-[340px] overflow-y-auto">
