@@ -1,18 +1,34 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import * as React from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import logoUrl from "@/assets/cut-logo.png";
-import { DemoPanel } from "@/components/DemoPanel";
+import { TestModeStamp } from "@/components/TestModeStamp";
+import { useAuth, ROLE_HOME } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "CUT Athletiq" },
-      { name: "description", content: "Welcome to CUT Athletiq, the unified sport-performance platform for the Central University of Technology." },
+      { name: "description", content: "Phase 1 test build — sport-performance app for CUT athletes, coaches and physios." },
     ],
   }),
   component: SplashPage,
 });
 
 function SplashPage() {
+  const { profile, loading } = useAuth();
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (loading) return;
+    if (profile) {
+      if (!profile.onboarding_complete) {
+        navigate({ to: "/onboarding" });
+      } else {
+        navigate({ to: ROLE_HOME[profile.role] });
+      }
+    }
+  }, [profile, loading, navigate]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary via-background to-secondary/40 flex items-center justify-center py-4 px-2">
       <div className="relative w-full max-w-[430px] min-h-[calc(100vh-2rem)] sm:min-h-[860px] bg-gradient-to-b from-navy via-navy to-navy-deep rounded-[2.25rem] sm:border-[10px] border-navy-deep shadow-2xl overflow-hidden flex flex-col">
@@ -51,10 +67,10 @@ function SplashPage() {
         </div>
 
         <div className="text-center text-[10px] text-white/40 py-4 relative z-10">
-          Concept demo · Built for CUT Sports Dept. · v0.1
+          Phase 1 Test Build — Authorised Users Only
         </div>
 
-        <DemoPanel />
+        <TestModeStamp />
       </div>
     </div>
   );
