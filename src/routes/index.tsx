@@ -8,6 +8,16 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "CUT Athletiq" },
+      { name: "description", content: "Phase 1 test build — sport-performance app for CUT athletes, coaches and physios." },
+    ],
+  }),
+  component: SplashPage,
+});
+
+export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "CUT Athletiq" },
       { name: "description", content: "Welcome to CUT Athletiq, the unified sport-performance platform for the Central University of Technology." },
     ],
   }),
