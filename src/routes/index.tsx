@@ -14,16 +14,6 @@ export const Route = createFileRoute("/")({
   component: SplashPage,
 });
 
-export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "CUT Athletiq" },
-      { name: "description", content: "Welcome to CUT Athletiq, the unified sport-performance platform for the Central University of Technology." },
-    ],
-  }),
-  component: SplashPage,
-});
-
 function SplashPage() {
   const { profile, loading } = useAuth();
   const navigate = useNavigate();
