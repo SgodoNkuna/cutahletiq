@@ -52,7 +52,7 @@ function SplashPage() {
 
           <div className="mt-10 flex flex-col gap-3 w-full max-w-xs">
             <Link
-              to="/signup"
+              to="/login"
               className="bg-gold text-navy-deep font-bold uppercase tracking-wider rounded-full py-3.5 text-center hover:scale-[1.02] transition-transform shadow-xl"
             >
               Get Started
