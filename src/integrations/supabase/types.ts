@@ -47,6 +47,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "consent_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "team_members_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       data_access_log: {
@@ -86,10 +93,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "data_access_log_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "team_members_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "data_access_log_subject_id_fkey"
             columns: ["subject_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_access_log_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "team_members_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -174,6 +195,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "injury_checkins_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "team_members_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       injury_records: {
@@ -231,10 +259,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "injury_records_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "team_members_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "injury_records_physio_id_fkey"
             columns: ["physio_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "injury_records_physio_id_fkey"
+            columns: ["physio_id"]
+            isOneToOne: false
+            referencedRelation: "team_members_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -279,10 +321,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "nudges_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "team_members_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "nudges_sender_id_fkey"
             columns: ["sender_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nudges_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "team_members_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -318,6 +374,13 @@ export type Database = {
             columns: ["athlete_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_records_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "team_members_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -427,6 +490,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "programmes_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "team_members_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "programmes_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
@@ -506,6 +576,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "teams_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "team_members_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       workout_logs: {
@@ -551,6 +628,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "workout_logs_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "team_members_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "workout_logs_exercise_id_fkey"
             columns: ["exercise_id"]
             isOneToOne: false
@@ -583,10 +667,67 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "injury_records_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "team_members_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_members_safe: {
+        Row: {
+          avatar_url: string | null
+          first_name: string | null
+          id: string | null
+          last_name: string | null
+          position: string | null
+          role: Database["public"]["Enums"]["app_role"] | null
+          sport: string | null
+          team_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          first_name?: string | null
+          id?: string | null
+          last_name?: string | null
+          position?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
+          sport?: string | null
+          team_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          first_name?: string | null
+          id?: string | null
+          last_name?: string | null
+          position?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
+          sport?: string | null
+          team_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_team_fk"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
     Functions: {
+      find_team_by_code: {
+        Args: { _code: string }
+        Returns: {
+          coach_id: string
+          id: string
+          name: string
+          sport: string
+        }[]
+      }
       generate_join_code: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -596,6 +737,13 @@ export type Database = {
         Returns: boolean
       }
       my_team_id: { Args: never; Returns: string }
+      profile_self_update_safe: {
+        Args: {
+          _new: Database["public"]["Tables"]["profiles"]["Row"]
+          _old: Database["public"]["Tables"]["profiles"]["Row"]
+        }
+        Returns: boolean
+      }
       team_rtp_pulse: {
         Args: never
         Returns: {
