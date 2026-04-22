@@ -1,40 +1,75 @@
 import * as React from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import logoUrl from "@/assets/cut-logo.png";
-import { ROLES, type Role } from "@/data/mock";
-import { useRole } from "@/lib/role-context";
-import { DemoPanel } from "@/components/DemoPanel";
-import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth, ROLE_HOME } from "@/lib/auth-context";
 import { Input } from "@/components/ui/input";
+import { TestModeStamp } from "@/components/TestModeStamp";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
       { title: "Sign in — CUT Athletiq" },
-      { name: "description", content: "Sign in as an athlete, coach, physio or admin." },
+      { name: "description", content: "Sign in to your CUT Athletiq locker." },
     ],
   }),
   component: LoginPage,
 });
 
-const ROLE_DEST: Record<Role, string> = {
-  athlete: "/athlete",
-  coach: "/coach",
-  physio: "/physio",
-  admin: "/admin",
-};
-
 function LoginPage() {
-  const { role, setRole } = useRole();
+  const { profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = React.useState("thabo.m@cut.ac.za");
-  const [password, setPassword] = React.useState("••••••••");
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [submitting, setSubmitting] = React.useState(false);
+  const [resetEmail, setResetEmail] = React.useState("");
+  const [showReset, setShowReset] = React.useState(false);
 
-  const handleLogin = (r: Role) => {
-    setRole(r);
-    toast.success(`Signed in as ${ROLES.find((x) => x.id === r)!.label}`);
-    navigate({ to: ROLE_DEST[r] });
+  React.useEffect(() => {
+    if (authLoading || !profile) return;
+    if (!profile.onboarding_complete) navigate({ to: "/onboarding" });
+    else navigate({ to: ROLE_HOME[profile.role] });
+  }, [profile, authLoading, navigate]);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !password) {
+      toast.error("Enter your email and password");
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    setSubmitting(false);
+    if (error) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes("invalid")) toast.error("Wrong email or password.");
+      else if (msg.includes("not confirmed")) toast.error("Please verify your email first.");
+      else toast.error("Could not sign in. Please try again.");
+      return;
+    }
+    toast.success("Signed in");
+  };
+
+  const sendReset = async () => {
+    if (!resetEmail.trim()) {
+      toast.error("Enter the email on your account");
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) {
+      toast.error("Could not send reset email. Try again.");
+      return;
+    }
+    toast.success("Check your inbox for a reset link.");
+    setShowReset(false);
+    setResetEmail("");
   };
 
   return (
@@ -53,57 +88,83 @@ function LoginPage() {
         </div>
 
         <div className="px-6 -mt-6 flex-1 overflow-y-auto pb-8">
-          <div className="bg-card rounded-2xl shadow-lg p-5 border">
-            <div className="space-y-3">
-              <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Email</label>
-                <Input value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1" />
-              </div>
-              <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Password</label>
-                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1" />
-              </div>
+          <form onSubmit={submit} className="bg-card rounded-2xl shadow-lg p-5 border space-y-3">
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Email</label>
+              <Input
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@cut.ac.za"
+                className="mt-1"
+                required
+              />
             </div>
-
-            <div className="mt-5">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">I am a…</div>
-              <div className="grid grid-cols-2 gap-2">
-                {ROLES.map((r) => (
-                  <button
-                    key={r.id}
-                    onClick={() => setRole(r.id as Role)}
-                    className={cn(
-                      "rounded-xl border-2 px-3 py-3 text-left transition-all",
-                      role === r.id
-                        ? "border-gold bg-gold/10"
-                        : "border-border hover:border-navy/40",
-                    )}
-                  >
-                    <div className="text-2xl">{r.emoji}</div>
-                    <div className="text-sm font-bold mt-0.5">{r.label}</div>
-                  </button>
-                ))}
-              </div>
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Password</label>
+              <Input
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1"
+                required
+                minLength={8}
+              />
             </div>
-
             <button
-              onClick={() => handleLogin(role)}
-              className="mt-5 w-full bg-navy text-primary-foreground font-bold uppercase tracking-wider rounded-full py-3 hover:bg-navy-deep transition-colors"
+              type="submit"
+              disabled={submitting}
+              className="w-full bg-navy text-primary-foreground font-bold uppercase tracking-wider rounded-full py-3 hover:bg-navy-deep transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
             >
-              Sign in as {ROLES.find((r) => r.id === role)!.label}
+              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+              Sign in
             </button>
-
-            <div className="mt-3 text-center text-[11px] text-muted-foreground">
-              Forgot password? · Sign in with CUT SSO
+            <div className="text-center text-[11px] text-muted-foreground">
+              <button
+                type="button"
+                onClick={() => setShowReset((v) => !v)}
+                className="hover:text-foreground underline"
+              >
+                Forgot password?
+              </button>
+              <span className="mx-2">·</span>
+              <Link to="/signup" className="hover:text-foreground underline font-bold">
+                Create account
+              </Link>
             </div>
-          </div>
+            {showReset && (
+              <div className="rounded-lg border bg-secondary/40 p-3 mt-2 space-y-2">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Reset password
+                </div>
+                <Input
+                  type="email"
+                  placeholder="email on account"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={sendReset}
+                  className="w-full bg-gold text-navy-deep font-bold uppercase tracking-wider rounded-full py-2 text-xs hover:scale-[1.01] transition-transform"
+                >
+                  Send reset link
+                </button>
+              </div>
+            )}
+          </form>
 
-          <div className="mt-5 text-center text-[10px] text-muted-foreground">
-            Demo tip — pick any role above; no real auth.
-          </div>
+          <p className="mt-4 text-center text-[10px] text-muted-foreground">
+            Phase 1 Test Build — Authorised Users Only ·{" "}
+            <Link to="/privacy" className="underline hover:text-foreground">
+              Privacy
+            </Link>
+          </p>
         </div>
 
-        <DemoPanel />
+        <TestModeStamp />
       </div>
     </div>
   );
