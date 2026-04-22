@@ -32,17 +32,14 @@ function JoinTeamPage() {
       return;
     }
     setLooking(true);
-    const { data, error } = await supabase
-      .from("teams")
-      .select("id, name, sport")
-      .eq("join_code", c)
-      .maybeSingle();
+    const { data, error } = await supabase.rpc("find_team_by_code", { _code: c });
     setLooking(false);
-    if (error || !data) {
+    const found = Array.isArray(data) ? data[0] : null;
+    if (error || !found) {
       toast.error("No team matches that code.");
       return;
     }
-    setTeam(data);
+    setTeam({ id: found.id, name: found.name, sport: found.sport });
   };
 
   const join = async () => {
