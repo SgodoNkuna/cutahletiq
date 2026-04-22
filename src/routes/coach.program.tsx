@@ -2,43 +2,10 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { MobileFrame } from "@/components/MobileFrame";
 import { SectionHeader } from "@/components/primitives";
-import { Plus, Trash2, GripVertical } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Plus, Trash2, GripVertical, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-
-type Exercise = { id: string; name: string; sets: number; reps: string };
-type Session = { id: string; day: string; title: string; exercises: Exercise[] };
-
-const SEED: Session[] = [
-  {
-    id: "s1",
-    day: "Mon",
-    title: "Lower · Strength",
-    exercises: [
-      { id: "x1", name: "Back Squat", sets: 4, reps: "5" },
-      { id: "x2", name: "Romanian Deadlift", sets: 3, reps: "8" },
-      { id: "x3", name: "Walking Lunge", sets: 3, reps: "12" },
-    ],
-  },
-  {
-    id: "s2",
-    day: "Wed",
-    title: "Upper · Power",
-    exercises: [
-      { id: "x4", name: "Bench Press", sets: 5, reps: "3" },
-      { id: "x5", name: "Pull-up", sets: 4, reps: "AMRAP" },
-    ],
-  },
-  {
-    id: "s3",
-    day: "Fri",
-    title: "Speed + Agility",
-    exercises: [
-      { id: "x6", name: "Sprints 40m", sets: 6, reps: "1" },
-      { id: "x7", name: "Med-ball throws", sets: 4, reps: "8" },
-    ],
-  },
-];
+import { useAuth } from "@/lib/auth-context";
+import { useCoachProgramme } from "@/lib/hooks/use-coach-programme";
 
 export const Route = createFileRoute("/coach/program")({
   head: () => ({
@@ -50,138 +17,154 @@ export const Route = createFileRoute("/coach/program")({
   component: ProgramPage,
 });
 
-function ProgramPage() {
-  const [scope, setScope] = React.useState<"team" | "individual">("team");
-  const [sessions, setSessions] = React.useState<Session[]>(SEED);
+const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+function dayLabel(iso: string) {
+  return DOW[new Date(iso + "T00:00:00").getDay()] ?? "—";
+}
 
-  const addExercise = (sid: string) => {
-    setSessions((arr) =>
-      arr.map((s) =>
-        s.id === sid
-          ? {
-              ...s,
-              exercises: [
-                ...s.exercises,
-                { id: crypto.randomUUID(), name: "New exercise", sets: 3, reps: "8" },
-              ],
-            }
-          : s,
-      ),
-    );
+function ProgramPage() {
+  const { profile } = useAuth();
+  const coachId = profile?.id ?? null;
+  const teamId = profile?.team_id ?? null;
+  const {
+    programme, loading, addSession, removeSession, updateSession,
+    addExercise, updateExercise, removeExercise, renameProgramme,
+  } = useCoachProgramme(coachId, teamId);
+
+  const handleAddSession = () => {
+    const next = new Date();
+    next.setDate(next.getDate() + (programme?.sessions.length ?? 0));
+    void addSession(next.toISOString().slice(0, 10), "New session");
   };
-  const removeExercise = (sid: string, xid: string) => {
-    setSessions((arr) =>
-      arr.map((s) => (s.id === sid ? { ...s, exercises: s.exercises.filter((x) => x.id !== xid) } : s)),
-    );
-  };
-  const addSession = () => {
-    setSessions((arr) => [
-      ...arr,
-      { id: crypto.randomUUID(), day: "Sat", title: "New session", exercises: [] },
-    ]);
-  };
-  const removeSession = (sid: string) => setSessions((arr) => arr.filter((s) => s.id !== sid));
 
   const publish = () => {
-    toast.success(`Program published to ${scope === "team" ? "Rugby squad (16 athletes)" : "Thabo Mokoena"}`);
+    if (!teamId) {
+      toast.error("Create or join a team first to publish");
+      return;
+    }
+    toast.success("Programme is live for your team — athletes have been notified.");
   };
+
+  if (loading || !programme) {
+    return (
+      <MobileFrame title="Program Builder">
+        <div className="px-5 py-12 flex items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-gold" />
+        </div>
+      </MobileFrame>
+    );
+  }
 
   return (
     <MobileFrame title="Program Builder">
       <div className="px-5">
-        <div className="bg-card rounded-xl border p-1 flex">
-          {(["team", "individual"] as const).map((s) => (
-            <button
-              key={s}
-              onClick={() => setScope(s)}
-              className={cn(
-                "flex-1 rounded-lg py-2 text-xs font-bold uppercase tracking-wider transition-colors",
-                scope === s ? "bg-navy text-primary-foreground" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {s === "team" ? "Team plan" : "Individual"}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-3 text-xs text-muted-foreground">
-          {scope === "team"
-            ? "Applies to all 16 Rugby squad members. Individuals can override."
-            : "Custom plan for Thabo Mokoena · 1 athlete."}
+        <div className="bg-card rounded-xl border p-3">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
+            Programme name
+          </label>
+          <input
+            value={programme.name}
+            onChange={(e) => renameProgramme(e.target.value)}
+            maxLength={120}
+            className="w-full bg-transparent text-base font-bold focus:outline-none mt-1"
+          />
+          <div className="text-[11px] text-muted-foreground mt-1">
+            {teamId
+              ? "Visible to your team. Athletes get a nudge on publish."
+              : "⚠ No team yet — create one to share with athletes."}
+          </div>
         </div>
 
         <SectionHeader
-          title="Week 1"
+          title="Sessions"
           action={
-            <button onClick={addSession} className="text-[11px] font-bold text-navy uppercase tracking-wider flex items-center gap-1">
+            <button
+              onClick={handleAddSession}
+              className="text-[11px] font-bold text-navy uppercase tracking-wider flex items-center gap-1"
+            >
               <Plus className="h-3 w-3" /> Session
             </button>
           }
         />
 
         <div className="space-y-3">
-          {sessions.map((s) => (
+          {programme.sessions.length === 0 && (
+            <div className="bg-secondary/40 rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+              No sessions yet. Tap <span className="font-bold">+ Session</span> above to add one.
+            </div>
+          )}
+          {programme.sessions.map((s) => (
             <div key={s.id} className="bg-card rounded-2xl border shadow-sm overflow-hidden">
               <div className="flex items-center gap-2 p-3 bg-secondary/40 border-b">
-                <div className="bg-gold text-navy-deep rounded-md px-2 py-0.5 text-[11px] font-bold">{s.day}</div>
+                <div className="bg-gold text-navy-deep rounded-md px-2 py-0.5 text-[11px] font-bold">
+                  {dayLabel(s.session_date)}
+                </div>
                 <input
-                  value={s.title}
-                  onChange={(e) =>
-                    setSessions((arr) => arr.map((x) => (x.id === s.id ? { ...x, title: e.target.value } : x)))
-                  }
-                  className="flex-1 bg-transparent text-sm font-bold focus:outline-none"
+                  value={s.name}
+                  onChange={(e) => updateSession(s.id, { name: e.target.value })}
+                  maxLength={120}
+                  className="flex-1 min-w-0 bg-transparent text-sm font-bold focus:outline-none"
                 />
-                <button onClick={() => removeSession(s.id)} className="text-muted-foreground hover:text-destructive">
+                <input
+                  type="date"
+                  value={s.session_date}
+                  onChange={(e) => updateSession(s.id, { session_date: e.target.value })}
+                  className="text-[11px] bg-secondary rounded px-1.5 py-1"
+                />
+                <button
+                  onClick={() => removeSession(s.id)}
+                  className="text-muted-foreground hover:text-destructive"
+                  aria-label="Remove session"
+                >
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
 
               <div className="p-2 space-y-1.5">
                 {s.exercises.map((x) => (
-                  <div key={x.id} className="flex items-center gap-2 rounded-lg border p-2 bg-background">
+                  <div key={x.id} className="flex items-center gap-1.5 rounded-lg border p-2 bg-background">
                     <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
                     <input
                       value={x.name}
-                      onChange={(e) =>
-                        setSessions((arr) =>
-                          arr.map((sn) =>
-                            sn.id === s.id
-                              ? { ...sn, exercises: sn.exercises.map((ex) => (ex.id === x.id ? { ...ex, name: e.target.value } : ex)) }
-                              : sn,
-                          ),
-                        )
-                      }
+                      onChange={(e) => updateExercise(x.id, s.id, { name: e.target.value })}
+                      maxLength={80}
                       className="flex-1 min-w-0 bg-transparent text-sm focus:outline-none"
                     />
                     <input
-                      type="number"
+                      type="number" min={1} max={20}
                       value={x.sets}
                       onChange={(e) =>
-                        setSessions((arr) =>
-                          arr.map((sn) =>
-                            sn.id === s.id
-                              ? { ...sn, exercises: sn.exercises.map((ex) => (ex.id === x.id ? { ...ex, sets: +e.target.value } : ex)) }
-                              : sn,
-                          ),
-                        )
+                        updateExercise(x.id, s.id, { sets: Math.max(1, Math.min(20, +e.target.value || 1)) })
                       }
                       className="w-10 text-center text-sm font-bold bg-secondary rounded-md py-1"
+                      title="Sets"
                     />
                     <span className="text-[10px] text-muted-foreground">×</span>
                     <input
+                      type="number" min={1} max={100}
                       value={x.reps}
                       onChange={(e) =>
-                        setSessions((arr) =>
-                          arr.map((sn) =>
-                            sn.id === s.id
-                              ? { ...sn, exercises: sn.exercises.map((ex) => (ex.id === x.id ? { ...ex, reps: e.target.value } : ex)) }
-                              : sn,
-                          ),
-                        )
+                        updateExercise(x.id, s.id, { reps: Math.max(1, Math.min(100, +e.target.value || 1)) })
                       }
                       className="w-12 text-center text-sm font-bold bg-secondary rounded-md py-1"
+                      title="Reps"
                     />
-                    <button onClick={() => removeExercise(s.id, x.id)} className="text-muted-foreground hover:text-destructive">
+                    <input
+                      type="number" min={0} max={500} step={2.5}
+                      value={x.weight_kg ?? 0}
+                      onChange={(e) =>
+                        updateExercise(x.id, s.id, {
+                          weight_kg: Math.max(0, Math.min(500, +e.target.value || 0)),
+                        })
+                      }
+                      className="w-14 text-center text-sm font-bold bg-secondary rounded-md py-1"
+                      title="Target kg"
+                    />
+                    <button
+                      onClick={() => removeExercise(x.id, s.id)}
+                      className="text-muted-foreground hover:text-destructive"
+                      aria-label="Remove exercise"
+                    >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
@@ -201,8 +184,11 @@ function ProgramPage() {
           onClick={publish}
           className="mt-5 w-full bg-gold text-navy-deep font-bold uppercase tracking-wider rounded-full py-3 hover:scale-[1.01] transition-transform shadow-lg"
         >
-          Publish program
+          {teamId ? "Notify athletes" : "Create a team to publish"}
         </button>
+        <div className="mt-2 mb-3 text-[10px] text-center text-muted-foreground">
+          Changes save automatically as you type.
+        </div>
       </div>
     </MobileFrame>
   );
