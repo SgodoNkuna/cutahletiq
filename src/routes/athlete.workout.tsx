@@ -3,14 +3,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import confetti from "canvas-confetti";
 import { MobileFrame } from "@/components/MobileFrame";
 import { PRBadge } from "@/components/primitives";
-import { TourOverlay } from "@/components/TourOverlay";
 import { RPEModal } from "@/components/RPEModal";
-import { todaysWorkout, currentAthlete } from "@/data/mock";
 import { cn } from "@/lib/utils";
-import { Check, Plus, Minus } from "lucide-react";
+import { Check, Plus, Minus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useRole } from "@/lib/role-context";
 import { rpeSchema } from "@/lib/sanitize";
+import { useAuth } from "@/lib/auth-context";
+import { supabase } from "@/integrations/supabase/client";
+import { fetchTodaysSessionForAthlete, type DBSession, type DBExercise } from "@/lib/hooks/use-coach-programme";
 
 export const Route = createFileRoute("/athlete/workout")({
   head: () => ({
@@ -26,18 +26,90 @@ type SetState = { reps: number; weight: number; done: boolean };
 
 function WorkoutPage() {
   const navigate = useNavigate();
-  const [state, setState] = React.useState(() =>
-    todaysWorkout.exercises.map((ex) => ex.sets.map<SetState>((s) => ({ ...s, done: false }))),
-  );
+  const { profile } = useAuth();
+  const [session, setSession] = React.useState<DBSession | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [state, setState] = React.useState<SetState[][]>([]);
+  const [prs, setPRs] = React.useState<Record<string, number>>({}); // exercise_name -> max kg
   const [askRPE, setAskRPE] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+
+  // Load today's session + athlete's existing PRs
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const s = await fetchTodaysSessionForAthlete();
+      if (cancelled) return;
+      setSession(s);
+      if (s) {
+        setState(
+          s.exercises.map((ex) =>
+            Array.from({ length: ex.sets }, () => ({
+              reps: ex.reps,
+              weight: ex.weight_kg ?? 0,
+              done: false,
+            })),
+          ),
+        );
+      }
+      if (profile?.id) {
+        const { data: prRows } = await supabase
+          .from("personal_records")
+          .select("exercise_name, weight_kg")
+          .eq("athlete_id", profile.id);
+        if (!cancelled && prRows) {
+          const map: Record<string, number> = {};
+          for (const r of prRows) {
+            const w = Number(r.weight_kg);
+            if (!map[r.exercise_name] || w > map[r.exercise_name]) map[r.exercise_name] = w;
+          }
+          setPRs(map);
+        }
+      }
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [profile?.id]);
+
+  if (loading) {
+    return (
+      <MobileFrame title="Workout">
+        <div className="px-5 py-12 flex items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-gold" />
+        </div>
+      </MobileFrame>
+    );
+  }
+
+  if (!session) {
+    return (
+      <MobileFrame title="Workout">
+        <div className="px-5 py-10 text-center">
+          <div className="text-5xl mb-3">🏖</div>
+          <div className="font-display text-2xl">No session scheduled</div>
+          <p className="text-sm text-muted-foreground mt-2">
+            Your coach hasn't published a session for today. Check back later or browse your calendar.
+          </p>
+          <button
+            onClick={() => navigate({ to: "/athlete" })}
+            className="mt-6 bg-gold text-navy-deep font-bold uppercase tracking-wider rounded-full py-3 px-6"
+          >
+            Back home
+          </button>
+        </div>
+      </MobileFrame>
+    );
+  }
 
   const totalSets = state.flat().length;
   const doneSets = state.flat().filter((s) => s.done).length;
+
   const newPRs = state
     .map((sets, i) => {
-      const ex = todaysWorkout.exercises[i];
+      const ex = session.exercises[i];
       const max = Math.max(...sets.filter((s) => s.done).map((s) => s.weight), 0);
-      return ex.pr && max > ex.pr ? { name: ex.name, weight: max } : null;
+      const currentPR = prs[ex.name] ?? 0;
+      return max > currentPR && max > 0 ? { name: ex.name, weight: max } : null;
     })
     .filter(Boolean) as { name: string; weight: number }[];
 
@@ -49,29 +121,83 @@ function WorkoutPage() {
     );
   };
 
-  const finish = () => setAskRPE(true);
+  const finish = () => {
+    if (doneSets === 0) {
+      toast.error("Tick at least one set first");
+      return;
+    }
+    setAskRPE(true);
+  };
 
-  const { addRPE } = useRole();
-  const submitRPE = (rpe: number) => {
+  const submitRPE = async (rpe: number) => {
     const parsed = rpeSchema.safeParse(rpe);
     if (!parsed.success) {
       toast.error("Invalid RPE value");
       return;
     }
+    if (!profile?.id || !session) return;
     setAskRPE(false);
-    addRPE({ athlete: currentAthlete.name, rpe: parsed.data, session: todaysWorkout.title });
+    setSaving(true);
+
+    // Persist all done sets as workout_logs
+    const rows: Array<{
+      athlete_id: string; exercise_id: string; session_id: string;
+      set_number: number; actual_reps: number; actual_weight_kg: number; is_pr: boolean;
+    }> = [];
+    state.forEach((sets, ei) => {
+      const ex = session.exercises[ei];
+      sets.forEach((s, si) => {
+        if (!s.done) return;
+        const isPR = newPRs.some((p) => p.name === ex.name && s.weight === p.weight);
+        rows.push({
+          athlete_id: profile.id,
+          exercise_id: ex.id,
+          session_id: session.id,
+          set_number: si + 1,
+          actual_reps: s.reps,
+          actual_weight_kg: s.weight,
+          is_pr: isPR,
+        });
+      });
+    });
+
+    const { error: logErr } = await supabase.from("workout_logs").insert(rows);
+    if (logErr) {
+      setSaving(false);
+      toast.error("Could not save workout");
+      return;
+    }
+
+    // Persist PRs
+    if (newPRs.length > 0) {
+      const prRows = newPRs.map((p) => {
+        const exIndex = session.exercises.findIndex((e: DBExercise) => e.name === p.name);
+        const setEntry = state[exIndex]?.find((s) => s.done && s.weight === p.weight);
+        return {
+          athlete_id: profile.id,
+          exercise_name: p.name,
+          weight_kg: p.weight,
+          reps: setEntry?.reps ?? 1,
+        };
+      });
+      await supabase.from("personal_records").insert(prRows);
+    }
+
+    setSaving(false);
     confetti({
       particleCount: 120,
       spread: 80,
       origin: { y: 0.4 },
       colors: ["#F5A800", "#003478", "#ffffff"],
     });
-    toast.success(`Session saved · ${doneSets}/${totalSets} sets · RPE ${parsed.data}/10 · +${newPRs.length} PR${newPRs.length === 1 ? "" : "s"}`);
+    toast.success(
+      `Saved · ${doneSets}/${totalSets} sets · RPE ${parsed.data}/10 · +${newPRs.length} PR${newPRs.length === 1 ? "" : "s"}`,
+    );
     setTimeout(() => navigate({ to: "/athlete/progress" }), 900);
   };
 
   return (
-    <MobileFrame title={todaysWorkout.title}>
+    <MobileFrame title={session.name}>
       <div className="px-5">
         {/* Progress bar */}
         <div className="bg-card rounded-xl border p-3">
@@ -82,29 +208,30 @@ function WorkoutPage() {
           <div className="h-2 bg-secondary rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-gold to-success transition-all"
-              style={{ width: `${(doneSets / totalSets) * 100}%` }}
+              style={{ width: `${totalSets ? (doneSets / totalSets) * 100 : 0}%` }}
             />
           </div>
         </div>
 
         <div className="space-y-4 mt-4">
-          {todaysWorkout.exercises.map((ex, ei) => {
-            const max = Math.max(...state[ei].filter((s) => s.done).map((s) => s.weight), 0);
-            const isPR = ex.pr && max > ex.pr;
+          {session.exercises.map((ex, ei) => {
+            const max = Math.max(...(state[ei] ?? []).filter((s) => s.done).map((s) => s.weight), 0);
+            const currentPR = prs[ex.name] ?? 0;
+            const isPR = max > currentPR && max > 0;
             return (
               <div key={ex.id} className="bg-card rounded-2xl border shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between p-4 border-b bg-secondary/40">
                   <div>
                     <div className="font-display text-lg leading-none">{ex.name}</div>
                     <div className="text-[11px] text-muted-foreground mt-1">
-                      Current PR: <span className="font-bold">{ex.pr} {ex.unit}</span>
+                      Current PR: <span className="font-bold">{currentPR || "—"} kg</span>
                     </div>
                   </div>
                   {isPR && <PRBadge />}
                 </div>
 
                 <div className="p-3 space-y-2">
-                  {state[ei].map((s, si) => (
+                  {(state[ei] ?? []).map((s, si) => (
                     <div
                       key={si}
                       className={cn(
@@ -150,35 +277,21 @@ function WorkoutPage() {
 
         <button
           onClick={finish}
-          className="mt-5 mb-3 w-full bg-gold text-navy-deep font-bold uppercase tracking-wider rounded-full py-3.5 hover:scale-[1.01] transition-transform shadow-lg"
+          disabled={saving}
+          className="mt-5 mb-3 w-full bg-gold text-navy-deep font-bold uppercase tracking-wider rounded-full py-3.5 hover:scale-[1.01] transition-transform shadow-lg disabled:opacity-50"
         >
-          🏁 Finish session
+          {saving ? "Saving…" : "🏁 Finish session"}
         </button>
       </div>
-      <TourOverlay
-        tourKey="athlete.workout"
-        steps={[
-          { title: "Tap ✓ on each set", body: "Sets turn green when done. Beat your PR and a 🔥 NEW PR badge auto-fires.", position: "center" },
-          { title: "Finish for confetti 🎉", body: "Hit Finish, rate the session (RPE 1-10), and your progress chart updates.", position: "bottom" },
-        ]}
-      />
       <RPEModal open={askRPE} onSubmit={submitRPE} />
     </MobileFrame>
   );
 }
 
 function NumStepper({
-  label,
-  value,
-  onChange,
-  step = 1,
-  disabled,
+  label, value, onChange, step = 1, disabled,
 }: {
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-  step?: number;
-  disabled?: boolean;
+  label: string; value: number; onChange: (v: number) => void; step?: number; disabled?: boolean;
 }) {
   return (
     <div className="flex flex-col items-center">
