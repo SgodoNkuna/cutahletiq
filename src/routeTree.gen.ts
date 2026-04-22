@@ -9,10 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PresentRouteImport } from './routes/present'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as JoinTeamRouteImport } from './routes/join-team'
 import { Route as FeedRouteImport } from './routes/feed'
+import { Route as CreateTeamRouteImport } from './routes/create-team'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PhysioIndexRouteImport } from './routes/physio.index'
@@ -25,9 +32,34 @@ import { Route as AthleteWorkoutRouteImport } from './routes/athlete.workout'
 import { Route as AthleteProgressRouteImport } from './routes/athlete.progress'
 import { Route as AthleteInjuryRouteImport } from './routes/athlete.injury'
 
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PresentRoute = PresentRouteImport.update({
   id: '/present',
   path: '/present',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -40,9 +72,19 @@ const LeaderboardRoute = LeaderboardRouteImport.update({
   path: '/leaderboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JoinTeamRoute = JoinTeamRouteImport.update({
+  id: '/join-team',
+  path: '/join-team',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FeedRoute = FeedRouteImport.update({
   id: '/feed',
   path: '/feed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreateTeamRoute = CreateTeamRouteImport.update({
+  id: '/create-team',
+  path: '/create-team',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CalendarRoute = CalendarRouteImport.update({
@@ -104,10 +146,17 @@ const AthleteInjuryRoute = AthleteInjuryRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
+  '/create-team': typeof CreateTeamRoute
   '/feed': typeof FeedRoute
+  '/join-team': typeof JoinTeamRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/present': typeof PresentRoute
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
   '/athlete/injury': typeof AthleteInjuryRoute
   '/athlete/progress': typeof AthleteProgressRoute
   '/athlete/workout': typeof AthleteWorkoutRoute
@@ -121,10 +170,17 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
+  '/create-team': typeof CreateTeamRoute
   '/feed': typeof FeedRoute
+  '/join-team': typeof JoinTeamRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/present': typeof PresentRoute
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
   '/athlete/injury': typeof AthleteInjuryRoute
   '/athlete/progress': typeof AthleteProgressRoute
   '/athlete/workout': typeof AthleteWorkoutRoute
@@ -139,10 +195,17 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
+  '/create-team': typeof CreateTeamRoute
   '/feed': typeof FeedRoute
+  '/join-team': typeof JoinTeamRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/present': typeof PresentRoute
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
   '/athlete/injury': typeof AthleteInjuryRoute
   '/athlete/progress': typeof AthleteProgressRoute
   '/athlete/workout': typeof AthleteWorkoutRoute
@@ -158,10 +221,17 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/calendar'
+    | '/create-team'
     | '/feed'
+    | '/join-team'
     | '/leaderboard'
     | '/login'
+    | '/onboarding'
     | '/present'
+    | '/privacy'
+    | '/profile'
+    | '/reset-password'
+    | '/signup'
     | '/athlete/injury'
     | '/athlete/progress'
     | '/athlete/workout'
@@ -175,10 +245,17 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/calendar'
+    | '/create-team'
     | '/feed'
+    | '/join-team'
     | '/leaderboard'
     | '/login'
+    | '/onboarding'
     | '/present'
+    | '/privacy'
+    | '/profile'
+    | '/reset-password'
+    | '/signup'
     | '/athlete/injury'
     | '/athlete/progress'
     | '/athlete/workout'
@@ -192,10 +269,17 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/calendar'
+    | '/create-team'
     | '/feed'
+    | '/join-team'
     | '/leaderboard'
     | '/login'
+    | '/onboarding'
     | '/present'
+    | '/privacy'
+    | '/profile'
+    | '/reset-password'
+    | '/signup'
     | '/athlete/injury'
     | '/athlete/progress'
     | '/athlete/workout'
@@ -210,10 +294,17 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CalendarRoute: typeof CalendarRoute
+  CreateTeamRoute: typeof CreateTeamRoute
   FeedRoute: typeof FeedRoute
+  JoinTeamRoute: typeof JoinTeamRoute
   LeaderboardRoute: typeof LeaderboardRoute
   LoginRoute: typeof LoginRoute
+  OnboardingRoute: typeof OnboardingRoute
   PresentRoute: typeof PresentRoute
+  PrivacyRoute: typeof PrivacyRoute
+  ProfileRoute: typeof ProfileRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  SignupRoute: typeof SignupRoute
   AthleteInjuryRoute: typeof AthleteInjuryRoute
   AthleteProgressRoute: typeof AthleteProgressRoute
   AthleteWorkoutRoute: typeof AthleteWorkoutRoute
@@ -227,11 +318,46 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/present': {
       id: '/present'
       path: '/present'
       fullPath: '/present'
       preLoaderRoute: typeof PresentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -248,11 +374,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LeaderboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/join-team': {
+      id: '/join-team'
+      path: '/join-team'
+      fullPath: '/join-team'
+      preLoaderRoute: typeof JoinTeamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/feed': {
       id: '/feed'
       path: '/feed'
       fullPath: '/feed'
       preLoaderRoute: typeof FeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/create-team': {
+      id: '/create-team'
+      path: '/create-team'
+      fullPath: '/create-team'
+      preLoaderRoute: typeof CreateTeamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/calendar': {
@@ -338,10 +478,17 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CalendarRoute: CalendarRoute,
+  CreateTeamRoute: CreateTeamRoute,
   FeedRoute: FeedRoute,
+  JoinTeamRoute: JoinTeamRoute,
   LeaderboardRoute: LeaderboardRoute,
   LoginRoute: LoginRoute,
+  OnboardingRoute: OnboardingRoute,
   PresentRoute: PresentRoute,
+  PrivacyRoute: PrivacyRoute,
+  ProfileRoute: ProfileRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  SignupRoute: SignupRoute,
   AthleteInjuryRoute: AthleteInjuryRoute,
   AthleteProgressRoute: AthleteProgressRoute,
   AthleteWorkoutRoute: AthleteWorkoutRoute,
@@ -355,3 +502,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

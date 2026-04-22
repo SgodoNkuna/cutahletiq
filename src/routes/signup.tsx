@@ -1,0 +1,237 @@
+import * as React from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import logoUrl from "@/assets/cut-logo.png";
+import { Input } from "@/components/ui/input";
+import { signupUser } from "@/lib/server/auth.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { TestModeStamp } from "@/components/TestModeStamp";
+import { ROLES } from "@/data/mock";
+import { ROLE_HOME, type Role } from "@/lib/auth-context";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+
+export const Route = createFileRoute("/signup")({
+  head: () => ({
+    meta: [
+      { title: "Create account — CUT Athletiq" },
+      { name: "description", content: "Sign up as an athlete, coach, physio, or admin." },
+    ],
+  }),
+  component: SignupPage,
+});
+
+function SignupPage() {
+  const navigate = useNavigate();
+  const [first, setFirst] = React.useState("");
+  const [last, setLast] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [role, setRole] = React.useState<Role>("athlete");
+  const [sport, setSport] = React.useState("");
+  const [position, setPosition] = React.useState("");
+  const [adminCode, setAdminCode] = React.useState("");
+  const [consentCoach, setConsentCoach] = React.useState(false);
+  const [consentPhysio, setConsentPhysio] = React.useState(false);
+  const [submitting, setSubmitting] = React.useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!consentCoach || !consentPhysio) {
+      toast.error("Please tick both consent boxes to continue.");
+      return;
+    }
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await signupUser({
+        data: {
+          first_name: first,
+          last_name: last,
+          email,
+          password,
+          role,
+          sport: sport || undefined,
+          position: position || undefined,
+          admin_invite_code: role === "admin" ? adminCode : undefined,
+          consent_coach_training: consentCoach,
+          consent_physio_health: consentPhysio,
+        },
+      });
+      if (!res.ok) {
+        toast.error(res.error ?? "Could not create account.");
+        setSubmitting(false);
+        return;
+      }
+      // Auto sign-in
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        toast.success("Account created. Please sign in.");
+        navigate({ to: "/login" });
+        return;
+      }
+      toast.success("Welcome to CUT Athletiq!");
+      navigate({ to: "/onboarding" });
+    } catch (err) {
+      console.error(err);
+      toast.error("Could not create account. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-secondary via-background to-secondary/40 flex items-center justify-center py-4 px-2">
+      <div className="relative w-full max-w-[430px] min-h-[calc(100vh-2rem)] sm:min-h-[860px] bg-background rounded-[2.25rem] sm:border-[10px] border-navy-deep shadow-2xl overflow-hidden flex flex-col">
+        <div className="bg-navy text-white px-6 pt-8 pb-8">
+          <div className="flex items-center gap-3">
+            <div className="bg-white rounded-lg p-1.5">
+              <img src={logoUrl} alt="CUT" className="h-7 w-auto" />
+            </div>
+            <div>
+              <div className="font-display text-xl tracking-wide leading-none">CREATE ACCOUNT</div>
+              <div className="text-[11px] text-white/60">Join the CUT Athletiq squad</div>
+            </div>
+          </div>
+        </div>
+
+        <form onSubmit={submit} className="flex-1 overflow-y-auto px-5 py-5 space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">First name</label>
+              <Input value={first} onChange={(e) => setFirst(e.target.value)} required maxLength={80} />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Last name</label>
+              <Input value={last} onChange={(e) => setLast(e.target.value)} required maxLength={80} />
+            </div>
+          </div>
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Email</label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+          </div>
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Password (min 8 chars)
+            </label>
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={8}
+              autoComplete="new-password"
+            />
+          </div>
+
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">I am a…</div>
+            <div className="grid grid-cols-2 gap-2">
+              {ROLES.map((r) => (
+                <button
+                  type="button"
+                  key={r.id}
+                  onClick={() => setRole(r.id as Role)}
+                  className={cn(
+                    "rounded-xl border-2 px-3 py-2 text-left transition-all",
+                    role === r.id ? "border-gold bg-gold/10" : "border-border hover:border-navy/40",
+                  )}
+                >
+                  <div className="text-xl">{r.emoji}</div>
+                  <div className="text-sm font-bold mt-0.5">{r.label}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {role === "athlete" && (
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Sport</label>
+                <Input value={sport} onChange={(e) => setSport(e.target.value)} placeholder="Rugby" />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Position</label>
+                <Input value={position} onChange={(e) => setPosition(e.target.value)} placeholder="Flanker" />
+              </div>
+            </div>
+          )}
+
+          {role === "coach" && (
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Sport</label>
+              <Input value={sport} onChange={(e) => setSport(e.target.value)} placeholder="Rugby" />
+            </div>
+          )}
+
+          {role === "admin" && (
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Admin invite code
+              </label>
+              <Input
+                value={adminCode}
+                onChange={(e) => setAdminCode(e.target.value)}
+                required
+                placeholder="From CUT Sports Dept."
+              />
+            </div>
+          )}
+
+          <div className="rounded-lg border bg-secondary/30 p-3 space-y-2 text-xs">
+            <div className="font-bold uppercase tracking-wider text-[10px] text-muted-foreground">
+              POPIA Consent (both required)
+            </div>
+            <label className="flex gap-2 items-start cursor-pointer">
+              <input
+                type="checkbox"
+                checked={consentCoach}
+                onChange={(e) => setConsentCoach(e.target.checked)}
+                className="mt-0.5"
+              />
+              <span>
+                I consent to my training data (workouts, RPE, attendance, readiness) being shared with my coach
+                and team admins.
+              </span>
+            </label>
+            <label className="flex gap-2 items-start cursor-pointer">
+              <input
+                type="checkbox"
+                checked={consentPhysio}
+                onChange={(e) => setConsentPhysio(e.target.checked)}
+                className="mt-0.5"
+              />
+              <span>
+                I consent to my injury check-ins and clinical records being shared <strong>only with the
+                physio</strong> assigned to my team. Coaches do not see this data.
+              </span>
+            </label>
+            <Link to="/privacy" className="text-[11px] underline hover:text-foreground">
+              Read the full Privacy Notice →
+            </Link>
+          </div>
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full bg-gold text-navy-deep font-bold uppercase tracking-wider rounded-full py-3 hover:scale-[1.01] transition-transform shadow-lg disabled:opacity-60 flex items-center justify-center gap-2"
+          >
+            {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+            Create my account
+          </button>
+          <p className="text-center text-[11px] text-muted-foreground">
+            Already have an account?{" "}
+            <Link to="/login" className="font-bold underline">
+              Sign in
+            </Link>
+          </p>
+        </form>
+
+        <TestModeStamp />
+      </div>
+    </div>
+  );
+}
