@@ -587,6 +587,15 @@ export type Database = {
       }
     }
     Functions: {
+      find_team_by_code: {
+        Args: { _code: string }
+        Returns: {
+          coach_id: string
+          id: string
+          name: string
+          sport: string
+        }[]
+      }
       generate_join_code: { Args: never; Returns: string }
       has_role: {
         Args: {
