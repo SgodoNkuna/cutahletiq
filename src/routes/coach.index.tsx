@@ -1,389 +1,172 @@
 import * as React from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { MobileFrame } from "@/components/MobileFrame";
-import { SectionHeader, StatCard, StatusPill, SportTag } from "@/components/primitives";
-import { Sparkline, type SparkPoint } from "@/components/Sparkline";
-import { TourOverlay } from "@/components/TourOverlay";
-import { roster, leaderboard, SPORTS } from "@/data/mock";
-import { cn } from "@/lib/utils";
-import { ChevronRight, BellRing, Activity, Moon, AlertCircle, Bell, TrendingUp } from "lucide-react";
+import { SectionHeader } from "@/components/primitives";
+import { useAuth } from "@/lib/auth-context";
+import { supabase } from "@/integrations/supabase/client";
+import { Copy, Loader2, Plus, RefreshCw, Users } from "lucide-react";
 import { toast } from "sonner";
-import { useRole } from "@/lib/role-context";
 
 export const Route = createFileRoute("/coach/")({
   head: () => ({
     meta: [
       { title: "Coach Dashboard — CUT Athletiq" },
-      { name: "description", content: "Squad readiness, training load and injury status at a glance." },
+      { name: "description", content: "Your team, your join code, recent training activity." },
     ],
   }),
   component: CoachHome,
 });
 
-const REASON_LABEL: Record<string, string> = {
-  injury: "Injury / pain",
-  sick: "Sick",
-  academic: "Academic",
-  personal: "Personal",
-  transport: "Transport",
-  other: "Other",
-};
-
-function timeAgo(at: number) {
-  const mins = Math.max(1, Math.round((Date.now() - at) / 60000));
-  if (mins < 60) return `${mins}m`;
-  const hrs = Math.round(mins / 60);
-  if (hrs < 24) return `${hrs}h`;
-  return `${Math.round(hrs / 24)}d`;
-}
+type Team = { id: string; name: string; sport: string; join_code: string };
+type Member = { id: string; first_name: string | null; last_name: string | null; sport: string | null; position: string | null; role: string | null };
 
 function CoachHome() {
-  const [filter, setFilter] = React.useState<string>("All");
-  const filtered = filter === "All" ? roster : roster.filter((r) => r.sport === filter);
-  const ready = roster.filter((r) => r.status === "ready").length;
-  const fatigued = roster.filter((r) => r.status === "fatigued").length;
-  const injured = roster.filter((r) => r.status === "injured").length;
+  const { profile } = useAuth();
+  const navigate = useNavigate();
+  const [team, setTeam] = React.useState<Team | null>(null);
+  const [members, setMembers] = React.useState<Member[]>([]);
+  const [loading, setLoading] = React.useState(true);
 
-  const { checkIns, rpeLogs, skipNotices } = useRole();
-  const checkInsToday = checkIns.length;
-  const avgRPE =
-    rpeLogs.length === 0
-      ? 0
-      : Math.round((rpeLogs.reduce((a, r) => a + r.rpe, 0) / rpeLogs.length) * 10) / 10;
-  const avgSleep =
-    checkIns.length === 0
-      ? 0
-      : Math.round((checkIns.reduce((a, c) => a + c.sleep, 0) / checkIns.length) * 10) / 10;
-  const flagged = checkIns.filter((c) => c.soreness >= 5 || c.readiness < 60);
+  const loadTeam = React.useCallback(async () => {
+    if (!profile) return;
+    const { data: t } = await supabase
+      .from("teams")
+      .select("id, name, sport, join_code")
+      .eq("coach_id", profile.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    setTeam(t ?? null);
+    if (t) {
+      const { data: m } = await supabase
+        .from("team_members_safe")
+        .select("id, first_name, last_name, sport, position, role")
+        .eq("team_id", t.id);
+      const cleaned: Member[] = (m ?? [])
+        .filter((r) => !!r.id)
+        .map((r) => ({
+          id: r.id as string,
+          first_name: r.first_name,
+          last_name: r.last_name,
+          sport: r.sport,
+          position: r.position,
+          role: r.role,
+        }));
+      setMembers(cleaned);
+    }
+    setLoading(false);
+  }, [profile]);
 
-  // 7-day rolling averages — last 6 days are demo baseline,
-  // today's value reflects whatever the live logs say.
-  const rpeSpark = React.useMemo<SparkPoint[]>(() => {
-    const baseline = [6.4, 7.1, 6.8, 7.5, 8.0, 7.3];
-    const today = avgRPE > 0 ? avgRPE : 7.4;
-    const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Today"];
-    return [...baseline, today].map((value, i) => ({ label: labels[i], value }));
-  }, [avgRPE]);
-  const sleepSpark = React.useMemo<SparkPoint[]>(() => {
-    const baseline = [7.2, 6.8, 7.5, 6.4, 7.0, 7.8];
-    const today = avgSleep > 0 ? avgSleep : 7.1;
-    const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Today"];
-    return [...baseline, today].map((value, i) => ({ label: labels[i], value }));
-  }, [avgSleep]);
-  const rpeDelta = +(rpeSpark[6].value - rpeSpark[5].value).toFixed(1);
-  const sleepDelta = +(sleepSpark[6].value - sleepSpark[5].value).toFixed(1);
+  React.useEffect(() => { void loadTeam(); }, [loadTeam]);
 
-  // Athletes who haven't checked in yet — show Nudge button (demo: anyone after 09:00)
-  const checkedInNames = React.useMemo(() => new Set(checkIns.map((c) => c.athlete)), [checkIns]);
-  const missingAthletes = React.useMemo(
-    () => roster.filter((r) => !checkedInNames.has(r.name) && r.status !== "injured"),
-    [checkedInNames],
-  );
-  const [nudged, setNudged] = React.useState<Set<string>>(new Set());
-  const handleNudge = (name: string) => {
-    setNudged((prev) => new Set(prev).add(name));
-    toast.success(`Nudge sent to ${name.split(" ")[0]}`, {
-      description: "Push reminder: complete your morning check-in",
-    });
+  const regenerate = async () => {
+    if (!team) return;
+    const { data: rpc } = await supabase.rpc("generate_join_code");
+    const newCode = (rpc as unknown as string) ?? "";
+    if (!newCode) { toast.error("Could not generate code"); return; }
+    const { data, error } = await supabase
+      .from("teams")
+      .update({ join_code: newCode })
+      .eq("id", team.id)
+      .select("id, name, sport, join_code")
+      .maybeSingle();
+    if (error || !data) { toast.error("Could not regenerate"); return; }
+    setTeam(data);
+    toast.success("New code generated");
   };
-  const pendingNudgeCount = missingAthletes.filter((r) => !nudged.has(r.name)).length;
-  const handleNudgeAll = () => {
-    const targets = missingAthletes.filter((r) => !nudged.has(r.name));
-    if (targets.length === 0) return;
-    setNudged((prev) => {
-      const next = new Set(prev);
-      targets.forEach((r) => next.add(r.name));
-      return next;
-    });
-    toast.success(`Nudged ${targets.length} athlete${targets.length === 1 ? "" : "s"}`, {
-      description: "Push reminders: complete your morning check-in",
-    });
+
+  const copyCode = async () => {
+    if (!team) return;
+    try { await navigator.clipboard.writeText(team.join_code); toast.success("Code copied"); }
+    catch { toast.error("Copy failed"); }
   };
+
+  if (!profile) return null;
+
+  const greetingName = profile.first_name?.trim() ? `Coach ${profile.first_name}` : "Coach";
+  const athletes = members.filter((m) => m.role === "athlete");
 
   return (
-    <MobileFrame title="Coach Mensah">
+    <MobileFrame title={greetingName}>
       <div className="px-5">
-        <div className="grid grid-cols-3 gap-2">
-          <StatCard label="Ready" value={ready} accent="success" />
-          <StatCard label="Fatigued" value={fatigued} accent="gold" />
-          <StatCard label="Injured" value={injured} accent="danger" />
-        </div>
-
-        {/* Live athlete feed */}
-        <SectionHeader title="Today · live" />
-        <div className="grid grid-cols-3 gap-2">
-          <StatCard label="Check-ins" value={checkInsToday} hint={`Avg sleep ${avgSleep || "—"}h`} accent="navy" />
-          <StatCard label="Avg RPE" value={avgRPE || "—"} hint={`${rpeLogs.length} sessions`} accent="gold" />
-          <StatCard label="Absences" value={skipNotices.length} hint="Notified" accent="danger" />
-        </div>
-
-        {/* 7-day load + recovery trends — side by side */}
-        <div className="mt-3 grid grid-cols-2 gap-1.5">
-          <TrendCard
-            title="Squad RPE"
-            unit=""
-            data={rpeSpark}
-            delta={rpeDelta}
-            yMin={5}
-            yMax={10}
-            higherIsBad
-          />
-          <TrendCard
-            title="Avg sleep"
-            unit="h"
-            data={sleepSpark}
-            delta={sleepDelta}
-            yMin={5}
-            yMax={9}
-            higherIsBad={false}
-          />
-        </div>
-
-        {skipNotices.length > 0 && (
+        {loading ? (
+          <div className="py-12 flex items-center justify-center">
+            <Loader2 className="h-5 w-5 animate-spin text-gold" />
+          </div>
+        ) : !team ? (
+          <div className="bg-gold/10 border border-gold/40 rounded-2xl p-5 text-center">
+            <Users className="h-6 w-6 text-gold mx-auto" />
+            <div className="font-display text-xl mt-2">No team yet</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Create your first team. You'll get a 6-character join code (like Zoom) to share with athletes.
+            </p>
+            <button
+              onClick={() => navigate({ to: "/create-team" })}
+              className="mt-4 bg-gold text-navy-deep font-bold uppercase tracking-wider rounded-full py-2.5 px-6 text-sm"
+            >
+              <Plus className="inline h-3.5 w-3.5 mr-1" /> Create team
+            </button>
+          </div>
+        ) : (
           <>
-            <SectionHeader title="Can't make it" />
-            <div className="space-y-2">
-              {skipNotices.slice(0, 3).map((s) => (
-                <div key={s.id} className="bg-destructive/5 border border-destructive/30 rounded-xl p-3 flex items-start gap-3">
-                  <div className="bg-destructive text-destructive-foreground rounded-full p-1.5 shrink-0">
-                    <AlertCircle className="h-3.5 w-3.5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold truncate">{s.athlete}</div>
-                    <div className="text-[11px] text-muted-foreground truncate">
-                      {s.session} · <span className="font-bold text-destructive">{REASON_LABEL[s.reason] ?? s.reason}</span>
-                    </div>
-                    {s.notes && <div className="text-[11px] mt-0.5 italic truncate">"{s.notes}"</div>}
-                  </div>
-                  <span className="text-[10px] text-muted-foreground shrink-0">{timeAgo(s.at)}</span>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {/* Flagged check-ins */}
-        {flagged.length > 0 && (
-          <>
-            <SectionHeader title="Watch list" action={<span className="text-[10px] text-muted-foreground">High soreness or low readiness</span>} />
-            <div className="space-y-2">
-              {flagged.slice(0, 3).map((c, i) => (
-                <div key={i} className="bg-card border rounded-xl p-3 flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-warn/15 text-warn flex items-center justify-center">
-                    <Activity className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold truncate">{c.athlete}</div>
-                    <div className="text-[11px] text-muted-foreground flex items-center gap-2">
-                      <span className="flex items-center gap-0.5"><Moon className="h-3 w-3" />{c.sleep.toFixed(1)}h</span>
-                      <span>· soreness <span className="font-bold text-warn">{c.soreness}/10</span></span>
-                      <span>· ready <span className={cn("font-bold", c.readiness < 60 ? "text-destructive" : "text-success")}>{c.readiness}%</span></span>
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground">{timeAgo(c.at)}</span>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {/* Recent RPEs */}
-        {rpeLogs.length > 0 && (
-          <>
-            <SectionHeader title="Recent RPE submissions" />
-            <div className="bg-card rounded-xl border divide-y">
-              {rpeLogs.slice(0, 4).map((r, i) => (
-                <div key={i} className="flex items-center gap-3 p-2.5">
-                  <div className={cn(
-                    "h-8 w-8 rounded-full font-display text-base flex items-center justify-center",
-                    r.rpe >= 8 ? "bg-destructive/15 text-destructive" : r.rpe >= 6 ? "bg-gold/20 text-gold" : "bg-success/15 text-success",
-                  )}>
-                    {r.rpe}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold truncate">{r.athlete}</div>
-                    <div className="text-[10px] text-muted-foreground truncate">{r.session}</div>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground shrink-0">{timeAgo(r.at)}</span>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        <SectionHeader
-          title="Squad"
-          action={
-            <Link to="/coach/program" className="text-[11px] font-bold text-navy uppercase tracking-wider">
-              Program →
-            </Link>
-          }
-        />
-
-        {/* Bulk Nudge banner */}
-        {pendingNudgeCount > 0 && (
-          <div className="bg-gold/10 border border-gold/40 rounded-xl p-2.5 mb-2 flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-gold text-navy-deep flex items-center justify-center shrink-0">
-              <Bell className="h-3.5 w-3.5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[13px] font-bold leading-tight">
-                {pendingNudgeCount} need{pendingNudgeCount === 1 ? "s" : ""} a check-in
+            {/* Team + join code banner */}
+            <div className="bg-gradient-to-br from-navy to-navy-deep text-white rounded-2xl p-4 relative overflow-hidden">
+              <div className="text-[11px] uppercase tracking-wider text-white/70 flex items-center gap-1">
+                <Users className="h-3.5 w-3.5 text-gold" /> Your team
               </div>
-              <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">One-tap reminder push</div>
-            </div>
-            <button
-              onClick={handleNudgeAll}
-              className="shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider bg-gold text-navy-deep border border-gold hover:scale-105 active:scale-95 transition-transform"
-            >
-              <Bell className="h-3 w-3" />
-              Nudge all
-            </button>
-          </div>
-        )}
-        {pendingNudgeCount === 0 && missingAthletes.length > 0 && (
-          <div className="bg-success/10 border border-success/30 rounded-xl p-2.5 mb-2 text-[11px] text-success font-bold flex items-center gap-2">
-            <Bell className="h-3.5 w-3.5" /> All pending athletes nudged
-          </div>
-        )}
+              <div className="font-display text-2xl mt-1">{team.name}</div>
+              <div className="text-[11px] text-white/70">{team.sport} · {athletes.length} athlete{athletes.length === 1 ? "" : "s"}</div>
 
-        <div className="flex gap-1.5 overflow-x-auto pb-2 -mx-1 px-1">
-          {["All", ...SPORTS].map((s) => (
-            <button
-              key={s}
-              onClick={() => setFilter(s)}
-              className={cn(
-                "shrink-0 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider border transition-colors",
-                filter === s ? "bg-navy text-primary-foreground border-navy" : "bg-card border-border text-muted-foreground hover:border-navy/40",
-              )}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-
-        <div className="space-y-2">
-          {filtered.map((r) => {
-            const ci = checkIns.find((c) => c.athlete === r.name);
-            const lastRpe = rpeLogs.find((x) => x.athlete === r.name);
-            const missing = !checkedInNames.has(r.name) && r.status !== "injured";
-            const wasNudged = nudged.has(r.name);
-            return (
-              <div key={r.id} className="bg-card rounded-2xl border p-3 flex items-center gap-3">
-                <div className="relative shrink-0">
-                  <div className="h-11 w-11 rounded-full bg-gradient-to-br from-navy to-navy-deep text-white font-bold flex items-center justify-center text-sm">
-                    {r.name.split(" ").map((n) => n[0]).join("")}
-                  </div>
-                  {ci && (
-                    <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-success border-2 border-card" aria-label="Checked in" />
-                  )}
-                  {missing && (
-                    <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-warn border-2 border-card" aria-label="No check-in" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-bold truncate">{r.name}</div>
-                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                    <SportTag sport={r.sport} />
-                    <span className="text-[10px] text-muted-foreground">Load {r.load}</span>
-                    {ci && (
-                      <span className="text-[10px] text-success font-bold flex items-center gap-0.5">
-                        <BellRing className="h-2.5 w-2.5" /> checked in
-                      </span>
-                    )}
-                    {lastRpe && (
-                      <span className="text-[10px] text-gold font-bold">RPE {lastRpe.rpe}</span>
-                    )}
-                    {missing && !wasNudged && (
-                      <span className="text-[10px] text-warn font-bold">No check-in</span>
-                    )}
-                  </div>
-                </div>
-                {missing ? (
-                  <button
-                    onClick={() => handleNudge(r.name)}
-                    disabled={wasNudged}
-                    className={cn(
-                      "shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider border transition-all",
-                      wasNudged
-                        ? "bg-success/10 text-success border-success/30"
-                        : "bg-gold text-navy-deep border-gold hover:scale-105 active:scale-95",
-                    )}
-                  >
-                    <Bell className="h-3 w-3" />
-                    {wasNudged ? "Sent" : "Nudge"}
+              <div className="mt-3 rounded-xl bg-white/10 border border-white/20 p-3 text-center">
+                <div className="text-[10px] uppercase tracking-wider text-white/70 font-bold">Join code — share with athletes</div>
+                <div className="font-display text-4xl tracking-[0.4em] text-gold mt-1">{team.join_code}</div>
+                <div className="mt-2 flex gap-2 justify-center">
+                  <button onClick={copyCode} className="inline-flex items-center gap-1 rounded-full bg-gold text-navy-deep px-3 py-1 text-[11px] font-bold uppercase tracking-wider">
+                    <Copy className="h-3 w-3" /> Copy
                   </button>
-                ) : (
-                  <StatusPill status={r.status} />
-                )}
+                  <button onClick={regenerate} className="inline-flex items-center gap-1 rounded-full bg-white/10 text-white border border-white/30 px-3 py-1 text-[11px] font-bold uppercase tracking-wider">
+                    <RefreshCw className="h-3 w-3" /> New code
+                  </button>
+                </div>
               </div>
-            );
-          })}
-        </div>
-
-        <SectionHeader title="Top performers" action={<Link to="/leaderboard" className="text-[11px] font-bold text-navy uppercase tracking-wider">All →</Link>} />
-        <div className="bg-card rounded-xl border divide-y">
-          {leaderboard.slice(0, 3).map((l) => (
-            <div key={l.rank} className="flex items-center gap-3 p-3">
-              <div className={cn(
-                "h-8 w-8 rounded-full font-display text-lg flex items-center justify-center",
-                l.rank === 1 && "bg-gold text-navy-deep",
-                l.rank === 2 && "bg-secondary text-navy",
-                l.rank === 3 && "bg-navy/10 text-navy",
-              )}>{l.rank}</div>
-              <div className="flex-1">
-                <div className="text-sm font-bold">{l.name}</div>
-                <div className="text-[10px] text-muted-foreground">{l.sport} · {l.points} pts</div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </div>
-          ))}
-        </div>
-      </div>
-      <TourOverlay
-        tourKey="coach.home"
-        steps={[
-          { title: "Live squad pulse", body: "Today's check-ins, average RPE and absence notifications update in real time as athletes submit them.", position: "top" },
-          { title: "7-day load trend", body: "Sparkline shows the squad's average RPE over the last week — spot overload before it becomes injury.", position: "center" },
-          { title: "Nudge stragglers", body: "Anyone without a check-in by 09:00 gets a gold Nudge button — one tap sends a reminder push.", position: "center" },
-        ]}
-      />
-    </MobileFrame>
-  );
-}
 
-function TrendCard({
-  title,
-  unit,
-  data,
-  delta,
-  yMin,
-  yMax,
-  higherIsBad,
-}: {
-  title: string;
-  unit: string;
-  data: SparkPoint[];
-  delta: number;
-  yMin: number;
-  yMax: number;
-  higherIsBad: boolean;
-}) {
-  const today = data[data.length - 1].value;
-  const isBad = higherIsBad ? delta > 0 : delta < 0;
-  const isGood = higherIsBad ? delta < 0 : delta > 0;
-  const deltaColor = isBad ? "text-destructive" : isGood ? "text-success" : "text-muted-foreground";
-  return (
-    <div className="bg-card rounded-2xl border p-2.5">
-      <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold truncate">{title} · 7d</div>
-      <div className="font-display text-lg leading-none mt-1 flex items-baseline gap-1">
-        <span className="truncate">{today.toFixed(1)}{unit && <span className="text-[10px] text-muted-foreground font-sans ml-0.5">{unit}</span>}</span>
-        <span className={cn("text-[10px] flex items-center gap-0.5 font-bold ml-auto shrink-0", deltaColor)}>
-          <TrendingUp className={cn("h-2.5 w-2.5", delta < 0 && "rotate-180")} />
-          {delta > 0 ? "+" : ""}{delta}
-        </span>
+            <SectionHeader
+              title="Squad"
+              action={
+                <Link to="/coach/program" className="text-[11px] font-bold text-navy uppercase tracking-wider">
+                  Program →
+                </Link>
+              }
+            />
+
+            {athletes.length === 0 ? (
+              <div className="bg-card rounded-xl border p-5 text-center text-sm text-muted-foreground">
+                No athletes have joined yet. Share the join code above.
+              </div>
+            ) : (
+              <div className="bg-card rounded-xl border divide-y">
+                {athletes.map((a) => {
+                  const full = `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || "Athlete";
+                  return (
+                    <div key={a.id} className="flex items-center gap-3 p-3">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-navy to-navy-deep text-white font-bold flex items-center justify-center text-sm">
+                        {full.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-bold truncate">{full}</div>
+                        <div className="text-[10px] text-muted-foreground truncate">
+                          {a.sport ?? "—"}{a.position ? ` · ${a.position}` : ""}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
       </div>
-      <Sparkline data={data} height={40} yMin={yMin} yMax={yMax} showLastLabel={false} />
-    </div>
+    </MobileFrame>
   );
 }

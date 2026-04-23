@@ -1,12 +1,13 @@
 import * as React from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { MobileFrame } from "@/components/MobileFrame";
-import { SectionHeader } from "@/components/primitives";
-import { roster } from "@/data/mock";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth-context";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/physio/log")({
   head: () => ({
@@ -19,21 +20,75 @@ export const Route = createFileRoute("/physio/log")({
 });
 
 const MECHANISMS = ["Contact", "Non-contact", "Overuse", "Re-injury"];
-const SEVERITIES = ["Mild", "Moderate", "Severe"];
+const SEVERITIES = [3, 6, 9];
+const SEVERITY_LABEL: Record<number, string> = { 3: "Mild", 6: "Moderate", 9: "Severe" };
+
+type AthleteOpt = { id: string; name: string; sport: string | null };
 
 function PhysioLogPage() {
   const navigate = useNavigate();
-  const [athleteId, setAthleteId] = React.useState<string>(roster[0].id);
+  const { profile } = useAuth();
+  const [athletes, setAthletes] = React.useState<AthleteOpt[]>([]);
+  const [athleteId, setAthleteId] = React.useState<string>("");
   const [region, setRegion] = React.useState("Right Hamstring");
-  const [pain, setPain] = React.useState(5);
+  const [injuryType, setInjuryType] = React.useState("Strain");
+  const [severity, setSeverity] = React.useState<number>(3);
   const [mechanism, setMechanism] = React.useState("Non-contact");
-  const [severity, setSeverity] = React.useState("Mild");
-  const [rtp, setRtp] = React.useState(7);
+  const [rtpDays, setRtpDays] = React.useState(7);
   const [notes, setNotes] = React.useState("");
+  const [submitting, setSubmitting] = React.useState(false);
+  const [loadingAthletes, setLoadingAthletes] = React.useState(true);
 
-  const submit = () => {
-    const a = roster.find((r) => r.id === athleteId)!;
-    toast.success(`Case opened · ${a.name} · ${region}`);
+  React.useEffect(() => {
+    let cancelled = false;
+    if (!profile) return;
+    (async () => {
+      const { data } = await supabase
+        .from("team_members_safe")
+        .select("id, first_name, last_name, sport, role")
+        .eq("role", "athlete");
+      if (cancelled) return;
+      const opts: AthleteOpt[] = (data ?? [])
+        .filter((r) => !!r.id)
+        .map((r) => ({
+          id: r.id as string,
+          name: `${r.first_name ?? ""} ${r.last_name ?? ""}`.trim() || "Athlete",
+          sport: r.sport,
+        }));
+      setAthletes(opts);
+      if (opts[0]) setAthleteId(opts[0].id);
+      setLoadingAthletes(false);
+    })();
+    return () => { cancelled = true; };
+  }, [profile]);
+
+  const submit = async () => {
+    if (!profile || !athleteId) {
+      toast.error("Pick an athlete first");
+      return;
+    }
+    setSubmitting(true);
+    const today = new Date().toISOString().slice(0, 10);
+    const expected = new Date();
+    expected.setDate(expected.getDate() + rtpDays);
+    const { error } = await supabase.from("injury_records").insert({
+      athlete_id: athleteId,
+      physio_id: profile.id,
+      body_region: region.trim() || "Unspecified",
+      injury_type: `${injuryType} (${mechanism})`,
+      severity,
+      date_of_injury: today,
+      expected_rtp_date: expected.toISOString().slice(0, 10),
+      treatment_notes: notes.trim() || null,
+      rtp_status: "unavailable",
+    });
+    setSubmitting(false);
+    if (error) {
+      console.error(error);
+      toast.error("Could not save case");
+      return;
+    }
+    toast.success("Case opened");
     setTimeout(() => navigate({ to: "/physio" }), 600);
   };
 
@@ -41,35 +96,51 @@ function PhysioLogPage() {
     <MobileFrame title="New Injury Log">
       <div className="px-5 space-y-4">
         <Field label="Athlete">
-          <select
-            value={athleteId}
-            onChange={(e) => setAthleteId(e.target.value)}
-            className="w-full rounded-md border bg-card px-3 py-2 text-sm"
-          >
-            {roster.map((r) => (
-              <option key={r.id} value={r.id}>{r.name} · {r.sport}</option>
-            ))}
-          </select>
+          {loadingAthletes ? (
+            <div className="py-3 flex items-center"><Loader2 className="h-4 w-4 animate-spin" /></div>
+          ) : athletes.length === 0 ? (
+            <div className="text-xs text-muted-foreground bg-secondary/40 rounded-lg p-3">
+              No athletes available yet. They need to join a team first.
+              <Link to="/physio" className="block mt-2 underline">Back to cases</Link>
+            </div>
+          ) : (
+            <select
+              value={athleteId}
+              onChange={(e) => setAthleteId(e.target.value)}
+              className="w-full rounded-md border bg-card px-3 py-2 text-sm"
+            >
+              {athletes.map((a) => (
+                <option key={a.id} value={a.id}>{a.name}{a.sport ? ` · ${a.sport}` : ""}</option>
+              ))}
+            </select>
+          )}
         </Field>
 
-        <Field label="Region">
-          <Input value={region} onChange={(e) => setRegion(e.target.value)} />
+        <Field label="Body region">
+          <Input value={region} onChange={(e) => setRegion(e.target.value)} maxLength={80} />
         </Field>
 
-        <Field label={`Pain · ${pain}/10`}>
-          <Slider value={[pain]} onValueChange={(v) => setPain(v[0])} min={0} max={10} step={1} />
+        <Field label="Injury type">
+          <Input value={injuryType} onChange={(e) => setInjuryType(e.target.value)} maxLength={80} placeholder="Strain, Sprain, Tear…" />
         </Field>
 
         <Field label="Mechanism">
           <PillRow options={MECHANISMS} value={mechanism} onChange={setMechanism} />
         </Field>
 
-        <Field label="Severity">
-          <PillRow options={SEVERITIES} value={severity} onChange={setSeverity} />
+        <Field label={`Severity · ${SEVERITY_LABEL[severity] ?? severity}/10`}>
+          <PillRow
+            options={SEVERITIES.map((s) => `${SEVERITY_LABEL[s]} (${s})`)}
+            value={`${SEVERITY_LABEL[severity]} (${severity})`}
+            onChange={(label) => {
+              const m = label.match(/\((\d+)\)/);
+              if (m) setSeverity(+m[1]);
+            }}
+          />
         </Field>
 
-        <Field label={`Estimated RTP · ${rtp} days`}>
-          <Slider value={[rtp]} onValueChange={(v) => setRtp(v[0])} min={1} max={42} step={1} />
+        <Field label={`Estimated RTP · ${rtpDays} days`}>
+          <Slider value={[rtpDays]} onValueChange={(v) => setRtpDays(v[0])} min={1} max={90} step={1} />
         </Field>
 
         <Field label="Clinical notes">
@@ -79,13 +150,16 @@ function PhysioLogPage() {
             rows={3}
             placeholder="Mechanism, palpation findings, plan of care…"
             className="w-full rounded-md border bg-card p-3 text-sm resize-none"
+            maxLength={1000}
           />
         </Field>
 
         <button
           onClick={submit}
-          className="w-full bg-gold text-navy-deep font-bold uppercase tracking-wider rounded-full py-3 hover:scale-[1.01] transition-transform shadow-lg"
+          disabled={submitting || !athleteId}
+          className="w-full bg-gold text-navy-deep font-bold uppercase tracking-wider rounded-full py-3 hover:scale-[1.01] transition-transform shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
         >
+          {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
           Open case
         </button>
       </div>
@@ -120,6 +194,3 @@ function PillRow({ options, value, onChange }: { options: string[]; value: strin
     </div>
   );
 }
-
-// Re-export SectionHeader so unused-warning is silent? not needed actually:
-void SectionHeader;

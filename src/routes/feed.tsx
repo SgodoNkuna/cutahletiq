@@ -1,53 +1,98 @@
+import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { MobileFrame } from "@/components/MobileFrame";
-import { feedPosts } from "@/data/mock";
-import { Pin, Heart, MessageCircle } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import { supabase } from "@/integrations/supabase/client";
+import { Bell, Loader2 } from "lucide-react";
+import type { Database } from "@/integrations/supabase/types";
+
+type Nudge = Database["public"]["Tables"]["nudges"]["Row"];
+
+const ICONS: Record<Nudge["type"], string> = {
+  new_programme: "🏋️",
+  pr_achieved: "🏅",
+  missed_session: "⚠️",
+  rtp_status_change: "🟢",
+  injury_flagged: "🩺",
+  checkin_reminder: "📋",
+};
 
 export const Route = createFileRoute("/feed")({
   head: () => ({
     meta: [
-      { title: "Team Feed — CUT Athletiq" },
-      { name: "description", content: "Announcements, milestones and recovery tips for the CUT sports community." },
+      { title: "Feed — CUT Athletiq" },
+      { name: "description", content: "Notifications and milestones from your team." },
     ],
   }),
   component: FeedPage,
 });
 
-function FeedPage() {
-  return (
-    <MobileFrame title="Team Feed">
-      <div className="px-5 space-y-3">
-        {feedPosts.map((p) => (
-          <article
-            key={p.id}
-            className={
-              "rounded-2xl border bg-card p-4 shadow-sm " +
-              (p.pinned ? "border-gold/60 bg-gold/5" : "")
-            }
-          >
-            <div className="flex items-center gap-2 text-[11px]">
-              {p.pinned && (
-                <span className="flex items-center gap-1 rounded-full bg-gold text-navy-deep px-2 py-0.5 font-bold uppercase tracking-wider">
-                  <Pin className="h-3 w-3" /> Pinned
-                </span>
-              )}
-              <span className="font-bold">{p.author}</span>
-              <span className="text-muted-foreground">· {p.role}</span>
-              <span className="text-muted-foreground ml-auto">{p.time}</span>
-            </div>
-            <h3 className="font-display text-xl mt-2 leading-tight">{p.title}</h3>
-            <p className="text-sm text-muted-foreground mt-1">{p.body}</p>
+function timeAgo(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.round(diff / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.round(h / 24);
+  return `${d}d ago`;
+}
 
-            <div className="flex items-center gap-4 mt-3 text-[11px] text-muted-foreground">
-              <button className="flex items-center gap-1 hover:text-destructive">
-                <Heart className="h-3.5 w-3.5" /> {12 + p.id.length}
-              </button>
-              <button className="flex items-center gap-1 hover:text-navy">
-                <MessageCircle className="h-3.5 w-3.5" /> {3 + p.id.length}
-              </button>
-            </div>
-          </article>
-        ))}
+function FeedPage() {
+  const { user } = useAuth();
+  const [nudges, setNudges] = React.useState<Nudge[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  const load = React.useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("nudges")
+      .select("*")
+      .eq("recipient_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    setNudges(data ?? []);
+    setLoading(false);
+  }, [user]);
+
+  React.useEffect(() => {
+    if (!user) return;
+    void load();
+    const ch = supabase
+      .channel(`feed:${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "nudges", filter: `recipient_id=eq.${user.id}` }, () => void load())
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+  }, [user, load]);
+
+  return (
+    <MobileFrame title="Feed">
+      <div className="px-5 space-y-3">
+        {loading ? (
+          <div className="py-12 flex items-center justify-center">
+            <Loader2 className="h-5 w-5 animate-spin text-gold" />
+          </div>
+        ) : nudges.length === 0 ? (
+          <div className="bg-card rounded-xl border p-8 text-center">
+            <Bell className="h-8 w-8 text-muted-foreground/40 mx-auto" />
+            <div className="text-sm font-bold mt-3">Nothing new yet</div>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              You'll see PR alerts, new programmes and physio updates here.
+            </p>
+          </div>
+        ) : (
+          nudges.map((n) => (
+            <article key={n.id} className="rounded-2xl border bg-card p-4 shadow-sm flex gap-3">
+              <div className="text-2xl shrink-0">{ICONS[n.type]}</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm leading-snug">{n.message}</p>
+                <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider">
+                  {timeAgo(n.created_at)}
+                </p>
+              </div>
+            </article>
+          ))
+        )}
       </div>
     </MobileFrame>
   );
