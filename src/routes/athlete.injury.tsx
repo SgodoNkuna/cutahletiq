@@ -3,9 +3,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { MobileFrame } from "@/components/MobileFrame";
 import { BodyMap, BODY_LABELS, type BodyRegion } from "@/components/BodyMap";
 import { SectionHeader } from "@/components/primitives";
-import { TourOverlay } from "@/components/TourOverlay";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth-context";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/athlete/injury")({
   head: () => ({
@@ -18,11 +20,13 @@ export const Route = createFileRoute("/athlete/injury")({
 });
 
 function InjuryPage() {
+  const { profile } = useAuth();
   const [pains, setPains] = React.useState<Record<string, number>>({});
   const [activeRegion, setActiveRegion] = React.useState<BodyRegion | null>(null);
   const [pain, setPain] = React.useState(4);
   const [notes, setNotes] = React.useState("");
   const [submitted, setSubmitted] = React.useState<string | null>(null);
+  const [submitting, setSubmitting] = React.useState(false);
 
   const toggle = (region: BodyRegion) => {
     setActiveRegion(region);
@@ -46,21 +50,37 @@ function InjuryPage() {
     setActiveRegion(null);
   };
 
-  const submit = () => {
+  const submit = async () => {
+    if (!profile) return;
     if (Object.keys(pains).length === 0) {
       toast.error("Tap at least one body part first");
       return;
     }
-    const ts = new Date().toLocaleString();
-    setSubmitted(ts);
-    toast.success("Sent to Physio Naidoo · response < 24h");
+    const maxPain = Math.max(...Object.values(pains));
+    setSubmitting(true);
+    const { error } = await supabase.from("injury_checkins").insert({
+      athlete_id: profile.id,
+      body_regions: Object.keys(pains),
+      pain_level: maxPain,
+      notes: notes.trim() || null,
+    });
+    setSubmitting(false);
+    if (error) {
+      console.error(error);
+      toast.error("Could not submit. Try again.");
+      return;
+    }
+    setSubmitted(new Date().toLocaleString());
+    setPains({});
+    setNotes("");
+    toast.success("Sent to your physio");
   };
 
   return (
     <MobileFrame title="Body check-in">
       <div className="px-5">
         <p className="text-xs text-muted-foreground">
-          Tap any body part to flag soreness. Your physio sees this instantly.
+          Tap any body part to flag soreness. Your physio sees this — your coach does not.
         </p>
 
         <div className="bg-card rounded-2xl border p-3 mt-3">
@@ -73,7 +93,7 @@ function InjuryPage() {
                   key={region}
                   className="inline-flex items-center gap-1 rounded-full bg-warn/15 text-warn border border-warn/40 px-2 py-0.5 text-[10px] font-bold"
                 >
-                  {BODY_LABELS[region]} · {p}/10
+                  {BODY_LABELS[region as BodyRegion]} · {p}/10
                 </span>
               ))}
             </div>
@@ -85,21 +105,24 @@ function InjuryPage() {
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={3}
+          maxLength={500}
           placeholder="Tight after sprints, eased with mobility…"
           className="w-full rounded-xl border bg-card p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-gold"
         />
 
         <button
           onClick={submit}
-          className="mt-4 w-full bg-navy text-primary-foreground font-bold uppercase tracking-wider rounded-full py-3 hover:bg-navy-deep transition-colors"
+          disabled={submitting}
+          className="mt-4 w-full bg-navy text-primary-foreground font-bold uppercase tracking-wider rounded-full py-3 hover:bg-navy-deep transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
         >
+          {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
           Send to physio
         </button>
 
         {submitted && (
           <div className="mt-3 bg-success/10 border border-success/40 rounded-xl p-3 text-sm">
             ✅ Submitted · {submitted}
-            <div className="text-[11px] text-muted-foreground mt-0.5">Physio Naidoo will respond within 24h.</div>
+            <div className="text-[11px] text-muted-foreground mt-0.5">Your physio will follow up.</div>
           </div>
         )}
       </div>
@@ -152,12 +175,6 @@ function InjuryPage() {
           </div>
         </div>
       )}
-      <TourOverlay
-        tourKey="athlete.injury"
-        steps={[
-          { title: "Tap a body part to log pain", body: "Hit any joint or muscle on the silhouette — slide the pain scale, send it to your physio.", position: "center" },
-        ]}
-      />
     </MobileFrame>
   );
 }
