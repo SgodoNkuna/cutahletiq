@@ -6,7 +6,9 @@ import { MobileFrame } from "@/components/MobileFrame";
 import { Input } from "@/components/ui/input";
 import { exportMyData, deleteMyAccount } from "@/lib/server/popia.functions";
 import { toast } from "sonner";
-import { Download, Loader2, LogOut, ShieldCheck, Trash2 } from "lucide-react";
+import { Download, FileText, Loader2, LogOut, ShieldCheck, Trash2 } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -78,6 +80,60 @@ function ProfilePage() {
     } catch (err) {
       console.error(err);
       toast.error("Export failed. Please try again.");
+    }
+  };
+
+  const onExportPDF = async () => {
+    try {
+      const data = await exportMyData();
+      const doc = new jsPDF();
+      const fullName = `${profile.first_name} ${profile.last_name}`.trim() || profile.email;
+
+      doc.setFontSize(18);
+      doc.text("CUT Athletiq — Personal Record", 14, 18);
+      doc.setFontSize(10);
+      doc.text(`Athlete: ${fullName}`, 14, 26);
+      doc.text(`Email: ${profile.email}`, 14, 32);
+      doc.text(`Exported: ${new Date().toLocaleString()}`, 14, 38);
+
+      const prRows = (data.personal_records ?? []).map((r) => [
+        new Date(r.achieved_at).toLocaleDateString(),
+        r.exercise_name,
+        `${r.weight_kg} kg`,
+        String(r.reps),
+      ]);
+      autoTable(doc, {
+        startY: 46,
+        head: [["Date", "Exercise", "Weight", "Reps"]],
+        body: prRows.length ? prRows : [["—", "No personal records yet", "", ""]],
+        headStyles: { fillColor: [13, 27, 62] },
+      });
+
+      const logRows = (data.workout_logs ?? [])
+        .sort((a, b) => +new Date(b.logged_at) - +new Date(a.logged_at))
+        .slice(0, 200)
+        .map((l) => [
+          new Date(l.logged_at).toLocaleDateString(),
+          `Set ${l.set_number}`,
+          `${l.actual_weight_kg} kg`,
+          String(l.actual_reps),
+          l.is_pr ? "PR" : "",
+        ]);
+      const afterPR = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+      doc.setFontSize(14);
+      doc.text("Workout Logs (last 200 sets)", 14, afterPR);
+      autoTable(doc, {
+        startY: afterPR + 4,
+        head: [["Date", "Set", "Weight", "Reps", "PR"]],
+        body: logRows.length ? logRows : [["—", "No logs yet", "", "", ""]],
+        headStyles: { fillColor: [13, 27, 62] },
+      });
+
+      doc.save(`cut-athletiq-${profile.email}.pdf`);
+      toast.success("PDF generated");
+    } catch (err) {
+      console.error(err);
+      toast.error("Could not generate PDF");
     }
   };
 
