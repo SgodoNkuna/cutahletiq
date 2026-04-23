@@ -231,6 +231,12 @@ function ProfilePage() {
             <Download className="h-4 w-4" /> Download my data (JSON)
           </button>
           <button
+            onClick={onExportPDF}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-full border-2 border-navy text-navy font-bold uppercase tracking-wider py-2.5 text-xs"
+          >
+            <FileText className="h-4 w-4" /> Download my record (PDF)
+          </button>
+          <button
             onClick={onDelete}
             className="w-full inline-flex items-center justify-center gap-2 rounded-full border-2 border-destructive text-destructive font-bold uppercase tracking-wider py-2.5 text-xs"
           >
