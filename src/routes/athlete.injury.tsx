@@ -13,7 +13,10 @@ export const Route = createFileRoute("/athlete/injury")({
   head: () => ({
     meta: [
       { title: "Body Check — CUT Athletiq" },
-      { name: "description", content: "Tap any body part to log soreness or injury for your physio." },
+      {
+        name: "description",
+        content: "Tap any body part to log soreness or injury for your physio.",
+      },
     ],
   }),
   component: InjuryPage,
@@ -122,7 +125,9 @@ function InjuryPage() {
         {submitted && (
           <div className="mt-3 bg-success/10 border border-success/40 rounded-xl p-3 text-sm">
             ✅ Submitted · {submitted}
-            <div className="text-[11px] text-muted-foreground mt-0.5">Your physio will follow up.</div>
+            <div className="text-[11px] text-muted-foreground mt-0.5">
+              Your physio will follow up.
+            </div>
           </div>
         )}
       </div>
@@ -143,7 +148,10 @@ function InjuryPage() {
 
             <div className="mt-4 flex items-end justify-between">
               <span className="text-[11px] text-muted-foreground">No pain</span>
-              <span className="font-display text-5xl text-navy leading-none">{pain}<span className="text-base text-muted-foreground">/10</span></span>
+              <span className="font-display text-5xl text-navy leading-none">
+                {pain}
+                <span className="text-base text-muted-foreground">/10</span>
+              </span>
               <span className="text-[11px] text-muted-foreground">Worst</span>
             </div>
 

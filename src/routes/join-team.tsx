@@ -45,7 +45,10 @@ function JoinTeamPage() {
   const join = async () => {
     if (!profile || !team) return;
     setSubmitting(true);
-    const { error } = await supabase.from("profiles").update({ team_id: team.id }).eq("id", profile.id);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ team_id: team.id })
+      .eq("id", profile.id);
     setSubmitting(false);
     if (error) {
       toast.error("Could not join. Try again.");
@@ -86,7 +89,9 @@ function JoinTeamPage() {
 
           {team && (
             <div className="rounded-xl border bg-success/10 p-3">
-              <div className="text-[11px] uppercase tracking-wider font-bold text-success">Team found</div>
+              <div className="text-[11px] uppercase tracking-wider font-bold text-success">
+                Team found
+              </div>
               <div className="font-display text-xl mt-1">{team.name}</div>
               <div className="text-xs text-muted-foreground">{team.sport}</div>
               <button
@@ -101,7 +106,10 @@ function JoinTeamPage() {
           )}
         </div>
 
-        <Link to={profile ? ROLE_HOME[profile.role] : "/"} className="block text-center text-[11px] underline text-muted-foreground">
+        <Link
+          to={profile ? ROLE_HOME[profile.role] : "/"}
+          className="block text-center text-[11px] underline text-muted-foreground"
+        >
           Skip for now
         </Link>
       </div>

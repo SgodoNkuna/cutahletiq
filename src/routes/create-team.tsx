@@ -22,7 +22,12 @@ function CreateTeamPage() {
   const navigate = useNavigate();
   const [name, setName] = React.useState("");
   const [sport, setSport] = React.useState("");
-  const [team, setTeam] = React.useState<{ id: string; name: string; sport: string; join_code: string } | null>(null);
+  const [team, setTeam] = React.useState<{
+    id: string;
+    name: string;
+    sport: string;
+    join_code: string;
+  } | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
 
   React.useEffect(() => {
@@ -110,18 +115,27 @@ function CreateTeamPage() {
           <Users className="h-6 w-6 text-gold" />
           <div className="font-display text-2xl mt-2 leading-tight">Spin up your squad</div>
           <p className="text-[11px] text-white/70 mt-1">
-            You'll get a 6-character code (like a Zoom meeting code) — share it with your athletes so they can join.
+            You'll get a 6-character code (like a Zoom meeting code) — share it with your athletes
+            so they can join.
           </p>
         </div>
 
         {!team ? (
           <div className="bg-card rounded-2xl border p-5 space-y-3">
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Team name</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Rugby 1st XV" />
+              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                Team name
+              </label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Rugby 1st XV"
+              />
             </div>
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Sport</label>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                Sport
+              </label>
               <Input value={sport} onChange={(e) => setSport(e.target.value)} placeholder="Rugby" />
             </div>
             <button
@@ -135,7 +149,9 @@ function CreateTeamPage() {
           </div>
         ) : (
           <div className="bg-card rounded-2xl border p-5 space-y-3">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold">Your team</div>
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold">
+              Your team
+            </div>
             <div className="font-display text-2xl leading-tight">{team.name}</div>
             <div className="text-xs text-muted-foreground">{team.sport}</div>
 
@@ -143,7 +159,9 @@ function CreateTeamPage() {
               <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
                 Join code
               </div>
-              <div className="font-display text-5xl tracking-[0.4em] text-navy-deep mt-2">{team.join_code}</div>
+              <div className="font-display text-5xl tracking-[0.4em] text-navy-deep mt-2">
+                {team.join_code}
+              </div>
               <div className="mt-3 flex gap-2 justify-center">
                 <button
                   onClick={copy}

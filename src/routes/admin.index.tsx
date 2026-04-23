@@ -40,7 +40,9 @@ function AdminHome() {
         injuries: i.count ?? 0,
       });
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [profile]);
 
   if (!profile) return null;
@@ -56,7 +58,14 @@ function AdminHome() {
             <ShieldCheck className="h-3.5 w-3.5 text-gold" /> CUT Sports Department
           </div>
           <div className="font-display text-3xl mt-1 relative">Live snapshot</div>
-          <div className="text-[11px] text-white/70 relative">{new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</div>
+          <div className="text-[11px] text-white/70 relative">
+            {new Date().toLocaleDateString(undefined, {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </div>
         </div>
 
         <SectionHeader title="System totals" />
@@ -75,20 +84,32 @@ function AdminHome() {
 
         <SectionHeader title="Quick links" />
         <div className="grid grid-cols-2 gap-2">
-          <Link to="/coach" className="bg-card rounded-xl border p-3 flex items-center gap-2 hover:border-gold transition-colors">
+          <Link
+            to="/coach"
+            className="bg-card rounded-xl border p-3 flex items-center gap-2 hover:border-gold transition-colors"
+          >
             <Users className="h-4 w-4" />
             <div className="text-sm font-bold flex-1">Squads</div>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
-          <Link to="/physio" className="bg-card rounded-xl border p-3 flex items-center gap-2 hover:border-gold transition-colors">
+          <Link
+            to="/physio"
+            className="bg-card rounded-xl border p-3 flex items-center gap-2 hover:border-gold transition-colors"
+          >
             <div className="text-sm font-bold flex-1">Health</div>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
-          <Link to="/feed" className="bg-card rounded-xl border p-3 flex items-center gap-2 hover:border-gold transition-colors">
+          <Link
+            to="/feed"
+            className="bg-card rounded-xl border p-3 flex items-center gap-2 hover:border-gold transition-colors"
+          >
             <div className="text-sm font-bold flex-1">Notifications</div>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
-          <Link to="/leaderboard" className="bg-card rounded-xl border p-3 flex items-center gap-2 hover:border-gold transition-colors">
+          <Link
+            to="/leaderboard"
+            className="bg-card rounded-xl border p-3 flex items-center gap-2 hover:border-gold transition-colors"
+          >
             <div className="text-sm font-bold flex-1">Leaderboard</div>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
@@ -101,7 +122,9 @@ function AdminHome() {
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="bg-card rounded-2xl border p-3">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">{label}</div>
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
+        {label}
+      </div>
       <div className="font-display text-3xl mt-0.5">{value}</div>
     </div>
   );

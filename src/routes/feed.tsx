@@ -60,9 +60,15 @@ function FeedPage() {
     void load();
     const ch = supabase
       .channel(`feed:${user.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "nudges", filter: `recipient_id=eq.${user.id}` }, () => void load())
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "nudges", filter: `recipient_id=eq.${user.id}` },
+        () => void load(),
+      )
       .subscribe();
-    return () => { void supabase.removeChannel(ch); };
+    return () => {
+      void supabase.removeChannel(ch);
+    };
   }, [user, load]);
 
   return (

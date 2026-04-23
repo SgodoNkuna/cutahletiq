@@ -54,7 +54,7 @@ export function NotificationBell() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "nudges", filter: `recipient_id=eq.${user.id}` },
-        () => void load()
+        () => void load(),
       )
       .subscribe();
     return () => {
@@ -66,7 +66,11 @@ export function NotificationBell() {
 
   const markAllRead = async () => {
     if (!user) return;
-    await supabase.from("nudges").update({ is_read: true }).eq("recipient_id", user.id).eq("is_read", false);
+    await supabase
+      .from("nudges")
+      .update({ is_read: true })
+      .eq("recipient_id", user.id)
+      .eq("is_read", false);
     void load();
   };
 
@@ -114,7 +118,8 @@ export function NotificationBell() {
               <Bell className="h-8 w-8 text-muted-foreground/50 mx-auto" />
               <p className="text-sm text-muted-foreground mt-3">No nudges yet.</p>
               <p className="text-[11px] text-muted-foreground mt-1">
-                You'll be pinged when a programme drops, when you hit a PR, or when your physio updates you.
+                You'll be pinged when a programme drops, when you hit a PR, or when your physio
+                updates you.
               </p>
             </div>
           )}
@@ -124,7 +129,7 @@ export function NotificationBell() {
               onClick={() => onTap(n)}
               className={cn(
                 "w-full text-left px-4 py-3 border-b flex gap-3 transition-colors hover:bg-secondary/40",
-                !n.is_read && "bg-gold-soft/30"
+                !n.is_read && "bg-gold-soft/30",
               )}
             >
               <div className="text-xl shrink-0">{ICONS[n.type]}</div>

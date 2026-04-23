@@ -10,9 +10,7 @@ function NotFoundComponent() {
       <div className="max-w-md text-center">
         <h1 className="font-display text-7xl text-navy">404</h1>
         <h2 className="mt-2 text-xl font-semibold">Off the field</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          That page doesn't exist.
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">That page doesn't exist.</p>
         <div className="mt-6">
           <Link
             to="/"
@@ -32,14 +30,24 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "CUT Athletiq" },
-      { name: "description", content: "Sport-performance app for athletes, coaches and physios at the Central University of Technology." },
+      {
+        name: "description",
+        content:
+          "Sport-performance app for athletes, coaches and physios at the Central University of Technology.",
+      },
       { name: "author", content: "CUT Sports Department" },
       { property: "og:title", content: "CUT Athletiq" },
-      { property: "og:description", content: "Sport-performance app for athletes, coaches and physios at CUT." },
+      {
+        property: "og:description",
+        content: "Sport-performance app for athletes, coaches and physios at CUT.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "CUT Athletiq" },
-      { name: "twitter:description", content: "Sport-performance app for athletes, coaches and physios at CUT." },
+      {
+        name: "twitter:description",
+        content: "Sport-performance app for athletes, coaches and physios at CUT.",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

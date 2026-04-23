@@ -47,7 +47,9 @@ export function useCoachProgramme(coachId: string | null, teamId: string | null)
     setLoading(true);
     const { data: programmes, error } = await supabase
       .from("programmes")
-      .select("id, name, sport, team_id, coach_id, start_date, end_date, sessions(id, name, session_date, notes, programme_id, exercises(id, name, sets, reps, weight_kg, order_index, notes, session_id))")
+      .select(
+        "id, name, sport, team_id, coach_id, start_date, end_date, sessions(id, name, session_date, notes, programme_id, exercises(id, name, sets, reps, weight_kg, order_index, notes, session_id))",
+      )
       .eq("coach_id", coachId)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -84,7 +86,9 @@ export function useCoachProgramme(coachId: string | null, teamId: string | null)
     setLoading(false);
   }, [coachId, teamId]);
 
-  React.useEffect(() => { void reload(); }, [reload]);
+  React.useEffect(() => {
+    void reload();
+  }, [reload]);
 
   const addSession = async (date: string, name: string) => {
     if (!programme) return;
@@ -95,22 +99,36 @@ export function useCoachProgramme(coachId: string | null, teamId: string | null)
       .select("id, name, session_date, notes, programme_id")
       .single();
     setSaving(false);
-    if (error || !data) { toast.error("Add session failed"); return; }
-    setProgramme((p) => p ? { ...p, sessions: [...p.sessions, { ...data, exercises: [] }] } : p);
+    if (error || !data) {
+      toast.error("Add session failed");
+      return;
+    }
+    setProgramme((p) => (p ? { ...p, sessions: [...p.sessions, { ...data, exercises: [] }] } : p));
   };
 
   const removeSession = async (sessionId: string) => {
     setSaving(true);
     const { error } = await supabase.from("sessions").delete().eq("id", sessionId);
     setSaving(false);
-    if (error) { toast.error("Remove failed"); return; }
-    setProgramme((p) => p ? { ...p, sessions: p.sessions.filter((s) => s.id !== sessionId) } : p);
+    if (error) {
+      toast.error("Remove failed");
+      return;
+    }
+    setProgramme((p) => (p ? { ...p, sessions: p.sessions.filter((s) => s.id !== sessionId) } : p));
   };
 
-  const updateSession = async (sessionId: string, patch: Partial<Pick<DBSession, "name" | "session_date">>) => {
-    setProgramme((p) => p ? {
-      ...p, sessions: p.sessions.map((s) => s.id === sessionId ? { ...s, ...patch } : s)
-    } : p);
+  const updateSession = async (
+    sessionId: string,
+    patch: Partial<Pick<DBSession, "name" | "session_date">>,
+  ) => {
+    setProgramme((p) =>
+      p
+        ? {
+            ...p,
+            sessions: p.sessions.map((s) => (s.id === sessionId ? { ...s, ...patch } : s)),
+          }
+        : p,
+    );
     const { error } = await supabase.from("sessions").update(patch).eq("id", sessionId);
     if (error) toast.error("Save failed");
   };
@@ -124,28 +142,64 @@ export function useCoachProgramme(coachId: string | null, teamId: string | null)
       .insert({ session_id: sessionId, name: "New exercise", sets: 3, reps: 8, order_index: order })
       .select("id, name, sets, reps, weight_kg, order_index, notes, session_id")
       .single();
-    if (error || !data) { toast.error("Add exercise failed"); return; }
-    setProgramme((p) => p ? {
-      ...p, sessions: p.sessions.map((s) => s.id === sessionId ? { ...s, exercises: [...s.exercises, data] } : s)
-    } : p);
+    if (error || !data) {
+      toast.error("Add exercise failed");
+      return;
+    }
+    setProgramme((p) =>
+      p
+        ? {
+            ...p,
+            sessions: p.sessions.map((s) =>
+              s.id === sessionId ? { ...s, exercises: [...s.exercises, data] } : s,
+            ),
+          }
+        : p,
+    );
   };
 
-  const updateExercise = async (exId: string, sessionId: string, patch: Partial<Pick<DBExercise, "name" | "sets" | "reps" | "weight_kg">>) => {
-    setProgramme((p) => p ? {
-      ...p, sessions: p.sessions.map((s) => s.id === sessionId ? {
-        ...s, exercises: s.exercises.map((x) => x.id === exId ? { ...x, ...patch } : x)
-      } : s)
-    } : p);
+  const updateExercise = async (
+    exId: string,
+    sessionId: string,
+    patch: Partial<Pick<DBExercise, "name" | "sets" | "reps" | "weight_kg">>,
+  ) => {
+    setProgramme((p) =>
+      p
+        ? {
+            ...p,
+            sessions: p.sessions.map((s) =>
+              s.id === sessionId
+                ? {
+                    ...s,
+                    exercises: s.exercises.map((x) => (x.id === exId ? { ...x, ...patch } : x)),
+                  }
+                : s,
+            ),
+          }
+        : p,
+    );
     const { error } = await supabase.from("exercises").update(patch).eq("id", exId);
     if (error) toast.error("Save failed");
   };
 
   const removeExercise = async (exId: string, sessionId: string) => {
     const { error } = await supabase.from("exercises").delete().eq("id", exId);
-    if (error) { toast.error("Remove failed"); return; }
-    setProgramme((p) => p ? {
-      ...p, sessions: p.sessions.map((s) => s.id === sessionId ? { ...s, exercises: s.exercises.filter((x) => x.id !== exId) } : s)
-    } : p);
+    if (error) {
+      toast.error("Remove failed");
+      return;
+    }
+    setProgramme((p) =>
+      p
+        ? {
+            ...p,
+            sessions: p.sessions.map((s) =>
+              s.id === sessionId
+                ? { ...s, exercises: s.exercises.filter((x) => x.id !== exId) }
+                : s,
+            ),
+          }
+        : p,
+    );
   };
 
   const renameProgramme = async (name: string) => {
@@ -155,7 +209,19 @@ export function useCoachProgramme(coachId: string | null, teamId: string | null)
     if (error) toast.error("Rename failed");
   };
 
-  return { programme, loading, saving, reload, addSession, removeSession, updateSession, addExercise, updateExercise, removeExercise, renameProgramme };
+  return {
+    programme,
+    loading,
+    saving,
+    reload,
+    addSession,
+    removeSession,
+    updateSession,
+    addExercise,
+    updateExercise,
+    removeExercise,
+    renameProgramme,
+  };
 }
 
 /** Athlete-side: fetch the next upcoming session in their team's programme. */
@@ -163,7 +229,9 @@ export async function fetchTodaysSessionForAthlete(): Promise<DBSession | null> 
   const today = new Date().toISOString().slice(0, 10);
   const { data } = await supabase
     .from("sessions")
-    .select("id, name, session_date, notes, programme_id, exercises(id, name, sets, reps, weight_kg, order_index, notes, session_id)")
+    .select(
+      "id, name, session_date, notes, programme_id, exercises(id, name, sets, reps, weight_kg, order_index, notes, session_id)",
+    )
     .gte("session_date", today)
     .order("session_date", { ascending: true })
     .limit(1)

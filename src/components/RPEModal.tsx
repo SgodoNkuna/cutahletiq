@@ -24,15 +24,21 @@ export function RPEModal({ open, onSubmit }: Props) {
   return (
     <div className="absolute inset-0 z-50 bg-black/55 flex items-center justify-center px-5 animate-fade-up">
       <div className="w-full max-w-[340px] bg-card rounded-2xl shadow-2xl border-2 border-gold p-5">
-        <div className="text-[11px] uppercase tracking-wider text-gold font-bold">Rate the session</div>
+        <div className="text-[11px] uppercase tracking-wider text-gold font-bold">
+          Rate the session
+        </div>
         <h3 className="font-display text-2xl leading-tight mt-1">How hard was it?</h3>
         <p className="text-xs text-muted-foreground mt-1">
           Borg RPE 1–10 · helps coach manage your training load.
         </p>
 
         <div className="mt-5 text-center">
-          <div className={cn("font-display text-7xl leading-none tabular-nums", desc.cls)}>{rpe}</div>
-          <div className={cn("text-sm font-bold uppercase tracking-wider mt-1", desc.cls)}>{desc.label}</div>
+          <div className={cn("font-display text-7xl leading-none tabular-nums", desc.cls)}>
+            {rpe}
+          </div>
+          <div className={cn("text-sm font-bold uppercase tracking-wider mt-1", desc.cls)}>
+            {desc.label}
+          </div>
         </div>
 
         <div className="mt-4">

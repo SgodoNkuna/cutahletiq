@@ -119,7 +119,8 @@ function ProfilePage() {
           String(l.actual_reps),
           l.is_pr ? "PR" : "",
         ]);
-      const afterPR = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+      const afterPR =
+        (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
       doc.setFontSize(14);
       doc.text("Workout Logs (last 200 sets)", 14, afterPR);
       autoTable(doc, {
@@ -139,7 +140,7 @@ function ProfilePage() {
 
   const onDelete = async () => {
     const ok = window.confirm(
-      "Delete your account permanently? This cannot be undone. (POPIA s.24)\n\nAll your check-ins, workouts and personal records will be removed."
+      "Delete your account permanently? This cannot be undone. (POPIA s.24)\n\nAll your check-ins, workouts and personal records will be removed.",
     );
     if (!ok) return;
     try {
@@ -161,7 +162,9 @@ function ProfilePage() {
     <MobileFrame title="Profile">
       <div className="px-5 space-y-4 pb-6">
         <div className="bg-card border rounded-2xl p-4 space-y-3">
-          <div className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Account</div>
+          <div className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">
+            Account
+          </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="text-[10px] font-bold uppercase text-muted-foreground">First</label>
@@ -183,12 +186,16 @@ function ProfilePage() {
           {(profile.role === "athlete" || profile.role === "coach") && (
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[10px] font-bold uppercase text-muted-foreground">Sport</label>
+                <label className="text-[10px] font-bold uppercase text-muted-foreground">
+                  Sport
+                </label>
                 <Input value={sport} onChange={(e) => setSport(e.target.value)} />
               </div>
               {profile.role === "athlete" && (
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-muted-foreground">Position</label>
+                  <label className="text-[10px] font-bold uppercase text-muted-foreground">
+                    Position
+                  </label>
                   <Input value={position} onChange={(e) => setPosition(e.target.value)} />
                 </div>
               )}
@@ -201,11 +208,21 @@ function ProfilePage() {
             Consent (POPIA)
           </div>
           <label className="flex items-start gap-2 text-xs cursor-pointer">
-            <input type="checkbox" checked={consentCoach} onChange={(e) => setConsentCoach(e.target.checked)} className="mt-0.5" />
+            <input
+              type="checkbox"
+              checked={consentCoach}
+              onChange={(e) => setConsentCoach(e.target.checked)}
+              className="mt-0.5"
+            />
             <span>Share training data with my coach and team admins.</span>
           </label>
           <label className="flex items-start gap-2 text-xs cursor-pointer">
-            <input type="checkbox" checked={consentPhysio} onChange={(e) => setConsentPhysio(e.target.checked)} className="mt-0.5" />
+            <input
+              type="checkbox"
+              checked={consentPhysio}
+              onChange={(e) => setConsentPhysio(e.target.checked)}
+              className="mt-0.5"
+            />
             <span>Share injury check-ins and clinical records with my physio (only).</span>
           </label>
           <Link to="/privacy" className="text-[11px] underline text-muted-foreground">
@@ -223,7 +240,9 @@ function ProfilePage() {
         </button>
 
         <div className="bg-card border rounded-2xl p-4 space-y-2">
-          <div className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Your data rights</div>
+          <div className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">
+            Your data rights
+          </div>
           <button
             onClick={onExport}
             className="w-full inline-flex items-center justify-center gap-2 rounded-full border-2 border-navy text-navy font-bold uppercase tracking-wider py-2.5 text-xs"

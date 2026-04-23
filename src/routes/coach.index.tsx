@@ -18,7 +18,14 @@ export const Route = createFileRoute("/coach/")({
 });
 
 type Team = { id: string; name: string; sport: string; join_code: string };
-type Member = { id: string; first_name: string | null; last_name: string | null; sport: string | null; position: string | null; role: string | null };
+type Member = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  sport: string | null;
+  position: string | null;
+  role: string | null;
+};
 
 function CoachHome() {
   const { profile } = useAuth();
@@ -57,28 +64,40 @@ function CoachHome() {
     setLoading(false);
   }, [profile]);
 
-  React.useEffect(() => { void loadTeam(); }, [loadTeam]);
+  React.useEffect(() => {
+    void loadTeam();
+  }, [loadTeam]);
 
   const regenerate = async () => {
     if (!team) return;
     const { data: rpc } = await supabase.rpc("generate_join_code");
     const newCode = (rpc as unknown as string) ?? "";
-    if (!newCode) { toast.error("Could not generate code"); return; }
+    if (!newCode) {
+      toast.error("Could not generate code");
+      return;
+    }
     const { data, error } = await supabase
       .from("teams")
       .update({ join_code: newCode })
       .eq("id", team.id)
       .select("id, name, sport, join_code")
       .maybeSingle();
-    if (error || !data) { toast.error("Could not regenerate"); return; }
+    if (error || !data) {
+      toast.error("Could not regenerate");
+      return;
+    }
     setTeam(data);
     toast.success("New code generated");
   };
 
   const copyCode = async () => {
     if (!team) return;
-    try { await navigator.clipboard.writeText(team.join_code); toast.success("Code copied"); }
-    catch { toast.error("Copy failed"); }
+    try {
+      await navigator.clipboard.writeText(team.join_code);
+      toast.success("Code copied");
+    } catch {
+      toast.error("Copy failed");
+    }
   };
 
   if (!profile) return null;
@@ -98,7 +117,8 @@ function CoachHome() {
             <Users className="h-6 w-6 text-gold mx-auto" />
             <div className="font-display text-xl mt-2">No team yet</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Create your first team. You'll get a 6-character join code (like Zoom) to share with athletes.
+              Create your first team. You'll get a 6-character join code (like Zoom) to share with
+              athletes.
             </p>
             <button
               onClick={() => navigate({ to: "/create-team" })}
@@ -115,16 +135,28 @@ function CoachHome() {
                 <Users className="h-3.5 w-3.5 text-gold" /> Your team
               </div>
               <div className="font-display text-2xl mt-1">{team.name}</div>
-              <div className="text-[11px] text-white/70">{team.sport} · {athletes.length} athlete{athletes.length === 1 ? "" : "s"}</div>
+              <div className="text-[11px] text-white/70">
+                {team.sport} · {athletes.length} athlete{athletes.length === 1 ? "" : "s"}
+              </div>
 
               <div className="mt-3 rounded-xl bg-white/10 border border-white/20 p-3 text-center">
-                <div className="text-[10px] uppercase tracking-wider text-white/70 font-bold">Join code — share with athletes</div>
-                <div className="font-display text-4xl tracking-[0.4em] text-gold mt-1">{team.join_code}</div>
+                <div className="text-[10px] uppercase tracking-wider text-white/70 font-bold">
+                  Join code — share with athletes
+                </div>
+                <div className="font-display text-4xl tracking-[0.4em] text-gold mt-1">
+                  {team.join_code}
+                </div>
                 <div className="mt-2 flex gap-2 justify-center">
-                  <button onClick={copyCode} className="inline-flex items-center gap-1 rounded-full bg-gold text-navy-deep px-3 py-1 text-[11px] font-bold uppercase tracking-wider">
+                  <button
+                    onClick={copyCode}
+                    className="inline-flex items-center gap-1 rounded-full bg-gold text-navy-deep px-3 py-1 text-[11px] font-bold uppercase tracking-wider"
+                  >
                     <Copy className="h-3 w-3" /> Copy
                   </button>
-                  <button onClick={regenerate} className="inline-flex items-center gap-1 rounded-full bg-white/10 text-white border border-white/30 px-3 py-1 text-[11px] font-bold uppercase tracking-wider">
+                  <button
+                    onClick={regenerate}
+                    className="inline-flex items-center gap-1 rounded-full bg-white/10 text-white border border-white/30 px-3 py-1 text-[11px] font-bold uppercase tracking-wider"
+                  >
                     <RefreshCw className="h-3 w-3" /> New code
                   </button>
                 </div>
@@ -134,7 +166,10 @@ function CoachHome() {
             <SectionHeader
               title="Squad"
               action={
-                <Link to="/coach/program" className="text-[11px] font-bold text-navy uppercase tracking-wider">
+                <Link
+                  to="/coach/program"
+                  className="text-[11px] font-bold text-navy uppercase tracking-wider"
+                >
                   Program →
                 </Link>
               }
@@ -151,12 +186,18 @@ function CoachHome() {
                   return (
                     <div key={a.id} className="flex items-center gap-3 p-3">
                       <div className="h-10 w-10 rounded-full bg-gradient-to-br from-navy to-navy-deep text-white font-bold flex items-center justify-center text-sm">
-                        {full.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                        {full
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .slice(0, 2)
+                          .toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-bold truncate">{full}</div>
                         <div className="text-[10px] text-muted-foreground truncate">
-                          {a.sport ?? "—"}{a.position ? ` · ${a.position}` : ""}
+                          {a.sport ?? "—"}
+                          {a.position ? ` · ${a.position}` : ""}
                         </div>
                       </div>
                     </div>

@@ -27,7 +27,9 @@ function statusFromRtp(s: Injury["rtp_status"]): string {
 
 function PhysioHome() {
   const { profile } = useAuth();
-  const [injuries, setInjuries] = React.useState<Array<Injury & { athlete_name: string; sport: string | null }>>([]);
+  const [injuries, setInjuries] = React.useState<
+    Array<Injury & { athlete_name: string; sport: string | null }>
+  >([]);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
@@ -40,14 +42,23 @@ function PhysioHome() {
         .order("updated_at", { ascending: false });
       if (cancelled) return;
       const rows = (data ?? []).map((r) => {
-        const p = r.profiles as { first_name?: string; last_name?: string; sport?: string | null } | null;
+        const p = r.profiles as {
+          first_name?: string;
+          last_name?: string;
+          sport?: string | null;
+        } | null;
         const name = `${p?.first_name ?? ""} ${p?.last_name ?? ""}`.trim() || "Athlete";
-        return { ...r, athlete_name: name, sport: p?.sport ?? null } as Injury & { athlete_name: string; sport: string | null };
+        return { ...r, athlete_name: name, sport: p?.sport ?? null } as Injury & {
+          athlete_name: string;
+          sport: string | null;
+        };
       });
       setInjuries(rows);
       setLoading(false);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [profile]);
 
   if (!profile) return null;
@@ -73,7 +84,8 @@ function PhysioHome() {
           </div>
         ) : injuries.length === 0 ? (
           <div className="bg-card rounded-xl border p-5 text-center text-sm text-muted-foreground">
-            No injury records yet. Use <span className="font-bold">Log</span> in the navbar to open a new case.
+            No injury records yet. Use <span className="font-bold">Log</span> in the navbar to open
+            a new case.
           </div>
         ) : (
           <div className="space-y-3">
@@ -92,11 +104,18 @@ function PhysioHome() {
                 <div className="px-3 pb-3 grid grid-cols-3 gap-2 text-center">
                   <Cell label="Severity" value={`${inj.severity}/10`} />
                   <Cell label="Type" value={inj.injury_type} />
-                  <Cell label="Logged" value={new Date(inj.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })} />
+                  <Cell
+                    label="Logged"
+                    value={new Date(inj.created_at).toLocaleDateString(undefined, {
+                      day: "numeric",
+                      month: "short",
+                    })}
+                  />
                 </div>
                 {inj.expected_rtp_date && (
                   <div className="px-3 pb-3 flex items-center gap-1 text-[11px] text-muted-foreground">
-                    <Calendar className="h-3 w-3" /> Expected RTP: {new Date(inj.expected_rtp_date).toLocaleDateString()}
+                    <Calendar className="h-3 w-3" /> Expected RTP:{" "}
+                    {new Date(inj.expected_rtp_date).toLocaleDateString()}
                   </div>
                 )}
               </div>
@@ -111,7 +130,9 @@ function PhysioHome() {
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="bg-card rounded-2xl border p-3">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">{label}</div>
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
+        {label}
+      </div>
       <div className="font-display text-2xl mt-0.5">{value}</div>
     </div>
   );

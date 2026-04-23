@@ -1,7 +1,20 @@
 import * as React from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { ROLE_LABEL, useAuth, type Role } from "@/lib/auth-context";
-import { Home, Dumbbell, LineChart, HeartPulse, Users, Trophy, Newspaper, ClipboardList, ShieldCheck, Calendar, LogOut, User as UserIcon } from "lucide-react";
+import {
+  Home,
+  Dumbbell,
+  LineChart,
+  HeartPulse,
+  Users,
+  Trophy,
+  Newspaper,
+  ClipboardList,
+  ShieldCheck,
+  Calendar,
+  LogOut,
+  User as UserIcon,
+} from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
 import { TestModeStamp } from "./TestModeStamp";
 import { cn } from "@/lib/utils";
@@ -86,14 +99,24 @@ export function MobileFrame({
           <span className="opacity-80">CUT ATHLETIQ</span>
           <div className="flex items-center gap-2">
             <span className="opacity-70 hidden sm:inline">Hi,</span>
-            <span className="font-bold truncate max-w-[100px]">{profile.first_name || profile.email.split("@")[0]}</span>
+            <span className="font-bold truncate max-w-[100px]">
+              {profile.first_name || profile.email.split("@")[0]}
+            </span>
             <span className="opacity-50">·</span>
             <span className="font-bold uppercase opacity-80">{roleLabel}</span>
             <NotificationBell />
-            <Link to="/profile" aria-label="Profile" className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center">
+            <Link
+              to="/profile"
+              aria-label="Profile"
+              className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
+            >
               <UserIcon className="h-4 w-4 text-white" />
             </Link>
-            <button onClick={handleSignOut} aria-label="Sign out" className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center">
+            <button
+              onClick={handleSignOut}
+              aria-label="Sign out"
+              className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
+            >
               <LogOut className="h-4 w-4 text-white" />
             </button>
           </div>
@@ -108,7 +131,10 @@ export function MobileFrame({
         <div className="flex-1 overflow-y-auto overflow-x-hidden">
           <div className="animate-fade-up">{children}</div>
           <div className="text-center text-[10px] text-muted-foreground py-3">
-            Phase 1 Test Build · <Link to="/privacy" className="underline hover:text-foreground">Privacy</Link>
+            Phase 1 Test Build ·{" "}
+            <Link to="/privacy" className="underline hover:text-foreground">
+              Privacy
+            </Link>
           </div>
         </div>
 
@@ -128,8 +154,12 @@ export function MobileFrame({
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
                   )}
                 >
-                  <Icon className={cn("h-5 w-5 transition-transform", active && "text-navy scale-110")} />
-                  <span className={cn("text-[10px] font-medium", active && "font-bold")}>{item.label}</span>
+                  <Icon
+                    className={cn("h-5 w-5 transition-transform", active && "text-navy scale-110")}
+                  />
+                  <span className={cn("text-[10px] font-medium", active && "font-bold")}>
+                    {item.label}
+                  </span>
                 </Link>
               );
             })}

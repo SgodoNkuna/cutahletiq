@@ -38,8 +38,14 @@ function AthleteHome() {
           .gte("session_date", today)
           .order("session_date", { ascending: true })
           .limit(5),
-        supabase.from("personal_records").select("id", { count: "exact", head: true }).eq("athlete_id", profile.id),
-        supabase.from("workout_logs").select("id", { count: "exact", head: true }).eq("athlete_id", profile.id),
+        supabase
+          .from("personal_records")
+          .select("id", { count: "exact", head: true })
+          .eq("athlete_id", profile.id),
+        supabase
+          .from("workout_logs")
+          .select("id", { count: "exact", head: true })
+          .eq("athlete_id", profile.id),
         profile.team_id
           ? supabase.from("teams").select("name").eq("id", profile.team_id).maybeSingle()
           : Promise.resolve({ data: null }),
@@ -57,11 +63,17 @@ function AthleteHome() {
       setTeamName((teamRes.data as { name: string } | null)?.name ?? null);
       setLoading(false);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [profile]);
 
   if (!profile) return null;
-  const todayStr = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+  const todayStr = new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
   const greetingName = profile.first_name?.trim() || profile.email.split("@")[0];
 
   return (
@@ -70,7 +82,13 @@ function AthleteHome() {
         <div className="text-[11px] uppercase tracking-wider text-white/60">{todayStr}</div>
         <div className="font-display text-3xl truncate">Hi {greetingName} 👋</div>
         <div className="text-[11px] text-white/70 mt-1">
-          {teamName ? <>Squad: <span className="font-bold">{teamName}</span></> : "Not on a team yet"}
+          {teamName ? (
+            <>
+              Squad: <span className="font-bold">{teamName}</span>
+            </>
+          ) : (
+            "Not on a team yet"
+          )}
         </div>
       </div>
 
@@ -84,7 +102,9 @@ function AthleteHome() {
               <Users className="h-3.5 w-3.5" /> Join a team
             </div>
             <div className="text-sm font-bold mt-1">Got a team join code from your coach?</div>
-            <div className="text-[11px] text-muted-foreground mt-0.5">Tap to enter the 6-character code.</div>
+            <div className="text-[11px] text-muted-foreground mt-0.5">
+              Tap to enter the 6-character code.
+            </div>
           </Link>
         )}
 
@@ -100,9 +120,17 @@ function AthleteHome() {
               <Stat label="Upcoming" value={upcoming.length} />
             </div>
 
-            <SectionHeader title="Up next" action={
-              <Link to="/calendar" className="text-[11px] font-bold text-navy uppercase tracking-wider">Calendar →</Link>
-            } />
+            <SectionHeader
+              title="Up next"
+              action={
+                <Link
+                  to="/calendar"
+                  className="text-[11px] font-bold text-navy uppercase tracking-wider"
+                >
+                  Calendar →
+                </Link>
+              }
+            />
             {upcoming.length === 0 ? (
               <div className="bg-card rounded-xl border p-5 text-center text-sm text-muted-foreground">
                 No sessions scheduled yet. Your coach will publish a programme soon.
@@ -110,7 +138,11 @@ function AthleteHome() {
             ) : (
               <div className="bg-card rounded-xl border divide-y">
                 {upcoming.map((s) => (
-                  <Link to="/athlete/workout" key={s.id} className="flex items-center gap-3 p-3 hover:bg-secondary/40">
+                  <Link
+                    to="/athlete/workout"
+                    key={s.id}
+                    className="flex items-center gap-3 p-3 hover:bg-secondary/40"
+                  >
                     <div className="h-9 w-9 rounded-lg bg-gold/15 text-gold flex items-center justify-center">
                       <Dumbbell className="h-4 w-4" />
                     </div>
@@ -118,8 +150,11 @@ function AthleteHome() {
                       <div className="text-sm font-bold truncate">{s.name}</div>
                       <div className="text-[10px] text-muted-foreground">
                         {new Date(s.session_date + "T00:00:00").toLocaleDateString(undefined, {
-                          weekday: "short", day: "numeric", month: "short",
-                        })} · {s.programme_name}
+                          weekday: "short",
+                          day: "numeric",
+                          month: "short",
+                        })}{" "}
+                        · {s.programme_name}
                       </div>
                     </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -130,29 +165,49 @@ function AthleteHome() {
 
             <SectionHeader title="Quick actions" />
             <div className="grid grid-cols-2 gap-3">
-              <Link to="/athlete/workout" className="bg-card rounded-xl border p-3 flex items-center gap-3 hover:border-gold transition-colors">
-                <div className="bg-gold/15 text-gold rounded-lg p-2"><Dumbbell className="h-5 w-5" /></div>
+              <Link
+                to="/athlete/workout"
+                className="bg-card rounded-xl border p-3 flex items-center gap-3 hover:border-gold transition-colors"
+              >
+                <div className="bg-gold/15 text-gold rounded-lg p-2">
+                  <Dumbbell className="h-5 w-5" />
+                </div>
                 <div>
                   <div className="text-sm font-bold">Today's session</div>
                   <div className="text-[11px] text-muted-foreground">Log sets & PRs</div>
                 </div>
               </Link>
-              <Link to="/athlete/progress" className="bg-card rounded-xl border p-3 flex items-center gap-3 hover:border-gold transition-colors">
-                <div className="bg-navy/10 text-navy rounded-lg p-2"><Trophy className="h-5 w-5" /></div>
+              <Link
+                to="/athlete/progress"
+                className="bg-card rounded-xl border p-3 flex items-center gap-3 hover:border-gold transition-colors"
+              >
+                <div className="bg-navy/10 text-navy rounded-lg p-2">
+                  <Trophy className="h-5 w-5" />
+                </div>
                 <div>
                   <div className="text-sm font-bold">Progress</div>
                   <div className="text-[11px] text-muted-foreground">PRs & charts</div>
                 </div>
               </Link>
-              <Link to="/athlete/injury" className="bg-card rounded-xl border p-3 flex items-center gap-3 hover:border-destructive transition-colors">
-                <div className="bg-destructive/10 text-destructive rounded-lg p-2"><HeartPulse className="h-5 w-5" /></div>
+              <Link
+                to="/athlete/injury"
+                className="bg-card rounded-xl border p-3 flex items-center gap-3 hover:border-destructive transition-colors"
+              >
+                <div className="bg-destructive/10 text-destructive rounded-lg p-2">
+                  <HeartPulse className="h-5 w-5" />
+                </div>
                 <div>
                   <div className="text-sm font-bold">Body check</div>
                   <div className="text-[11px] text-muted-foreground">Log pain / injury</div>
                 </div>
               </Link>
-              <Link to="/leaderboard" className="bg-card rounded-xl border p-3 flex items-center gap-3 hover:border-gold transition-colors">
-                <div className="bg-gold/15 text-gold rounded-lg p-2"><Trophy className="h-5 w-5" /></div>
+              <Link
+                to="/leaderboard"
+                className="bg-card rounded-xl border p-3 flex items-center gap-3 hover:border-gold transition-colors"
+              >
+                <div className="bg-gold/15 text-gold rounded-lg p-2">
+                  <Trophy className="h-5 w-5" />
+                </div>
                 <div>
                   <div className="text-sm font-bold">Leaderboard</div>
                   <div className="text-[11px] text-muted-foreground">Squad ranks</div>
@@ -169,7 +224,9 @@ function AthleteHome() {
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="bg-card rounded-2xl border p-3">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">{label}</div>
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
+        {label}
+      </div>
       <div className="font-display text-2xl mt-0.5">{value}</div>
     </div>
   );

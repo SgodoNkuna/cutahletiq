@@ -10,7 +10,9 @@ export type CalEvent = {
   notes?: string;
 };
 
-function pad(n: number) { return String(n).padStart(2, "0"); }
+function pad(n: number) {
+  return String(n).padStart(2, "0");
+}
 
 function toICSDate(dateISO: string, time: string): string {
   const [h, m] = time.split(":").map(Number);
@@ -42,7 +44,11 @@ function addMinutes(dateISO: string, time: string, minutes: number) {
 }
 
 function ics(text: string): string {
-  return cleanText(text).replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
+  return cleanText(text)
+    .replace(/\\/g, "\\\\")
+    .replace(/\n/g, "\\n")
+    .replace(/,/g, "\\,")
+    .replace(/;/g, "\\;");
 }
 
 export function buildICS(event: CalEvent, durationMin = 60): string {
@@ -62,7 +68,9 @@ export function buildICS(event: CalEvent, durationMin = 60): string {
     event.notes ? `DESCRIPTION:${ics(event.notes)}` : "",
     "END:VEVENT",
     "END:VCALENDAR",
-  ].filter(Boolean).join("\r\n");
+  ]
+    .filter(Boolean)
+    .join("\r\n");
 }
 
 export function downloadICS(event: CalEvent) {
