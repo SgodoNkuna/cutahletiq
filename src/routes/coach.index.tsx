@@ -42,7 +42,17 @@ function CoachHome() {
         .from("team_members_safe")
         .select("id, first_name, last_name, sport, position, role")
         .eq("team_id", t.id);
-      setMembers((m ?? []).filter((r): r is Member => !!r.id));
+      const cleaned: Member[] = (m ?? [])
+        .filter((r) => !!r.id)
+        .map((r) => ({
+          id: r.id as string,
+          first_name: r.first_name,
+          last_name: r.last_name,
+          sport: r.sport,
+          position: r.position,
+          role: r.role,
+        }));
+      setMembers(cleaned);
     }
     setLoading(false);
   }, [profile]);

@@ -49,9 +49,9 @@ function PhysioLogPage() {
         .eq("role", "athlete");
       if (cancelled) return;
       const opts: AthleteOpt[] = (data ?? [])
-        .filter((r): r is { id: string; first_name: string | null; last_name: string | null; sport: string | null; role: string | null } => !!r.id)
+        .filter((r) => !!r.id)
         .map((r) => ({
-          id: r.id,
+          id: r.id as string,
           name: `${r.first_name ?? ""} ${r.last_name ?? ""}`.trim() || "Athlete",
           sport: r.sport,
         }));

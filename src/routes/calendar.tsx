@@ -62,10 +62,6 @@ function CalendarPage() {
     return () => { cancelled = true; };
   }, [profile]);
 
-  if (!profile) return null;
-
-  const grid = buildMonth(anchor);
-  const monthLabel = anchor.toLocaleDateString(undefined, { month: "long", year: "numeric" });
   const sessionsByDay = React.useMemo(() => {
     const map = new Map<string, Sess[]>();
     for (const s of sessions) {
@@ -74,6 +70,11 @@ function CalendarPage() {
     }
     return map;
   }, [sessions]);
+
+  if (!profile) return null;
+
+  const grid = buildMonth(anchor);
+  const monthLabel = anchor.toLocaleDateString(undefined, { month: "long", year: "numeric" });
   const daySessions = sessionsByDay.get(selected) ?? [];
 
   return (
