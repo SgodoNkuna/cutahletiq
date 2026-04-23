@@ -27,8 +27,15 @@ function ProgramPage() {
   const coachId = profile?.id ?? null;
   const teamId = profile?.team_id ?? null;
   const {
-    programme, loading, addSession, removeSession, updateSession,
-    addExercise, updateExercise, removeExercise, renameProgramme,
+    programme,
+    loading,
+    addSession,
+    removeSession,
+    updateSession,
+    addExercise,
+    updateExercise,
+    removeExercise,
+    renameProgramme,
   } = useCoachProgramme(coachId, teamId);
 
   const handleAddSession = () => {
@@ -122,7 +129,10 @@ function ProgramPage() {
 
               <div className="p-2 space-y-1.5">
                 {s.exercises.map((x) => (
-                  <div key={x.id} className="flex items-center gap-1.5 rounded-lg border p-2 bg-background">
+                  <div
+                    key={x.id}
+                    className="flex items-center gap-1.5 rounded-lg border p-2 bg-background"
+                  >
                     <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
                     <input
                       value={x.name}
@@ -131,26 +141,37 @@ function ProgramPage() {
                       className="flex-1 min-w-0 bg-transparent text-sm focus:outline-none"
                     />
                     <input
-                      type="number" min={1} max={20}
+                      type="number"
+                      min={1}
+                      max={20}
                       value={x.sets}
                       onChange={(e) =>
-                        updateExercise(x.id, s.id, { sets: Math.max(1, Math.min(20, +e.target.value || 1)) })
+                        updateExercise(x.id, s.id, {
+                          sets: Math.max(1, Math.min(20, +e.target.value || 1)),
+                        })
                       }
                       className="w-10 text-center text-sm font-bold bg-secondary rounded-md py-1"
                       title="Sets"
                     />
                     <span className="text-[10px] text-muted-foreground">×</span>
                     <input
-                      type="number" min={1} max={100}
+                      type="number"
+                      min={1}
+                      max={100}
                       value={x.reps}
                       onChange={(e) =>
-                        updateExercise(x.id, s.id, { reps: Math.max(1, Math.min(100, +e.target.value || 1)) })
+                        updateExercise(x.id, s.id, {
+                          reps: Math.max(1, Math.min(100, +e.target.value || 1)),
+                        })
                       }
                       className="w-12 text-center text-sm font-bold bg-secondary rounded-md py-1"
                       title="Reps"
                     />
                     <input
-                      type="number" min={0} max={500} step={2.5}
+                      type="number"
+                      min={0}
+                      max={500}
+                      step={2.5}
                       value={x.weight_kg ?? 0}
                       onChange={(e) =>
                         updateExercise(x.id, s.id, {

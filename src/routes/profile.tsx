@@ -6,7 +6,9 @@ import { MobileFrame } from "@/components/MobileFrame";
 import { Input } from "@/components/ui/input";
 import { exportMyData, deleteMyAccount } from "@/lib/server/popia.functions";
 import { toast } from "sonner";
-import { Download, Loader2, LogOut, ShieldCheck, Trash2 } from "lucide-react";
+import { Download, FileText, Loader2, LogOut, ShieldCheck, Trash2 } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -81,9 +83,64 @@ function ProfilePage() {
     }
   };
 
+  const onExportPDF = async () => {
+    try {
+      const data = await exportMyData();
+      const doc = new jsPDF();
+      const fullName = `${profile.first_name} ${profile.last_name}`.trim() || profile.email;
+
+      doc.setFontSize(18);
+      doc.text("CUT Athletiq — Personal Record", 14, 18);
+      doc.setFontSize(10);
+      doc.text(`Athlete: ${fullName}`, 14, 26);
+      doc.text(`Email: ${profile.email}`, 14, 32);
+      doc.text(`Exported: ${new Date().toLocaleString()}`, 14, 38);
+
+      const prRows = (data.personal_records ?? []).map((r) => [
+        new Date(r.achieved_at).toLocaleDateString(),
+        r.exercise_name,
+        `${r.weight_kg} kg`,
+        String(r.reps),
+      ]);
+      autoTable(doc, {
+        startY: 46,
+        head: [["Date", "Exercise", "Weight", "Reps"]],
+        body: prRows.length ? prRows : [["—", "No personal records yet", "", ""]],
+        headStyles: { fillColor: [13, 27, 62] },
+      });
+
+      const logRows = (data.workout_logs ?? [])
+        .sort((a, b) => +new Date(b.logged_at) - +new Date(a.logged_at))
+        .slice(0, 200)
+        .map((l) => [
+          new Date(l.logged_at).toLocaleDateString(),
+          `Set ${l.set_number}`,
+          `${l.actual_weight_kg} kg`,
+          String(l.actual_reps),
+          l.is_pr ? "PR" : "",
+        ]);
+      const afterPR =
+        (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+      doc.setFontSize(14);
+      doc.text("Workout Logs (last 200 sets)", 14, afterPR);
+      autoTable(doc, {
+        startY: afterPR + 4,
+        head: [["Date", "Set", "Weight", "Reps", "PR"]],
+        body: logRows.length ? logRows : [["—", "No logs yet", "", "", ""]],
+        headStyles: { fillColor: [13, 27, 62] },
+      });
+
+      doc.save(`cut-athletiq-${profile.email}.pdf`);
+      toast.success("PDF generated");
+    } catch (err) {
+      console.error(err);
+      toast.error("Could not generate PDF");
+    }
+  };
+
   const onDelete = async () => {
     const ok = window.confirm(
-      "Delete your account permanently? This cannot be undone. (POPIA s.24)\n\nAll your check-ins, workouts and personal records will be removed."
+      "Delete your account permanently? This cannot be undone. (POPIA s.24)\n\nAll your check-ins, workouts and personal records will be removed.",
     );
     if (!ok) return;
     try {
@@ -105,7 +162,9 @@ function ProfilePage() {
     <MobileFrame title="Profile">
       <div className="px-5 space-y-4 pb-6">
         <div className="bg-card border rounded-2xl p-4 space-y-3">
-          <div className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Account</div>
+          <div className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">
+            Account
+          </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="text-[10px] font-bold uppercase text-muted-foreground">First</label>
@@ -127,12 +186,16 @@ function ProfilePage() {
           {(profile.role === "athlete" || profile.role === "coach") && (
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[10px] font-bold uppercase text-muted-foreground">Sport</label>
+                <label className="text-[10px] font-bold uppercase text-muted-foreground">
+                  Sport
+                </label>
                 <Input value={sport} onChange={(e) => setSport(e.target.value)} />
               </div>
               {profile.role === "athlete" && (
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-muted-foreground">Position</label>
+                  <label className="text-[10px] font-bold uppercase text-muted-foreground">
+                    Position
+                  </label>
                   <Input value={position} onChange={(e) => setPosition(e.target.value)} />
                 </div>
               )}
@@ -145,11 +208,21 @@ function ProfilePage() {
             Consent (POPIA)
           </div>
           <label className="flex items-start gap-2 text-xs cursor-pointer">
-            <input type="checkbox" checked={consentCoach} onChange={(e) => setConsentCoach(e.target.checked)} className="mt-0.5" />
+            <input
+              type="checkbox"
+              checked={consentCoach}
+              onChange={(e) => setConsentCoach(e.target.checked)}
+              className="mt-0.5"
+            />
             <span>Share training data with my coach and team admins.</span>
           </label>
           <label className="flex items-start gap-2 text-xs cursor-pointer">
-            <input type="checkbox" checked={consentPhysio} onChange={(e) => setConsentPhysio(e.target.checked)} className="mt-0.5" />
+            <input
+              type="checkbox"
+              checked={consentPhysio}
+              onChange={(e) => setConsentPhysio(e.target.checked)}
+              className="mt-0.5"
+            />
             <span>Share injury check-ins and clinical records with my physio (only).</span>
           </label>
           <Link to="/privacy" className="text-[11px] underline text-muted-foreground">
@@ -167,12 +240,20 @@ function ProfilePage() {
         </button>
 
         <div className="bg-card border rounded-2xl p-4 space-y-2">
-          <div className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Your data rights</div>
+          <div className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">
+            Your data rights
+          </div>
           <button
             onClick={onExport}
             className="w-full inline-flex items-center justify-center gap-2 rounded-full border-2 border-navy text-navy font-bold uppercase tracking-wider py-2.5 text-xs"
           >
             <Download className="h-4 w-4" /> Download my data (JSON)
+          </button>
+          <button
+            onClick={onExportPDF}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-full border-2 border-navy text-navy font-bold uppercase tracking-wider py-2.5 text-xs"
+          >
+            <FileText className="h-4 w-4" /> Download my record (PDF)
           </button>
           <button
             onClick={onDelete}

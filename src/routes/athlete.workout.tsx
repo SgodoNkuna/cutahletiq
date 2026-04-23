@@ -10,7 +10,11 @@ import { toast } from "sonner";
 import { rpeSchema } from "@/lib/sanitize";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchTodaysSessionForAthlete, type DBSession, type DBExercise } from "@/lib/hooks/use-coach-programme";
+import {
+  fetchTodaysSessionForAthlete,
+  type DBSession,
+  type DBExercise,
+} from "@/lib/hooks/use-coach-programme";
 
 export const Route = createFileRoute("/athlete/workout")({
   head: () => ({
@@ -68,7 +72,9 @@ function WorkoutPage() {
       }
       setLoading(false);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [profile?.id]);
 
   if (loading) {
@@ -88,7 +94,8 @@ function WorkoutPage() {
           <div className="text-5xl mb-3">🏖</div>
           <div className="font-display text-2xl">No session scheduled</div>
           <p className="text-sm text-muted-foreground mt-2">
-            Your coach hasn't published a session for today. Check back later or browse your calendar.
+            Your coach hasn't published a session for today. Check back later or browse your
+            calendar.
           </p>
           <button
             onClick={() => navigate({ to: "/athlete" })}
@@ -141,8 +148,13 @@ function WorkoutPage() {
 
     // Persist all done sets as workout_logs
     const rows: Array<{
-      athlete_id: string; exercise_id: string; session_id: string;
-      set_number: number; actual_reps: number; actual_weight_kg: number; is_pr: boolean;
+      athlete_id: string;
+      exercise_id: string;
+      session_id: string;
+      set_number: number;
+      actual_reps: number;
+      actual_weight_kg: number;
+      is_pr: boolean;
     }> = [];
     state.forEach((sets, ei) => {
       const ex = session.exercises[ei];
@@ -203,7 +215,9 @@ function WorkoutPage() {
         <div className="bg-card rounded-xl border p-3">
           <div className="flex items-center justify-between text-xs mb-1.5">
             <span className="font-bold uppercase tracking-wider">Session progress</span>
-            <span className="text-muted-foreground">{doneSets}/{totalSets} sets</span>
+            <span className="text-muted-foreground">
+              {doneSets}/{totalSets} sets
+            </span>
           </div>
           <div className="h-2 bg-secondary rounded-full overflow-hidden">
             <div
@@ -215,7 +229,10 @@ function WorkoutPage() {
 
         <div className="space-y-4 mt-4">
           {session.exercises.map((ex, ei) => {
-            const max = Math.max(...(state[ei] ?? []).filter((s) => s.done).map((s) => s.weight), 0);
+            const max = Math.max(
+              ...(state[ei] ?? []).filter((s) => s.done).map((s) => s.weight),
+              0,
+            );
             const currentPR = prs[ex.name] ?? 0;
             const isPR = max > currentPR && max > 0;
             return (
@@ -289,9 +306,17 @@ function WorkoutPage() {
 }
 
 function NumStepper({
-  label, value, onChange, step = 1, disabled,
+  label,
+  value,
+  onChange,
+  step = 1,
+  disabled,
 }: {
-  label: string; value: number; onChange: (v: number) => void; step?: number; disabled?: boolean;
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  step?: number;
+  disabled?: boolean;
 }) {
   return (
     <div className="flex flex-col items-center">

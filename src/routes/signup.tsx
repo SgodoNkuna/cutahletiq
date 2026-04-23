@@ -101,17 +101,39 @@ function SignupPage() {
         <form onSubmit={submit} className="flex-1 overflow-y-auto px-5 py-5 space-y-3">
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">First name</label>
-              <Input value={first} onChange={(e) => setFirst(e.target.value)} required maxLength={80} />
+              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                First name
+              </label>
+              <Input
+                value={first}
+                onChange={(e) => setFirst(e.target.value)}
+                required
+                maxLength={80}
+              />
             </div>
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Last name</label>
-              <Input value={last} onChange={(e) => setLast(e.target.value)} required maxLength={80} />
+              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Last name
+              </label>
+              <Input
+                value={last}
+                onChange={(e) => setLast(e.target.value)}
+                required
+                maxLength={80}
+              />
             </div>
           </div>
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Email</label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Email
+            </label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
           </div>
           <div>
             <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -128,7 +150,9 @@ function SignupPage() {
           </div>
 
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">I am a…</div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+              I am a…
+            </div>
             <div className="grid grid-cols-2 gap-2">
               {ROLES.map((r) => (
                 <button
@@ -150,19 +174,33 @@ function SignupPage() {
           {role === "athlete" && (
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Sport</label>
-                <Input value={sport} onChange={(e) => setSport(e.target.value)} placeholder="Rugby" />
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Sport
+                </label>
+                <Input
+                  value={sport}
+                  onChange={(e) => setSport(e.target.value)}
+                  placeholder="Rugby"
+                />
               </div>
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Position</label>
-                <Input value={position} onChange={(e) => setPosition(e.target.value)} placeholder="Flanker" />
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Position
+                </label>
+                <Input
+                  value={position}
+                  onChange={(e) => setPosition(e.target.value)}
+                  placeholder="Flanker"
+                />
               </div>
             </div>
           )}
 
           {role === "coach" && (
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Sport</label>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Sport
+              </label>
               <Input value={sport} onChange={(e) => setSport(e.target.value)} placeholder="Rugby" />
             </div>
           )}
@@ -193,8 +231,8 @@ function SignupPage() {
                 className="mt-0.5"
               />
               <span>
-                I consent to my training data (workouts, RPE, attendance, readiness) being shared with my coach
-                and team admins.
+                I consent to my training data (workouts, RPE, attendance, readiness) being shared
+                with my coach and team admins.
               </span>
             </label>
             <label className="flex gap-2 items-start cursor-pointer">
@@ -205,8 +243,9 @@ function SignupPage() {
                 className="mt-0.5"
               />
               <span>
-                I consent to my injury check-ins and clinical records being shared <strong>only with the
-                physio</strong> assigned to my team. Coaches do not see this data.
+                I consent to my injury check-ins and clinical records being shared{" "}
+                <strong>only with the physio</strong> assigned to my team. Coaches do not see this
+                data.
               </span>
             </label>
             <Link to="/privacy" className="text-[11px] underline hover:text-foreground">

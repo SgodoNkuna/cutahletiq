@@ -59,7 +59,9 @@ function PhysioLogPage() {
       if (opts[0]) setAthleteId(opts[0].id);
       setLoadingAthletes(false);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [profile]);
 
   const submit = async () => {
@@ -97,11 +99,15 @@ function PhysioLogPage() {
       <div className="px-5 space-y-4">
         <Field label="Athlete">
           {loadingAthletes ? (
-            <div className="py-3 flex items-center"><Loader2 className="h-4 w-4 animate-spin" /></div>
+            <div className="py-3 flex items-center">
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </div>
           ) : athletes.length === 0 ? (
             <div className="text-xs text-muted-foreground bg-secondary/40 rounded-lg p-3">
               No athletes available yet. They need to join a team first.
-              <Link to="/physio" className="block mt-2 underline">Back to cases</Link>
+              <Link to="/physio" className="block mt-2 underline">
+                Back to cases
+              </Link>
             </div>
           ) : (
             <select
@@ -110,7 +116,10 @@ function PhysioLogPage() {
               className="w-full rounded-md border bg-card px-3 py-2 text-sm"
             >
               {athletes.map((a) => (
-                <option key={a.id} value={a.id}>{a.name}{a.sport ? ` · ${a.sport}` : ""}</option>
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                  {a.sport ? ` · ${a.sport}` : ""}
+                </option>
               ))}
             </select>
           )}
@@ -121,7 +130,12 @@ function PhysioLogPage() {
         </Field>
 
         <Field label="Injury type">
-          <Input value={injuryType} onChange={(e) => setInjuryType(e.target.value)} maxLength={80} placeholder="Strain, Sprain, Tear…" />
+          <Input
+            value={injuryType}
+            onChange={(e) => setInjuryType(e.target.value)}
+            maxLength={80}
+            placeholder="Strain, Sprain, Tear…"
+          />
         </Field>
 
         <Field label="Mechanism">
@@ -140,7 +154,13 @@ function PhysioLogPage() {
         </Field>
 
         <Field label={`Estimated RTP · ${rtpDays} days`}>
-          <Slider value={[rtpDays]} onValueChange={(v) => setRtpDays(v[0])} min={1} max={90} step={1} />
+          <Slider
+            value={[rtpDays]}
+            onValueChange={(v) => setRtpDays(v[0])}
+            min={1}
+            max={90}
+            step={1}
+          />
         </Field>
 
         <Field label="Clinical notes">
@@ -170,13 +190,23 @@ function PhysioLogPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">{label}</div>
+      <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+        {label}
+      </div>
       {children}
     </div>
   );
 }
 
-function PillRow({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
+function PillRow({
+  options,
+  value,
+  onChange,
+}: {
+  options: string[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {options.map((o) => (
@@ -185,7 +215,9 @@ function PillRow({ options, value, onChange }: { options: string[]; value: strin
           onClick={() => onChange(o)}
           className={cn(
             "rounded-full px-3 py-1.5 text-xs font-bold border transition-colors",
-            value === o ? "bg-navy text-primary-foreground border-navy" : "bg-card border-border text-muted-foreground hover:border-navy/40",
+            value === o
+              ? "bg-navy text-primary-foreground border-navy"
+              : "bg-card border-border text-muted-foreground hover:border-navy/40",
           )}
         >
           {o}

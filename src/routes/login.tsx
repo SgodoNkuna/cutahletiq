@@ -90,7 +90,9 @@ function LoginPage() {
         <div className="px-6 -mt-6 flex-1 overflow-y-auto pb-8">
           <form onSubmit={submit} className="bg-card rounded-2xl shadow-lg p-5 border space-y-3">
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Email</label>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                Email
+              </label>
               <Input
                 type="email"
                 autoComplete="email"
@@ -102,7 +104,9 @@ function LoginPage() {
               />
             </div>
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Password</label>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                Password
+              </label>
               <Input
                 type="password"
                 autoComplete="current-password"

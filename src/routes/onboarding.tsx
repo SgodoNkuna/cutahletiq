@@ -72,8 +72,12 @@ function OnboardingPage() {
               <img src={logoUrl} alt="CUT" className="h-8 w-auto" />
             </div>
             <div>
-              <div className="font-display text-2xl tracking-wide leading-none">WELCOME, {profile.first_name?.toUpperCase()}</div>
-              <div className="text-[11px] text-white/60">A couple of quick details to get you set up</div>
+              <div className="font-display text-2xl tracking-wide leading-none">
+                WELCOME, {profile.first_name?.toUpperCase()}
+              </div>
+              <div className="text-[11px] text-white/60">
+                A couple of quick details to get you set up
+              </div>
             </div>
           </div>
         </div>
@@ -81,23 +85,37 @@ function OnboardingPage() {
         <div className="flex-1 px-6 py-6 space-y-4 overflow-y-auto">
           <div className="bg-card rounded-2xl shadow-md p-5 border space-y-3">
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Sport</label>
-              <Input value={sport} onChange={(e) => setSport(e.target.value)} placeholder="e.g. Rugby" />
+              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                Sport
+              </label>
+              <Input
+                value={sport}
+                onChange={(e) => setSport(e.target.value)}
+                placeholder="e.g. Rugby"
+              />
             </div>
             {profile.role === "athlete" && (
               <div>
                 <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                   Position (optional)
                 </label>
-                <Input value={position} onChange={(e) => setPosition(e.target.value)} placeholder="e.g. Flanker" />
+                <Input
+                  value={position}
+                  onChange={(e) => setPosition(e.target.value)}
+                  placeholder="e.g. Flanker"
+                />
               </div>
             )}
 
             <div className="rounded-lg bg-secondary/40 p-3 text-[11px] text-muted-foreground">
-              {profile.role === "coach" && "Next, you'll create a team and get a 6-character join code to share with your athletes."}
-              {profile.role === "athlete" && "Next, ask your coach for the team join code (like a Zoom code) to connect to your squad."}
-              {profile.role === "physio" && "You'll see athletes from teams you support. Coaches will share team codes with you."}
-              {profile.role === "admin" && "You can manage all users, teams and POPIA tools from the admin dashboard."}
+              {profile.role === "coach" &&
+                "Next, you'll create a team and get a 6-character join code to share with your athletes."}
+              {profile.role === "athlete" &&
+                "Next, ask your coach for the team join code (like a Zoom code) to connect to your squad."}
+              {profile.role === "physio" &&
+                "You'll see athletes from teams you support. Coaches will share team codes with you."}
+              {profile.role === "admin" &&
+                "You can manage all users, teams and POPIA tools from the admin dashboard."}
             </div>
 
             <button

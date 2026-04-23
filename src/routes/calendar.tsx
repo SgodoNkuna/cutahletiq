@@ -51,15 +51,19 @@ function CalendarPage() {
         .select("id, name, session_date, programmes!inner(name)")
         .order("session_date", { ascending: true });
       if (cancelled) return;
-      setSessions((data ?? []).map((s) => ({
-        id: s.id,
-        name: s.name,
-        session_date: s.session_date,
-        programme_name: (s.programmes as { name: string } | null)?.name ?? "Programme",
-      })));
+      setSessions(
+        (data ?? []).map((s) => ({
+          id: s.id,
+          name: s.name,
+          session_date: s.session_date,
+          programme_name: (s.programmes as { name: string } | null)?.name ?? "Programme",
+        })),
+      );
       setLoading(false);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [profile]);
 
   const sessionsByDay = React.useMemo(() => {
@@ -84,20 +88,28 @@ function CalendarPage() {
           <button
             onClick={() => setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() - 1, 1))}
             className="px-3 py-1 text-sm hover:bg-secondary rounded-md"
-          >‹</button>
+          >
+            ‹
+          </button>
           <div className="font-display text-xl">{monthLabel}</div>
           <button
             onClick={() => setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() + 1, 1))}
             className="px-3 py-1 text-sm hover:bg-secondary rounded-md"
-          >›</button>
+          >
+            ›
+          </button>
         </div>
 
         {loading ? (
-          <div className="py-8 flex items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-gold" /></div>
+          <div className="py-8 flex items-center justify-center">
+            <Loader2 className="h-5 w-5 animate-spin text-gold" />
+          </div>
         ) : (
           <div className="bg-card rounded-xl border p-2 mt-2">
             <div className="grid grid-cols-7 text-[9px] uppercase tracking-wider text-muted-foreground text-center mb-1">
-              {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => <div key={i}>{d}</div>)}
+              {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
+                <div key={i}>{d}</div>
+              ))}
             </div>
             <div className="grid grid-cols-7 gap-1">
               {grid.map(({ iso, date, inMonth }) => {
@@ -115,9 +127,16 @@ function CalendarPage() {
                       isToday && !isSel && "ring-2 ring-gold",
                     )}
                   >
-                    <span className={cn("font-bold leading-none", isSel && "text-white")}>{date.getDate()}</span>
+                    <span className={cn("font-bold leading-none", isSel && "text-white")}>
+                      {date.getDate()}
+                    </span>
                     {evs.length > 0 && (
-                      <span className={cn("h-1 w-1 rounded-full mt-auto mb-0.5", isSel ? "bg-white" : "bg-gold")} />
+                      <span
+                        className={cn(
+                          "h-1 w-1 rounded-full mt-auto mb-0.5",
+                          isSel ? "bg-white" : "bg-gold",
+                        )}
+                      />
                     )}
                   </button>
                 );
@@ -130,10 +149,17 @@ function CalendarPage() {
           <div className="flex items-end justify-between mb-2">
             <div>
               <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold">
-                {selected === todayISO ? "Today" : new Date(selected + "T00:00:00").toLocaleDateString(undefined, { weekday: "long" })}
+                {selected === todayISO
+                  ? "Today"
+                  : new Date(selected + "T00:00:00").toLocaleDateString(undefined, {
+                      weekday: "long",
+                    })}
               </div>
               <h2 className="font-display text-2xl leading-none">
-                {new Date(selected + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "long" })}
+                {new Date(selected + "T00:00:00").toLocaleDateString(undefined, {
+                  day: "numeric",
+                  month: "long",
+                })}
               </h2>
             </div>
           </div>
@@ -156,7 +182,9 @@ function CalendarPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-bold text-sm truncate">{s.name}</div>
-                      <div className="text-[11px] text-muted-foreground truncate">{s.programme_name}</div>
+                      <div className="text-[11px] text-muted-foreground truncate">
+                        {s.programme_name}
+                      </div>
                     </div>
                   </div>
                 </Link>

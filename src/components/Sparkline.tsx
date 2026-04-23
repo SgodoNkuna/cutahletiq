@@ -69,10 +69,24 @@ export function Sparkline({
       aria-hidden
     >
       <path d={area} fill={fill} />
-      <path d={path} fill="none" stroke={stroke} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d={path}
+        fill="none"
+        stroke={stroke}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
       {showLastDot && (
         <>
-          <circle cx={last.x} cy={last.y} r={4} fill="var(--gold)" stroke="var(--card)" strokeWidth={2} />
+          <circle
+            cx={last.x}
+            cy={last.y}
+            r={4}
+            fill="var(--gold)"
+            stroke="var(--card)"
+            strokeWidth={2}
+          />
         </>
       )}
       {showLastLabel && (
