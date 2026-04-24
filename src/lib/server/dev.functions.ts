@@ -83,21 +83,23 @@ export const roleDataSnapshot = createServerFn({ method: "POST" })
       "consent_log",
     ] as const;
 
-    const result: Record<string, unknown> = {
+    const tableResults: Record<string, { count: number; rows: unknown[]; error?: string }> = {};
+    for (const t of tables) {
+      const { data, error } = await supabase.from(t).select("*").limit(1000);
+      tableResults[t] = error
+        ? { count: 0, rows: [], error: error.message }
+        : { count: data?.length ?? 0, rows: data ?? [] };
+    }
+
+    return {
       _meta: {
         snapshot_at: new Date().toISOString(),
         viewer_id: userId,
         viewer_role: profile?.role ?? "unknown",
         viewer_team_id: profile?.team_id ?? null,
       },
+      tables: tableResults,
     };
-
-    for (const t of tables) {
-      const { data, error } = await supabase.from(t).select("*").limit(1000);
-      result[t] = error ? { error: error.message } : { count: data?.length ?? 0, rows: data ?? [] };
-    }
-
-    return result;
   });
 
 /* -------------------------------------------------------------------------- */
@@ -153,7 +155,7 @@ export const runRlsDiagnostic = createServerFn({ method: "POST" }).handler(async
   const expect = async (
     name: string,
     expected: "allow" | "deny",
-    fn: () => Promise<{ data: unknown; error: { message: string } | null }>,
+    fn: () => PromiseLike<{ data: unknown; error: { message: string } | null }>,
   ) => {
     try {
       const { data, error } = await fn();
