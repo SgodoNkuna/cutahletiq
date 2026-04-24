@@ -272,6 +272,15 @@ function ProfilePage() {
         >
           <LogOut className="h-4 w-4" /> Sign out
         </button>
+
+        {import.meta.env.DEV && (
+          <Link
+            to="/dev/diagnostics"
+            className="block text-center text-[10px] text-muted-foreground underline hover:text-foreground"
+          >
+            Developer diagnostics →
+          </Link>
+        )}
       </div>
     </MobileFrame>
   );
