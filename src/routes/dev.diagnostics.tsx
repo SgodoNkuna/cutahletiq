@@ -72,7 +72,17 @@ function DevDiagnosticsPage() {
     setSnapBusy(true);
     try {
       const data = await roleDataSnapshot();
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      // Inflate rows_json strings into real arrays for a friendlier file
+      const inflated = {
+        ...data,
+        tables: Object.fromEntries(
+          Object.entries(data.tables).map(([k, v]) => [
+            k,
+            { count: v.count, error: v.error, rows: JSON.parse(v.rows_json) as unknown[] },
+          ]),
+        ),
+      };
+      const blob = new Blob([JSON.stringify(inflated, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       const role = profile?.role ?? "user";
@@ -80,7 +90,7 @@ function DevDiagnosticsPage() {
       a.download = `cut-snapshot-${role}-${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success("Snapshot downloaded");
+      toast.success(`Snapshot downloaded (${Object.keys(inflated.tables).length} tables)`);
     } catch (e) {
       console.error(e);
       toast.error("Snapshot failed");
