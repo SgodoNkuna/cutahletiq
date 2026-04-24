@@ -83,13 +83,12 @@ export const roleDataSnapshot = createServerFn({ method: "POST" })
       "consent_log",
     ] as const;
 
-    const tableResults: Record<string, { count: number; rows: unknown; error: string | null }> = {};
+    const tableResults: Record<string, { count: number; rows_json: string; error: string | null }> = {};
     for (const t of tables) {
       const { data, error } = await supabase.from(t).select("*").limit(1000);
       tableResults[t] = {
         count: error ? 0 : data?.length ?? 0,
-        // JSON-roundtrip to coerce to a serializable shape for the server-fn boundary
-        rows: error ? [] : JSON.parse(JSON.stringify(data ?? [])),
+        rows_json: JSON.stringify(error ? [] : data ?? []),
         error: error?.message ?? null,
       };
     }
