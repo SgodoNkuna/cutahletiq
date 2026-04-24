@@ -26,6 +26,7 @@ import { Route as CoachIndexRouteImport } from './routes/coach.index'
 import { Route as AthleteIndexRouteImport } from './routes/athlete.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as PhysioLogRouteImport } from './routes/physio.log'
+import { Route as DevDiagnosticsRouteImport } from './routes/dev.diagnostics'
 import { Route as CoachProgramRouteImport } from './routes/coach.program'
 import { Route as AthleteWorkoutRouteImport } from './routes/athlete.workout'
 import { Route as AthleteProgressRouteImport } from './routes/athlete.progress'
@@ -116,6 +117,11 @@ const PhysioLogRoute = PhysioLogRouteImport.update({
   path: '/physio/log',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevDiagnosticsRoute = DevDiagnosticsRouteImport.update({
+  id: '/dev/diagnostics',
+  path: '/dev/diagnostics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CoachProgramRoute = CoachProgramRouteImport.update({
   id: '/coach/program',
   path: '/coach/program',
@@ -154,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/athlete/progress': typeof AthleteProgressRoute
   '/athlete/workout': typeof AthleteWorkoutRoute
   '/coach/program': typeof CoachProgramRoute
+  '/dev/diagnostics': typeof DevDiagnosticsRoute
   '/physio/log': typeof PhysioLogRoute
   '/admin/': typeof AdminIndexRoute
   '/athlete/': typeof AthleteIndexRoute
@@ -177,6 +184,7 @@ export interface FileRoutesByTo {
   '/athlete/progress': typeof AthleteProgressRoute
   '/athlete/workout': typeof AthleteWorkoutRoute
   '/coach/program': typeof CoachProgramRoute
+  '/dev/diagnostics': typeof DevDiagnosticsRoute
   '/physio/log': typeof PhysioLogRoute
   '/admin': typeof AdminIndexRoute
   '/athlete': typeof AthleteIndexRoute
@@ -201,6 +209,7 @@ export interface FileRoutesById {
   '/athlete/progress': typeof AthleteProgressRoute
   '/athlete/workout': typeof AthleteWorkoutRoute
   '/coach/program': typeof CoachProgramRoute
+  '/dev/diagnostics': typeof DevDiagnosticsRoute
   '/physio/log': typeof PhysioLogRoute
   '/admin/': typeof AdminIndexRoute
   '/athlete/': typeof AthleteIndexRoute
@@ -226,6 +235,7 @@ export interface FileRouteTypes {
     | '/athlete/progress'
     | '/athlete/workout'
     | '/coach/program'
+    | '/dev/diagnostics'
     | '/physio/log'
     | '/admin/'
     | '/athlete/'
@@ -249,6 +259,7 @@ export interface FileRouteTypes {
     | '/athlete/progress'
     | '/athlete/workout'
     | '/coach/program'
+    | '/dev/diagnostics'
     | '/physio/log'
     | '/admin'
     | '/athlete'
@@ -272,6 +283,7 @@ export interface FileRouteTypes {
     | '/athlete/progress'
     | '/athlete/workout'
     | '/coach/program'
+    | '/dev/diagnostics'
     | '/physio/log'
     | '/admin/'
     | '/athlete/'
@@ -296,6 +308,7 @@ export interface RootRouteChildren {
   AthleteProgressRoute: typeof AthleteProgressRoute
   AthleteWorkoutRoute: typeof AthleteWorkoutRoute
   CoachProgramRoute: typeof CoachProgramRoute
+  DevDiagnosticsRoute: typeof DevDiagnosticsRoute
   PhysioLogRoute: typeof PhysioLogRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AthleteIndexRoute: typeof AthleteIndexRoute
@@ -424,6 +437,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PhysioLogRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dev/diagnostics': {
+      id: '/dev/diagnostics'
+      path: '/dev/diagnostics'
+      fullPath: '/dev/diagnostics'
+      preLoaderRoute: typeof DevDiagnosticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/coach/program': {
       id: '/coach/program'
       path: '/coach/program'
@@ -472,6 +492,7 @@ const rootRouteChildren: RootRouteChildren = {
   AthleteProgressRoute: AthleteProgressRoute,
   AthleteWorkoutRoute: AthleteWorkoutRoute,
   CoachProgramRoute: CoachProgramRoute,
+  DevDiagnosticsRoute: DevDiagnosticsRoute,
   PhysioLogRoute: PhysioLogRoute,
   AdminIndexRoute: AdminIndexRoute,
   AthleteIndexRoute: AthleteIndexRoute,
