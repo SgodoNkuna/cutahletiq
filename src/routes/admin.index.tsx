@@ -17,20 +17,27 @@ export const Route = createFileRoute("/admin/")({
 });
 
 type Counts = { profiles: number; teams: number; sessions: number; injuries: number };
+type TeamRow = { id: string; name: string; sport: string; join_code: string; coach?: { first_name: string | null; last_name: string | null } | null };
 
 function AdminHome() {
   const { profile } = useAuth();
   const [counts, setCounts] = React.useState<Counts | null>(null);
+  const [teams, setTeams] = React.useState<TeamRow[]>([]);
 
   React.useEffect(() => {
     let cancelled = false;
     if (!profile) return;
     (async () => {
-      const [p, t, s, i] = await Promise.all([
+      const [p, t, s, i, teamRows] = await Promise.all([
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("teams").select("id", { count: "exact", head: true }),
         supabase.from("sessions").select("id", { count: "exact", head: true }),
         supabase.from("injury_records").select("id", { count: "exact", head: true }),
+        supabase
+          .from("teams")
+          .select("id, name, sport, join_code, coach:profiles!teams_coach_id_fkey(first_name, last_name)")
+          .order("created_at", { ascending: false })
+          .limit(12),
       ]);
       if (cancelled) return;
       setCounts({
@@ -39,6 +46,7 @@ function AdminHome() {
         sessions: s.count ?? 0,
         injuries: i.count ?? 0,
       });
+      setTeams((teamRows.data ?? []) as unknown as TeamRow[]);
     })();
     return () => {
       cancelled = true;
@@ -114,6 +122,33 @@ function AdminHome() {
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
         </div>
+
+        <SectionHeader title="Coach teams" />
+        {teams.length === 0 ? (
+          <div className="bg-card rounded-xl border p-5 text-center text-sm text-muted-foreground">
+            No teams are visible yet.
+          </div>
+        ) : (
+          <div className="bg-card rounded-xl border divide-y">
+            {teams.map((team) => {
+              const coach = `${team.coach?.first_name ?? ""} ${team.coach?.last_name ?? ""}`.trim() || "Coach";
+              return (
+                <div key={team.id} className="p-3 flex items-center gap-3">
+                  <Users className="h-4 w-4 text-gold" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-bold truncate">{team.name}</div>
+                    <div className="text-[10px] text-muted-foreground truncate">
+                      {coach} · {team.sport}
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold text-navy uppercase tracking-wider">
+                    {team.join_code}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </MobileFrame>
   );
