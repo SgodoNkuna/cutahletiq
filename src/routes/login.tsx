@@ -6,7 +6,8 @@ import { useAuth, ROLE_HOME } from "@/lib/auth-context";
 import { Input } from "@/components/ui/input";
 import { TestModeStamp } from "@/components/TestModeStamp";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, FlaskConical, Copy } from "lucide-react";
+import { devMockResetPassword } from "@/lib/server/dev.functions";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -156,6 +157,7 @@ function LoginPage() {
                 >
                   Send reset link
                 </button>
+                {import.meta.env.DEV && <DevMockResetBlock email={resetEmail} />}
               </div>
             )}
           </form>
@@ -170,6 +172,78 @@ function LoginPage() {
 
         <TestModeStamp />
       </div>
+    </div>
+  );
+}
+
+function DevMockResetBlock({ email }: { email: string }) {
+  const [busy, setBusy] = React.useState(false);
+  const [link, setLink] = React.useState<string | null>(null);
+
+  const run = async () => {
+    if (!email.trim()) {
+      toast.error("Enter the email above first");
+      return;
+    }
+    setBusy(true);
+    setLink(null);
+    try {
+      const res = await devMockResetPassword({
+        data: {
+          email: email.trim(),
+          redirectTo: `${window.location.origin}/reset-password`,
+        },
+      });
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
+      setLink(res.action_link);
+      toast.success("Mock recovery link generated (no email sent).");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="rounded-md border border-dashed border-gold/60 bg-gold/5 p-2.5 space-y-2">
+      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-gold">
+        <FlaskConical className="h-3 w-3" /> Dev only · mock reset (no email)
+      </div>
+      <button
+        type="button"
+        onClick={run}
+        disabled={busy}
+        className="w-full bg-navy text-white font-bold uppercase tracking-wider rounded-full py-1.5 text-[11px] disabled:opacity-60 flex items-center justify-center gap-1.5"
+      >
+        {busy && <Loader2 className="h-3 w-3 animate-spin" />}
+        Generate mock recovery link
+      </button>
+      {link && (
+        <div className="space-y-1.5">
+          <div className="text-[10px] break-all font-mono bg-card border rounded p-2 max-h-24 overflow-auto">
+            {link}
+          </div>
+          <div className="flex gap-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                void navigator.clipboard.writeText(link);
+                toast.success("Copied");
+              }}
+              className="inline-flex items-center gap-1 rounded-full bg-card border px-2.5 py-1 text-[10px] font-bold"
+            >
+              <Copy className="h-2.5 w-2.5" /> Copy
+            </button>
+            <a
+              href={link}
+              className="inline-flex items-center gap-1 rounded-full bg-gold text-navy-deep px-2.5 py-1 text-[10px] font-bold"
+            >
+              Open →
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

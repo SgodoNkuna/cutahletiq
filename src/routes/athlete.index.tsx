@@ -31,13 +31,13 @@ function AthleteHome() {
     if (!profile) return;
     (async () => {
       const today = new Date().toISOString().slice(0, 10);
-      const [sessRes, prRes, logRes, teamRes] = await Promise.all([
+      const [sessRes, prRes, logRes, teamRes, doneRes] = await Promise.all([
         supabase
           .from("sessions")
           .select("id, name, session_date, programmes!inner(name, team_id)")
           .gte("session_date", today)
           .order("session_date", { ascending: true })
-          .limit(5),
+          .limit(10),
         supabase
           .from("personal_records")
           .select("id", { count: "exact", head: true })
@@ -49,14 +49,24 @@ function AthleteHome() {
         profile.team_id
           ? supabase.from("teams").select("name").eq("id", profile.team_id).maybeSingle()
           : Promise.resolve({ data: null }),
+        supabase
+          .from("workout_logs")
+          .select("session_id")
+          .eq("athlete_id", profile.id),
       ]);
       if (cancelled) return;
-      const sessions = (sessRes.data ?? []).map((s) => ({
-        id: s.id,
-        name: s.name,
-        session_date: s.session_date,
-        programme_name: (s.programmes as { name: string } | null)?.name ?? "Programme",
-      }));
+      const completedSessionIds = new Set(
+        (doneRes.data ?? []).map((r) => r.session_id as string),
+      );
+      const sessions = (sessRes.data ?? [])
+        .filter((s) => !completedSessionIds.has(s.id))
+        .slice(0, 5)
+        .map((s) => ({
+          id: s.id,
+          name: s.name,
+          session_date: s.session_date,
+          programme_name: (s.programmes as { name: string } | null)?.name ?? "Programme",
+        }));
       setUpcoming(sessions);
       setPrCount(prRes.count ?? 0);
       setLogCount(logRes.count ?? 0);
