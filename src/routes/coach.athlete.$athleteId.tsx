@@ -5,6 +5,7 @@ import { SectionHeader, SportTag } from "@/components/primitives";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, Loader2, Trophy, Dumbbell } from "lucide-react";
+import type { Database } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/coach/athlete/$athleteId")({
   head: () => ({
@@ -34,6 +35,7 @@ type LogRow = {
   logged_at: string;
   exercises: { name: string } | null;
 };
+type Nudge = Database["public"]["Tables"]["nudges"]["Row"];
 
 function CoachAthleteDetail() {
   const { profile } = useAuth();
@@ -41,13 +43,14 @@ function CoachAthleteDetail() {
   const [athlete, setAthlete] = React.useState<Member | null>(null);
   const [prs, setPrs] = React.useState<PR[]>([]);
   const [logs, setLogs] = React.useState<LogRow[]>([]);
+  const [nudges, setNudges] = React.useState<Nudge[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
     if (!profile) return;
     let cancelled = false;
     (async () => {
-      const [aRes, prRes, logRes] = await Promise.all([
+      const [aRes, prRes, logRes, nudgeRes] = await Promise.all([
         supabase
           .from("team_members_safe")
           .select("id, first_name, last_name, sport, position")
@@ -67,6 +70,13 @@ function CoachAthleteDetail() {
           .eq("athlete_id", athleteId)
           .order("logged_at", { ascending: false })
           .limit(20),
+        supabase
+          .from("nudges")
+          .select("*")
+          .eq("recipient_id", athleteId)
+          .in("type", ["new_programme", "pr_achieved", "missed_session", "checkin_reminder"])
+          .order("created_at", { ascending: false })
+          .limit(10),
       ]);
       if (cancelled) return;
       setAthlete(
@@ -74,6 +84,7 @@ function CoachAthleteDetail() {
       );
       setPrs(prRes.data ?? []);
       setLogs((logRes.data ?? []) as unknown as LogRow[]);
+      setNudges(nudgeRes.data ?? []);
       setLoading(false);
     })();
     return () => {
@@ -132,6 +143,27 @@ function CoachAthleteDetail() {
               <Stat label="PRs" value={prs.length} />
               <Stat label="Sets logged" value={logs.length} />
             </div>
+
+            <SectionHeader title="Recent notifications" />
+            {nudges.length === 0 ? (
+              <div className="bg-card rounded-xl border p-4 text-center text-xs text-muted-foreground">
+                No recent training notifications.
+              </div>
+            ) : (
+              <div className="bg-card rounded-xl border divide-y">
+                {nudges.map((n) => (
+                  <div key={n.id} className="p-3">
+                    <div className="text-sm leading-snug">{n.message}</div>
+                    <div className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider">
+                      {new Date(n.created_at).toLocaleDateString(undefined, {
+                        day: "numeric",
+                        month: "short",
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <SectionHeader title="Recent personal records" />
             {prs.length === 0 ? (
