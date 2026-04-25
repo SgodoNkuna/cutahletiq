@@ -17,7 +17,13 @@ export const Route = createFileRoute("/admin/")({
 });
 
 type Counts = { profiles: number; teams: number; sessions: number; injuries: number };
-type TeamRow = { id: string; name: string; sport: string; join_code: string; coach?: { first_name: string | null; last_name: string | null } | null };
+type TeamRow = {
+  id: string;
+  name: string;
+  sport: string;
+  join_code: string;
+  coach?: { first_name: string | null; last_name: string | null } | null;
+};
 
 function AdminHome() {
   const { profile } = useAuth();
@@ -35,7 +41,9 @@ function AdminHome() {
         supabase.from("injury_records").select("id", { count: "exact", head: true }),
         supabase
           .from("teams")
-          .select("id, name, sport, join_code, coach:profiles!teams_coach_id_fkey(first_name, last_name)")
+          .select(
+            "id, name, sport, join_code, coach:profiles!teams_coach_id_fkey(first_name, last_name)",
+          )
           .order("created_at", { ascending: false })
           .limit(12),
       ]);
@@ -131,7 +139,8 @@ function AdminHome() {
         ) : (
           <div className="bg-card rounded-xl border divide-y">
             {teams.map((team) => {
-              const coach = `${team.coach?.first_name ?? ""} ${team.coach?.last_name ?? ""}`.trim() || "Coach";
+              const coach =
+                `${team.coach?.first_name ?? ""} ${team.coach?.last_name ?? ""}`.trim() || "Coach";
               return (
                 <div key={team.id} className="p-3 flex items-center gap-3">
                   <Users className="h-4 w-4 text-gold" />

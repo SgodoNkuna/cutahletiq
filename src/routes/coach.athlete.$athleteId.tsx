@@ -25,7 +25,13 @@ type Member = {
   sport: string | null;
   position: string | null;
 };
-type PR = { id: string; exercise_name: string; weight_kg: number; reps: number; achieved_at: string };
+type PR = {
+  id: string;
+  exercise_name: string;
+  weight_kg: number;
+  reps: number;
+  achieved_at: string;
+};
 type LogRow = {
   id: string;
   set_number: number;
@@ -79,9 +85,7 @@ function CoachAthleteDetail() {
           .limit(10),
       ]);
       if (cancelled) return;
-      setAthlete(
-        aRes.data ? ({ ...aRes.data, id: aRes.data.id as string } as Member) : null,
-      );
+      setAthlete(aRes.data ? ({ ...aRes.data, id: aRes.data.id as string } as Member) : null);
       setPrs(prRes.data ?? []);
       setLogs((logRes.data ?? []) as unknown as LogRow[]);
       setNudges(nudgeRes.data ?? []);
@@ -94,8 +98,7 @@ function CoachAthleteDetail() {
 
   if (!profile) return null;
 
-  const fullName =
-    `${athlete?.first_name ?? ""} ${athlete?.last_name ?? ""}`.trim() || "Athlete";
+  const fullName = `${athlete?.first_name ?? ""} ${athlete?.last_name ?? ""}`.trim() || "Athlete";
 
   return (
     <MobileFrame title={fullName}>

@@ -139,7 +139,8 @@ function FeedPage() {
         ) : (
           <>
             {announcements.map((a) => {
-              const author = `${a.author?.first_name ?? ""} ${a.author?.last_name ?? ""}`.trim() || "Admin";
+              const author =
+                `${a.author?.first_name ?? ""} ${a.author?.last_name ?? ""}`.trim() || "Admin";
               return (
                 <article
                   key={`ann-${a.id}`}
@@ -175,7 +176,11 @@ function FeedPage() {
                       )}
                     </div>
                     <h2 className="font-display text-lg leading-tight mt-1">{a.title}</h2>
-                    {a.body && <p className="text-sm text-foreground/80 mt-1 whitespace-pre-wrap">{a.body}</p>}
+                    {a.body && (
+                      <p className="text-sm text-foreground/80 mt-1 whitespace-pre-wrap">
+                        {a.body}
+                      </p>
+                    )}
                     <div className="text-[10px] text-muted-foreground mt-2 uppercase tracking-wider">
                       {author} · {timeAgo(a.created_at)}
                     </div>
