@@ -234,7 +234,7 @@ export async function fetchTodaysSessionForAthlete(): Promise<DBSession | null> 
     supabase
       .from("sessions")
       .select(
-        "id, name, session_date, notes, programme_id, exercises(id, name, sets, reps, weight_kg, order_index, notes, session_id)",
+        "id, name, session_date, notes, programme_id, programmes(name), exercises(id, name, sets, reps, weight_kg, order_index, notes, session_id)",
       )
       .gte("session_date", today)
       .order("session_date", { ascending: true })
@@ -265,13 +265,13 @@ export async function fetchUpcomingSessionsForAthlete(limit = 5): Promise<DBSess
   const supabaseAny = supabase as any;
   const [{ data }, { data: completedRows }, { data: loggedRows }] = await Promise.all([
     supabase
-    .from("sessions")
-    .select(
-      "id, name, session_date, notes, programme_id, exercises(id, name, sets, reps, weight_kg, order_index, notes, session_id)",
-    )
-    .gte("session_date", today)
-    .order("session_date", { ascending: true })
-    .limit(20),
+      .from("sessions")
+      .select(
+        "id, name, session_date, notes, programme_id, programmes(name), exercises(id, name, sets, reps, weight_kg, order_index, notes, session_id)",
+      )
+      .gte("session_date", today)
+      .order("session_date", { ascending: true })
+      .limit(20),
     athleteId
       ? supabaseAny.from("session_completions").select("session_id").eq("athlete_id", athleteId)
       : Promise.resolve({ data: [] }),
