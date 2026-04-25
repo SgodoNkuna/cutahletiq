@@ -184,7 +184,12 @@ function CoachHome() {
                 {athletes.map((a) => {
                   const full = `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || "Athlete";
                   return (
-                    <div key={a.id} className="flex items-center gap-3 p-3">
+                    <Link
+                      key={a.id}
+                      to="/coach/athlete/$athleteId"
+                      params={{ athleteId: a.id }}
+                      className="flex items-center gap-3 p-3 hover:bg-secondary/40 transition-colors"
+                    >
                       <div className="h-10 w-10 rounded-full bg-gradient-to-br from-navy to-navy-deep text-white font-bold flex items-center justify-center text-sm">
                         {full
                           .split(" ")
@@ -200,7 +205,10 @@ function CoachHome() {
                           {a.position ? ` · ${a.position}` : ""}
                         </div>
                       </div>
-                    </div>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                        View →
+                      </span>
+                    </Link>
                   );
                 })}
               </div>
