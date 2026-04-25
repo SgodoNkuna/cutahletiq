@@ -163,6 +163,38 @@ export type Database = {
           },
         ]
       }
+      event_rsvps: {
+        Row: {
+          event_id: string
+          id: string
+          responded_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          id?: string
+          responded_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          id?: string
+          responded_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_rsvps_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "team_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exercises: {
         Row: {
           created_at: string
@@ -553,6 +585,30 @@ export type Database = {
           },
         ]
       }
+      session_completions: {
+        Row: {
+          athlete_id: string
+          completed_at: string
+          id: string
+          rpe: number | null
+          session_id: string
+        }
+        Insert: {
+          athlete_id: string
+          completed_at?: string
+          id?: string
+          rpe?: number | null
+          session_id: string
+        }
+        Update: {
+          athlete_id?: string
+          completed_at?: string
+          id?: string
+          rpe?: number | null
+          session_id?: string
+        }
+        Relationships: []
+      }
       sessions: {
         Row: {
           created_at: string
@@ -587,6 +643,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      team_events: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string
+          event_date: string
+          event_time: string | null
+          event_type: string
+          id: string
+          location: string | null
+          team_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string
+          event_date: string
+          event_time?: string | null
+          event_type?: string
+          id?: string
+          location?: string | null
+          team_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string
+          event_date?: string
+          event_time?: string | null
+          event_type?: string
+          id?: string
+          location?: string | null
+          team_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       teams: {
         Row: {

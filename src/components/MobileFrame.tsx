@@ -26,7 +26,7 @@ const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { to: "/athlete", label: "Home", icon: Home },
     { to: "/athlete/workout", label: "Workout", icon: Dumbbell },
     { to: "/calendar", label: "Calendar", icon: Calendar },
-    { to: "/athlete/progress", label: "Stats", icon: LineChart },
+    { to: "/feed", label: "Feed", icon: Newspaper },
     { to: "/athlete/injury", label: "Body", icon: HeartPulse },
   ],
   coach: [

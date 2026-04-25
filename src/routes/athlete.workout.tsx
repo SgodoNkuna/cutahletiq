@@ -195,6 +195,16 @@ function WorkoutPage() {
       await supabase.from("personal_records").insert(prRows);
     }
 
+    await (supabase as any).from("session_completions").upsert(
+      {
+        athlete_id: profile.id,
+        session_id: session.id,
+        rpe: parsed.data,
+        completed_at: new Date().toISOString(),
+      },
+      { onConflict: "athlete_id,session_id" },
+    );
+
     setSaving(false);
     confetti({
       particleCount: 120,
@@ -205,7 +215,7 @@ function WorkoutPage() {
     toast.success(
       `Saved · ${doneSets}/${totalSets} sets · RPE ${parsed.data}/10 · +${newPRs.length} PR${newPRs.length === 1 ? "" : "s"}`,
     );
-    setTimeout(() => navigate({ to: "/athlete/progress" }), 900);
+    setTimeout(() => navigate({ to: "/athlete" }), 900);
   };
 
   return (
