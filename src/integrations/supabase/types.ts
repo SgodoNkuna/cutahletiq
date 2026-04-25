@@ -585,6 +585,30 @@ export type Database = {
           },
         ]
       }
+      session_completions: {
+        Row: {
+          athlete_id: string
+          completed_at: string
+          id: string
+          rpe: number | null
+          session_id: string
+        }
+        Insert: {
+          athlete_id: string
+          completed_at?: string
+          id?: string
+          rpe?: number | null
+          session_id: string
+        }
+        Update: {
+          athlete_id?: string
+          completed_at?: string
+          id?: string
+          rpe?: number | null
+          session_id?: string
+        }
+        Relationships: []
+      }
       sessions: {
         Row: {
           created_at: string
