@@ -6,7 +6,8 @@ import { useAuth, ROLE_HOME } from "@/lib/auth-context";
 import { Input } from "@/components/ui/input";
 import { TestModeStamp } from "@/components/TestModeStamp";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, FlaskConical, Copy } from "lucide-react";
+import { devMockResetPassword } from "@/lib/server/dev.functions";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -156,6 +157,7 @@ function LoginPage() {
                 >
                   Send reset link
                 </button>
+                {import.meta.env.DEV && <DevMockResetBlock email={resetEmail} />}
               </div>
             )}
           </form>
