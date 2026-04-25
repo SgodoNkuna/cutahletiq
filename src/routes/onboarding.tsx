@@ -59,7 +59,7 @@ function OnboardingPage() {
     await refreshProfile();
     toast.success("All set!");
     if (profile.role === "coach") navigate({ to: "/create-team" });
-    else if (profile.role === "athlete") navigate({ to: "/join-team" });
+    else if (profile.role === "athlete" || profile.role === "physio") navigate({ to: "/join-team" });
     else navigate({ to: ROLE_HOME[profile.role] });
   };
 
