@@ -50,7 +50,8 @@ function AthleteHome() {
         id: s.id,
         name: s.name,
         session_date: s.session_date,
-        programme_name: "Programme",
+        programme_name:
+          ((s as unknown as { programmes?: { name: string } | null }).programmes?.name) ?? "Programme",
       }));
       setUpcoming(sessions);
       setPrCount(prRes.count ?? 0);
