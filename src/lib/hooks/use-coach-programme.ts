@@ -227,17 +227,68 @@ export function useCoachProgramme(coachId: string | null, teamId: string | null)
 /** Athlete-side: fetch the next upcoming session in their team's programme. */
 export async function fetchTodaysSessionForAthlete(): Promise<DBSession | null> {
   const today = new Date().toISOString().slice(0, 10);
-  const { data } = await supabase
+  const { data: userData } = await supabase.auth.getUser();
+  const athleteId = userData.user?.id;
+  const supabaseAny = supabase as any;
+  const [{ data }, { data: completedRows }, { data: loggedRows }] = await Promise.all([
+    supabase
+      .from("sessions")
+      .select(
+        "id, name, session_date, notes, programme_id, exercises(id, name, sets, reps, weight_kg, order_index, notes, session_id)",
+      )
+      .gte("session_date", today)
+      .order("session_date", { ascending: true })
+      .limit(12),
+    athleteId
+      ? supabaseAny.from("session_completions").select("session_id").eq("athlete_id", athleteId)
+      : Promise.resolve({ data: [] }),
+    athleteId
+      ? supabase.from("workout_logs").select("session_id").eq("athlete_id", athleteId)
+      : Promise.resolve({ data: [] }),
+  ]);
+  const completed = new Set<string>([
+    ...((completedRows ?? []) as Array<{ session_id: string }>).map((r) => r.session_id),
+    ...((loggedRows ?? []) as Array<{ session_id: string }>).map((r) => r.session_id),
+  ]);
+  const next = (data ?? []).find((s) => !completed.has(s.id));
+  if (!next) return null;
+  const s = next as unknown as DBSession;
+  s.exercises = (s.exercises ?? []).sort((a, b) => a.order_index - b.order_index);
+  return s;
+}
+
+/** Athlete-side: fetch upcoming sessions excluding completed/logged sessions. */
+export async function fetchUpcomingSessionsForAthlete(limit = 5): Promise<DBSession[]> {
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: userData } = await supabase.auth.getUser();
+  const athleteId = userData.user?.id;
+  const supabaseAny = supabase as any;
+  const [{ data }, { data: completedRows }, { data: loggedRows }] = await Promise.all([
+    supabase
     .from("sessions")
     .select(
       "id, name, session_date, notes, programme_id, exercises(id, name, sets, reps, weight_kg, order_index, notes, session_id)",
     )
     .gte("session_date", today)
     .order("session_date", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (!data) return null;
-  const s = data as unknown as DBSession;
-  s.exercises = (s.exercises ?? []).sort((a, b) => a.order_index - b.order_index);
-  return s;
+    .limit(20),
+    athleteId
+      ? supabaseAny.from("session_completions").select("session_id").eq("athlete_id", athleteId)
+      : Promise.resolve({ data: [] }),
+    athleteId
+      ? supabase.from("workout_logs").select("session_id").eq("athlete_id", athleteId)
+      : Promise.resolve({ data: [] }),
+  ]);
+  const completed = new Set<string>([
+    ...((completedRows ?? []) as Array<{ session_id: string }>).map((r) => r.session_id),
+    ...((loggedRows ?? []) as Array<{ session_id: string }>).map((r) => r.session_id),
+  ]);
+  return (data ?? [])
+    .filter((s) => !completed.has(s.id))
+    .slice(0, limit)
+    .map((s) => {
+      const session = s as unknown as DBSession;
+      session.exercises = (session.exercises ?? []).sort((a, b) => a.order_index - b.order_index);
+      return session;
+    });
 }
