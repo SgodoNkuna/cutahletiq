@@ -14,6 +14,7 @@ type Announcement = {
   title: string;
   body: string;
   media_url: string | null;
+  signed_media_url?: string | null;
   media_type: "image" | "video" | null;
   created_at: string;
   author?: { first_name: string | null; last_name: string | null } | null;
@@ -49,6 +50,15 @@ function timeAgo(iso: string) {
   return `${d}d ago`;
 }
 
+async function signedAnnouncementUrl(pathOrUrl: string | null) {
+  if (!pathOrUrl) return null;
+  const marker = "/announcements/";
+  const path = pathOrUrl.includes(marker) ? pathOrUrl.split(marker).pop() : pathOrUrl;
+  if (!path) return pathOrUrl;
+  const { data } = await supabase.storage.from("announcements").createSignedUrl(path, 60 * 60);
+  return data?.signedUrl ?? pathOrUrl;
+}
+
 function FeedPage() {
   const { user, profile } = useAuth();
   const [nudges, setNudges] = React.useState<Nudge[]>([]);
@@ -64,7 +74,11 @@ function FeedPage() {
       )
       .order("created_at", { ascending: false })
       .limit(50);
-    setAnnouncements((data ?? []) as unknown as Announcement[]);
+    const rows = (data ?? []) as unknown as Announcement[];
+    const withMedia = await Promise.all(
+      rows.map(async (a) => ({ ...a, signed_media_url: await signedAnnouncementUrl(a.media_url) })),
+    );
+    setAnnouncements(withMedia);
   }, []);
 
   const loadNudges = React.useCallback(async () => {
@@ -131,17 +145,17 @@ function FeedPage() {
                   key={`ann-${a.id}`}
                   className="rounded-2xl border border-gold/30 bg-gradient-to-br from-card to-gold/5 shadow-sm overflow-hidden"
                 >
-                  {a.media_url && a.media_type === "image" && (
+                  {a.signed_media_url && a.media_type === "image" && (
                     <img
-                      src={a.media_url}
+                      src={a.signed_media_url}
                       alt={a.title}
                       className="w-full max-h-72 object-cover"
                       loading="lazy"
                     />
                   )}
-                  {a.media_url && a.media_type === "video" && (
+                  {a.signed_media_url && a.media_type === "video" && (
                     <video
-                      src={a.media_url}
+                      src={a.signed_media_url}
                       controls
                       className="w-full max-h-72 bg-black"
                       preload="metadata"
@@ -246,8 +260,7 @@ function AnnouncementComposer({ onPosted }: { onPosted: () => Promise<void> }) {
         setPosting(false);
         return;
       }
-      const { data: pub } = supabase.storage.from("announcements").getPublicUrl(path);
-      media_url = pub.publicUrl;
+      media_url = path;
       media_type = isVideo ? "video" : "image";
     }
 
