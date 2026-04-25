@@ -5,6 +5,7 @@ import { SectionHeader } from "@/components/primitives";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Dumbbell, HeartPulse, Trophy, ChevronRight, Loader2, Users } from "lucide-react";
+import { fetchUpcomingSessionsForAthlete } from "@/lib/hooks/use-coach-programme";
 
 export const Route = createFileRoute("/athlete/")({
   head: () => ({
@@ -30,14 +31,8 @@ function AthleteHome() {
     let cancelled = false;
     if (!profile) return;
     (async () => {
-      const today = new Date().toISOString().slice(0, 10);
-      const [sessRes, prRes, logRes, teamRes, doneRes] = await Promise.all([
-        supabase
-          .from("sessions")
-          .select("id, name, session_date, programmes!inner(name, team_id)")
-          .gte("session_date", today)
-          .order("session_date", { ascending: true })
-          .limit(10),
+      const [sessionsData, prRes, logRes, teamRes] = await Promise.all([
+        fetchUpcomingSessionsForAthlete(5),
         supabase
           .from("personal_records")
           .select("id", { count: "exact", head: true })
@@ -49,24 +44,14 @@ function AthleteHome() {
         profile.team_id
           ? supabase.from("teams").select("name").eq("id", profile.team_id).maybeSingle()
           : Promise.resolve({ data: null }),
-        supabase
-          .from("workout_logs")
-          .select("session_id")
-          .eq("athlete_id", profile.id),
       ]);
       if (cancelled) return;
-      const completedSessionIds = new Set(
-        (doneRes.data ?? []).map((r) => r.session_id as string),
-      );
-      const sessions = (sessRes.data ?? [])
-        .filter((s) => !completedSessionIds.has(s.id))
-        .slice(0, 5)
-        .map((s) => ({
-          id: s.id,
-          name: s.name,
-          session_date: s.session_date,
-          programme_name: (s.programmes as { name: string } | null)?.name ?? "Programme",
-        }));
+      const sessions = sessionsData.map((s) => ({
+        id: s.id,
+        name: s.name,
+        session_date: s.session_date,
+        programme_name: "Programme",
+      }));
       setUpcoming(sessions);
       setPrCount(prRes.count ?? 0);
       setLogCount(logRes.count ?? 0);
