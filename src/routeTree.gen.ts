@@ -31,6 +31,9 @@ import { Route as CoachProgramRouteImport } from './routes/coach.program'
 import { Route as AthleteWorkoutRouteImport } from './routes/athlete.workout'
 import { Route as AthleteProgressRouteImport } from './routes/athlete.progress'
 import { Route as AthleteInjuryRouteImport } from './routes/athlete.injury'
+import { Route as AdminTeamsRouteImport } from './routes/admin.teams'
+import { Route as AdminSessionsRouteImport } from './routes/admin.sessions'
+import { Route as AdminInjuriesRouteImport } from './routes/admin.injuries'
 import { Route as CoachAthleteAthleteIdRouteImport } from './routes/coach.athlete.$athleteId'
 
 const SignupRoute = SignupRouteImport.update({
@@ -143,6 +146,21 @@ const AthleteInjuryRoute = AthleteInjuryRouteImport.update({
   path: '/athlete/injury',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminTeamsRoute = AdminTeamsRouteImport.update({
+  id: '/admin/teams',
+  path: '/admin/teams',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSessionsRoute = AdminSessionsRouteImport.update({
+  id: '/admin/sessions',
+  path: '/admin/sessions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminInjuriesRoute = AdminInjuriesRouteImport.update({
+  id: '/admin/injuries',
+  path: '/admin/injuries',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CoachAthleteAthleteIdRoute = CoachAthleteAthleteIdRouteImport.update({
   id: '/coach/athlete/$athleteId',
   path: '/coach/athlete/$athleteId',
@@ -162,6 +180,9 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/admin/injuries': typeof AdminInjuriesRoute
+  '/admin/sessions': typeof AdminSessionsRoute
+  '/admin/teams': typeof AdminTeamsRoute
   '/athlete/injury': typeof AthleteInjuryRoute
   '/athlete/progress': typeof AthleteProgressRoute
   '/athlete/workout': typeof AthleteWorkoutRoute
@@ -187,6 +208,9 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/admin/injuries': typeof AdminInjuriesRoute
+  '/admin/sessions': typeof AdminSessionsRoute
+  '/admin/teams': typeof AdminTeamsRoute
   '/athlete/injury': typeof AthleteInjuryRoute
   '/athlete/progress': typeof AthleteProgressRoute
   '/athlete/workout': typeof AthleteWorkoutRoute
@@ -213,6 +237,9 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/admin/injuries': typeof AdminInjuriesRoute
+  '/admin/sessions': typeof AdminSessionsRoute
+  '/admin/teams': typeof AdminTeamsRoute
   '/athlete/injury': typeof AthleteInjuryRoute
   '/athlete/progress': typeof AthleteProgressRoute
   '/athlete/workout': typeof AthleteWorkoutRoute
@@ -240,6 +267,9 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reset-password'
     | '/signup'
+    | '/admin/injuries'
+    | '/admin/sessions'
+    | '/admin/teams'
     | '/athlete/injury'
     | '/athlete/progress'
     | '/athlete/workout'
@@ -265,6 +295,9 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reset-password'
     | '/signup'
+    | '/admin/injuries'
+    | '/admin/sessions'
+    | '/admin/teams'
     | '/athlete/injury'
     | '/athlete/progress'
     | '/athlete/workout'
@@ -290,6 +323,9 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reset-password'
     | '/signup'
+    | '/admin/injuries'
+    | '/admin/sessions'
+    | '/admin/teams'
     | '/athlete/injury'
     | '/athlete/progress'
     | '/athlete/workout'
@@ -316,6 +352,9 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
+  AdminInjuriesRoute: typeof AdminInjuriesRoute
+  AdminSessionsRoute: typeof AdminSessionsRoute
+  AdminTeamsRoute: typeof AdminTeamsRoute
   AthleteInjuryRoute: typeof AthleteInjuryRoute
   AthleteProgressRoute: typeof AthleteProgressRoute
   AthleteWorkoutRoute: typeof AthleteWorkoutRoute
@@ -485,6 +524,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AthleteInjuryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/teams': {
+      id: '/admin/teams'
+      path: '/admin/teams'
+      fullPath: '/admin/teams'
+      preLoaderRoute: typeof AdminTeamsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/sessions': {
+      id: '/admin/sessions'
+      path: '/admin/sessions'
+      fullPath: '/admin/sessions'
+      preLoaderRoute: typeof AdminSessionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/injuries': {
+      id: '/admin/injuries'
+      path: '/admin/injuries'
+      fullPath: '/admin/injuries'
+      preLoaderRoute: typeof AdminInjuriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/coach/athlete/$athleteId': {
       id: '/coach/athlete/$athleteId'
       path: '/coach/athlete/$athleteId'
@@ -508,6 +568,9 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
+  AdminInjuriesRoute: AdminInjuriesRoute,
+  AdminSessionsRoute: AdminSessionsRoute,
+  AdminTeamsRoute: AdminTeamsRoute,
   AthleteInjuryRoute: AthleteInjuryRoute,
   AthleteProgressRoute: AthleteProgressRoute,
   AthleteWorkoutRoute: AthleteWorkoutRoute,
