@@ -91,42 +91,42 @@ function AdminHome() {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-2">
+            <StatLink to="/admin/teams" label="Teams" value={counts.teams} />
+            <StatLink to="/admin/sessions" label="Sessions" value={counts.sessions} />
+            <StatLink to="/admin/injuries" label="Injury cases" value={counts.injuries} />
             <Stat label="Users" value={counts.profiles} />
-            <Stat label="Teams" value={counts.teams} />
-            <Stat label="Sessions" value={counts.sessions} />
-            <Stat label="Injury cases" value={counts.injuries} />
           </div>
         )}
 
-        <SectionHeader title="Quick links" />
+        <SectionHeader title="Browse" />
         <div className="grid grid-cols-2 gap-2">
           <Link
-            to="/coach"
+            to="/admin/teams"
             className="bg-card rounded-xl border p-3 flex items-center gap-2 hover:border-gold transition-colors"
           >
             <Users className="h-4 w-4" />
-            <div className="text-sm font-bold flex-1">Squads</div>
+            <div className="text-sm font-bold flex-1">All teams</div>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
           <Link
-            to="/physio"
+            to="/admin/injuries"
             className="bg-card rounded-xl border p-3 flex items-center gap-2 hover:border-gold transition-colors"
           >
-            <div className="text-sm font-bold flex-1">Health</div>
+            <div className="text-sm font-bold flex-1">Injuries</div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
+          <Link
+            to="/admin/sessions"
+            className="bg-card rounded-xl border p-3 flex items-center gap-2 hover:border-gold transition-colors"
+          >
+            <div className="text-sm font-bold flex-1">Sessions</div>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
           <Link
             to="/feed"
             className="bg-card rounded-xl border p-3 flex items-center gap-2 hover:border-gold transition-colors"
           >
-            <div className="text-sm font-bold flex-1">Notifications</div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          </Link>
-          <Link
-            to="/leaderboard"
-            className="bg-card rounded-xl border p-3 flex items-center gap-2 hover:border-gold transition-colors"
-          >
-            <div className="text-sm font-bold flex-1">Leaderboard</div>
+            <div className="text-sm font-bold flex-1">Feed</div>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
         </div>
@@ -171,5 +171,19 @@ function Stat({ label, value }: { label: string; value: number }) {
       </div>
       <div className="font-display text-3xl mt-0.5">{value}</div>
     </div>
+  );
+}
+
+function StatLink({ to, label, value }: { to: string; label: string; value: number }) {
+  return (
+    <Link
+      to={to}
+      className="bg-card rounded-2xl border p-3 hover:border-gold transition-colors block"
+    >
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
+        {label}
+      </div>
+      <div className="font-display text-3xl mt-0.5">{value}</div>
+    </Link>
   );
 }
