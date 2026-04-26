@@ -443,8 +443,35 @@ function EventComposer({
     );
   }
 
+  const applyTemplate = (tpl: Template) => {
+    setTitle(tpl.title);
+    setEventType(tpl.type);
+    setDescription(tpl.notes);
+    // If a time is set, leave it; otherwise prefill 09:00 + duration suggestion in notes
+    if (!time) setTime("09:00");
+  };
+
   return (
     <div className="rounded-2xl border-2 border-gold/50 bg-card p-4 space-y-2 mb-2">
+      {profile?.role === "physio" && (
+        <div className="space-y-1.5">
+          <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+            Quick templates
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+            {PHYSIO_TEMPLATES.map((tpl) => (
+              <button
+                key={tpl.id}
+                type="button"
+                onClick={() => applyTemplate(tpl)}
+                className="shrink-0 rounded-full border-2 border-navy/30 bg-background px-3 py-1 text-[11px] font-bold text-navy hover:bg-navy hover:text-white transition-colors whitespace-nowrap"
+              >
+                {tpl.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
