@@ -130,7 +130,11 @@ export class DevErrorBoundary extends React.Component<Props, State> {
         <div className="max-w-2xl mx-auto space-y-4">
           <div className="rounded-xl border-2 border-destructive/60 bg-destructive/5 p-4">
             <div className="text-[10px] uppercase tracking-wider font-bold text-destructive mb-1">
-              {stale ? "Stale transform — auto-reloading" : "Runtime error"}
+              {stale
+                ? isAutoRetryEnabled()
+                  ? "Stale transform — auto-reloading"
+                  : "Stale transform — auto-retry disabled"
+                : "Runtime error"}
             </div>
             <div className="font-display text-xl">{error.name}</div>
             <p className="text-sm text-foreground/80 mt-1 break-words">{error.message}</p>
