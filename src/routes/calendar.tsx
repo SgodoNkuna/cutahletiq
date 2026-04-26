@@ -302,6 +302,14 @@ function CalendarPage() {
   );
 }
 
+const EVENT_TYPES = [
+  { value: "team_event", label: "Team event" },
+  { value: "extra_mural", label: "Extra-mural" },
+  { value: "team_meeting", label: "Team meeting" },
+  { value: "individual", label: "Individual" },
+  { value: "rehab_session", label: "Rehab session" },
+] as const;
+
 function EventComposer({
   teams,
   selected,
@@ -319,25 +327,43 @@ function EventComposer({
   const [location, setLocation] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [teamId, setTeamId] = React.useState("");
+  const [eventType, setEventType] = React.useState<string>(
+    profile?.role === "physio" ? "rehab_session" : "team_event",
+  );
   const [saving, setSaving] = React.useState(false);
+
+  const canPickTeam = profile?.role === "admin" || profile?.role === "physio";
 
   React.useEffect(() => setDate(selected), [selected]);
 
   const create = async () => {
-    if (!profile || !title.trim()) {
+    if (!profile) return;
+    const cleanTitle = cleanText(title);
+    if (!cleanTitle) {
       toast.error("Add an event title");
       return;
     }
+    if (cleanTitle.length > 120) {
+      toast.error("Title is too long (max 120 chars)");
+      return;
+    }
+    const cleanDesc = cleanText(description).slice(0, 1000);
+    const cleanLoc = cleanText(location).slice(0, 120);
+
     setSaving(true);
+    const resolvedTeamId = canPickTeam
+      ? teamId || null
+      : (profile.team_id ?? null);
+
     const { error } = await (supabase as any).from("team_events").insert({
       created_by: profile.id,
-      team_id: profile.role === "coach" ? profile.team_id : teamId || null,
-      title: title.trim(),
-      description: description.trim(),
-      event_type: "extra_mural",
+      team_id: resolvedTeamId,
+      title: cleanTitle.slice(0, 120),
+      description: cleanDesc,
+      event_type: eventType,
       event_date: date,
       event_time: time || null,
-      location: location.trim() || null,
+      location: cleanLoc || null,
     });
     setSaving(false);
     if (error) {
@@ -357,21 +383,34 @@ function EventComposer({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="w-full rounded-2xl border-2 border-dashed border-gold/50 bg-gold/5 p-3 flex items-center gap-2 text-sm font-bold text-navy hover:bg-gold/10 transition-colors"
+        className="w-full rounded-2xl border-2 border-dashed border-gold/50 bg-gold/5 p-3 flex items-center gap-2 text-sm font-bold text-navy hover:bg-gold/10 transition-colors mb-2"
       >
-        <Plus className="h-4 w-4 text-gold" /> Add team event
+        <Plus className="h-4 w-4 text-gold" />
+        {profile?.role === "physio" ? "Schedule rehab / meeting" : "Add team event"}
       </button>
     );
   }
 
   return (
-    <div className="rounded-2xl border-2 border-gold/50 bg-card p-4 space-y-2">
+    <div className="rounded-2xl border-2 border-gold/50 bg-card p-4 space-y-2 mb-2">
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder="Team building, awards evening…"
+        placeholder="Team building, rehab session, awards…"
+        maxLength={120}
         className="w-full rounded-md border bg-background px-3 py-2 text-sm font-bold"
       />
+      <select
+        value={eventType}
+        onChange={(e) => setEventType(e.target.value)}
+        className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+      >
+        {EVENT_TYPES.map((t) => (
+          <option key={t.value} value={t.value}>
+            {t.label}
+          </option>
+        ))}
+      </select>
       <div className="grid grid-cols-2 gap-2">
         <input
           type="date"
@@ -386,7 +425,7 @@ function EventComposer({
           className="rounded-md border bg-background px-3 py-2 text-sm"
         />
       </div>
-      {profile?.role === "admin" && (
+      {canPickTeam && (
         <select
           value={teamId}
           onChange={(e) => setTeamId(e.target.value)}
@@ -404,6 +443,7 @@ function EventComposer({
         value={location}
         onChange={(e) => setLocation(e.target.value)}
         placeholder="Location"
+        maxLength={120}
         className="w-full rounded-md border bg-background px-3 py-2 text-sm"
       />
       <textarea
@@ -411,6 +451,7 @@ function EventComposer({
         onChange={(e) => setDescription(e.target.value)}
         placeholder="Details…"
         rows={2}
+        maxLength={1000}
         className="w-full rounded-md border bg-background p-3 text-sm resize-none"
       />
       <div className="flex gap-2">
