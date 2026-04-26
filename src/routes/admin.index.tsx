@@ -173,3 +173,17 @@ function Stat({ label, value }: { label: string; value: number }) {
     </div>
   );
 }
+
+function StatLink({ to, label, value }: { to: string; label: string; value: number }) {
+  return (
+    <Link
+      to={to}
+      className="bg-card rounded-2xl border p-3 hover:border-gold transition-colors block"
+    >
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
+        {label}
+      </div>
+      <div className="font-display text-3xl mt-0.5">{value}</div>
+    </Link>
+  );
+}
