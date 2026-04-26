@@ -61,9 +61,10 @@ function PhysioHome() {
         .order("submitted_at", { ascending: false })
         .limit(30),
       supabase
-        .from("team_members_safe")
+        .from("profiles")
         .select("id, first_name, last_name, sport, position, role")
-        .eq("role", "athlete"),
+        .eq("role", "athlete")
+        .order("first_name", { ascending: true }),
     ]);
 
     const injuryRows = (injRes.data ?? []).map((r) => {
@@ -130,8 +131,8 @@ function PhysioHome() {
         </div>
 
         <div className="mt-3 rounded-xl border bg-success/10 border-success/30 p-3 text-[11px] text-foreground/80">
-          Team-scoped inbox: this page only loads players, check-ins, and injury records visible
-          through your team access.
+          Cross-team inbox: as a physio you can see and log injuries for every athlete in the
+          system, and schedule rehab or meetings on the calendar.
         </div>
 
         <SectionHeader

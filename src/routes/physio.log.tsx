@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { cleanText } from "@/lib/sanitize";
 
 export const Route = createFileRoute("/physio/log")({
   head: () => ({
@@ -43,10 +44,12 @@ function PhysioLogPage() {
     let cancelled = false;
     if (!profile) return;
     (async () => {
+      // Physios now have RLS access to all athlete profiles across teams
       const { data } = await supabase
-        .from("team_members_safe")
+        .from("profiles")
         .select("id, first_name, last_name, sport, role")
-        .eq("role", "athlete");
+        .eq("role", "athlete")
+        .order("first_name", { ascending: true });
       if (cancelled) return;
       const opts: AthleteOpt[] = (data ?? [])
         .filter((r) => !!r.id)
@@ -69,6 +72,10 @@ function PhysioLogPage() {
       toast.error("Pick an athlete first");
       return;
     }
+    const cleanRegion = cleanText(region).slice(0, 80) || "Unspecified";
+    const cleanType = cleanText(injuryType).slice(0, 80) || "Injury";
+    const cleanNotes = cleanText(notes).slice(0, 1000);
+
     setSubmitting(true);
     const today = new Date().toISOString().slice(0, 10);
     const expected = new Date();
@@ -76,12 +83,12 @@ function PhysioLogPage() {
     const { error } = await supabase.from("injury_records").insert({
       athlete_id: athleteId,
       physio_id: profile.id,
-      body_region: region.trim() || "Unspecified",
-      injury_type: `${injuryType} (${mechanism})`,
+      body_region: cleanRegion,
+      injury_type: `${cleanType} (${mechanism})`,
       severity,
       date_of_injury: today,
       expected_rtp_date: expected.toISOString().slice(0, 10),
-      treatment_notes: notes.trim() || null,
+      treatment_notes: cleanNotes || null,
       rtp_status: "unavailable",
     });
     setSubmitting(false);
