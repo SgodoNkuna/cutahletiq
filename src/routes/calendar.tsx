@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Calendar as CalIcon, Clock, Loader2, MapPin, Plus, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { cleanText } from "@/lib/sanitize";
 
 export const Route = createFileRoute("/calendar")({
   head: () => ({
@@ -61,7 +62,9 @@ function CalendarPage() {
   const [loading, setLoading] = React.useState(true);
   const [selected, setSelected] = React.useState<string>(todayISO);
   const [anchor, setAnchor] = React.useState(new Date(today.getFullYear(), today.getMonth(), 1));
-  const isEventOwner = profile?.role === "coach" || profile?.role === "admin";
+  const isEventOwner =
+    profile?.role === "coach" || profile?.role === "admin" || profile?.role === "physio";
+  const canPickAnyTeam = profile?.role === "admin" || profile?.role === "physio";
 
   const load = React.useCallback(async () => {
     if (!profile) return;
@@ -73,7 +76,7 @@ function CalendarPage() {
         .order("session_date", { ascending: true }),
       db.from("team_events").select("*").order("event_date", { ascending: true }),
       db.from("event_rsvps").select("*").eq("user_id", profile.id),
-      profile.role === "admin"
+      canPickAnyTeam
         ? supabase.from("teams").select("id, name, sport").order("name", { ascending: true })
         : Promise.resolve({ data: [] }),
     ]);
@@ -89,7 +92,7 @@ function CalendarPage() {
     setRsvps((rsvpRes.data ?? []) as Rsvp[]);
     setTeams((teamRes.data ?? []) as Team[]);
     setLoading(false);
-  }, [profile]);
+  }, [profile, canPickAnyTeam]);
 
   React.useEffect(() => {
     if (!profile) return;
