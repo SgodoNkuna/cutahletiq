@@ -65,7 +65,7 @@ export class DevErrorBoundary extends React.Component<Props, State> {
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     this.setState({ error, info });
     if (typeof window === "undefined") return;
-    if (isStaleTransform(error)) {
+    if (isStaleTransform(error) && isAutoRetryEnabled()) {
       try {
         const already = sessionStorage.getItem(RELOAD_KEY);
         if (!already) {
