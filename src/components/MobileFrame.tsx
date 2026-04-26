@@ -135,7 +135,6 @@ export function MobileFrame({
         )}
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth">
-        <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth">
           <div className="animate-fade-up">{children}</div>
           <div className="text-center text-[10px] text-muted-foreground py-3">
             Phase 1 Test Build ·{" "}
