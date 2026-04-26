@@ -63,6 +63,7 @@ export function MobileFrame({
   const { profile, loading, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const scrollRef = React.useRef<HTMLDivElement>(null);
 
   // Auth gate — bounce to /login if no profile
   React.useEffect(() => {
@@ -73,6 +74,11 @@ export function MobileFrame({
       navigate({ to: "/onboarding" });
     }
   }, [profile, loading, navigate, location.pathname]);
+
+  // Scroll to top on route change so the user always lands at the top of the new view.
+  React.useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [location.pathname]);
 
   if (loading || !profile) {
     return (
@@ -128,7 +134,8 @@ export function MobileFrame({
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth">
           <div className="animate-fade-up">{children}</div>
           <div className="text-center text-[10px] text-muted-foreground py-3">
             Phase 1 Test Build ·{" "}
