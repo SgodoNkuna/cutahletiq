@@ -12,6 +12,28 @@ type Props = { children: React.ReactNode };
 type State = { error: Error | null; info: React.ErrorInfo | null };
 
 const RELOAD_KEY = "__cut_stale_transform_reload__";
+const AUTO_RETRY_KEY = "__cut_auto_retry_enabled__";
+
+/** Dev-only: read the user's preference for auto-retry on stale transforms. */
+export function isAutoRetryEnabled(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    const v = localStorage.getItem(AUTO_RETRY_KEY);
+    return v === null ? true : v === "1";
+  } catch {
+    return true;
+  }
+}
+
+/** Dev-only: toggle auto-retry. Returns the new value. */
+export function setAutoRetryEnabled(enabled: boolean): boolean {
+  try {
+    localStorage.setItem(AUTO_RETRY_KEY, enabled ? "1" : "0");
+  } catch {
+    /* ignore */
+  }
+  return enabled;
+}
 
 function isStaleTransform(err: Error | null) {
   if (!err) return false;
