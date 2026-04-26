@@ -310,6 +310,58 @@ const EVENT_TYPES = [
   { value: "rehab_session", label: "Rehab session" },
 ] as const;
 
+type Template = {
+  id: string;
+  label: string;
+  type: (typeof EVENT_TYPES)[number]["value"];
+  title: string;
+  durationMin: number;
+  notes: string;
+};
+
+const PHYSIO_TEMPLATES: Template[] = [
+  {
+    id: "rehab-30",
+    label: "Rehab · 30m",
+    type: "rehab_session",
+    title: "Rehab session",
+    durationMin: 30,
+    notes: "Mobility, activation, controlled loading. Bring band + log book.",
+  },
+  {
+    id: "rehab-45",
+    label: "Rehab · 45m",
+    type: "rehab_session",
+    title: "Extended rehab",
+    durationMin: 45,
+    notes: "Phase progression, plyometric prep. Pain monitoring throughout.",
+  },
+  {
+    id: "rtp-test",
+    label: "RTP test",
+    type: "individual",
+    title: "Return-to-play test",
+    durationMin: 60,
+    notes: "Functional battery: hop, change-of-direction, tolerance check.",
+  },
+  {
+    id: "team-meeting",
+    label: "Team meeting",
+    type: "team_meeting",
+    title: "Medical team brief",
+    durationMin: 30,
+    notes: "Weekly update on cases, RTP timelines, and load management.",
+  },
+  {
+    id: "1to1",
+    label: "1-on-1",
+    type: "individual",
+    title: "Individual consult",
+    durationMin: 20,
+    notes: "Subjective check + treatment plan review.",
+  },
+];
+
 function EventComposer({
   teams,
   selected,
