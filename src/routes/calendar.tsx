@@ -310,6 +310,58 @@ const EVENT_TYPES = [
   { value: "rehab_session", label: "Rehab session" },
 ] as const;
 
+type Template = {
+  id: string;
+  label: string;
+  type: (typeof EVENT_TYPES)[number]["value"];
+  title: string;
+  durationMin: number;
+  notes: string;
+};
+
+const PHYSIO_TEMPLATES: Template[] = [
+  {
+    id: "rehab-30",
+    label: "Rehab · 30m",
+    type: "rehab_session",
+    title: "Rehab session",
+    durationMin: 30,
+    notes: "Mobility, activation, controlled loading. Bring band + log book.",
+  },
+  {
+    id: "rehab-45",
+    label: "Rehab · 45m",
+    type: "rehab_session",
+    title: "Extended rehab",
+    durationMin: 45,
+    notes: "Phase progression, plyometric prep. Pain monitoring throughout.",
+  },
+  {
+    id: "rtp-test",
+    label: "RTP test",
+    type: "individual",
+    title: "Return-to-play test",
+    durationMin: 60,
+    notes: "Functional battery: hop, change-of-direction, tolerance check.",
+  },
+  {
+    id: "team-meeting",
+    label: "Team meeting",
+    type: "team_meeting",
+    title: "Medical team brief",
+    durationMin: 30,
+    notes: "Weekly update on cases, RTP timelines, and load management.",
+  },
+  {
+    id: "1to1",
+    label: "1-on-1",
+    type: "individual",
+    title: "Individual consult",
+    durationMin: 20,
+    notes: "Subjective check + treatment plan review.",
+  },
+];
+
 function EventComposer({
   teams,
   selected,
@@ -391,8 +443,35 @@ function EventComposer({
     );
   }
 
+  const applyTemplate = (tpl: Template) => {
+    setTitle(tpl.title);
+    setEventType(tpl.type);
+    setDescription(tpl.notes);
+    // If a time is set, leave it; otherwise prefill 09:00 + duration suggestion in notes
+    if (!time) setTime("09:00");
+  };
+
   return (
     <div className="rounded-2xl border-2 border-gold/50 bg-card p-4 space-y-2 mb-2">
+      {profile?.role === "physio" && (
+        <div className="space-y-1.5">
+          <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+            Quick templates
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+            {PHYSIO_TEMPLATES.map((tpl) => (
+              <button
+                key={tpl.id}
+                type="button"
+                onClick={() => applyTemplate(tpl)}
+                className="shrink-0 rounded-full border-2 border-navy/30 bg-background px-3 py-1 text-[11px] font-bold text-navy hover:bg-navy hover:text-white transition-colors whitespace-nowrap"
+              >
+                {tpl.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}

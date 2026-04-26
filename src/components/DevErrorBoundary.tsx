@@ -12,6 +12,28 @@ type Props = { children: React.ReactNode };
 type State = { error: Error | null; info: React.ErrorInfo | null };
 
 const RELOAD_KEY = "__cut_stale_transform_reload__";
+const AUTO_RETRY_KEY = "__cut_auto_retry_enabled__";
+
+/** Dev-only: read the user's preference for auto-retry on stale transforms. */
+export function isAutoRetryEnabled(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    const v = localStorage.getItem(AUTO_RETRY_KEY);
+    return v === null ? true : v === "1";
+  } catch {
+    return true;
+  }
+}
+
+/** Dev-only: toggle auto-retry. Returns the new value. */
+export function setAutoRetryEnabled(enabled: boolean): boolean {
+  try {
+    localStorage.setItem(AUTO_RETRY_KEY, enabled ? "1" : "0");
+  } catch {
+    /* ignore */
+  }
+  return enabled;
+}
 
 function isStaleTransform(err: Error | null) {
   if (!err) return false;
@@ -43,7 +65,7 @@ export class DevErrorBoundary extends React.Component<Props, State> {
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     this.setState({ error, info });
     if (typeof window === "undefined") return;
-    if (isStaleTransform(error)) {
+    if (isStaleTransform(error) && isAutoRetryEnabled()) {
       try {
         const already = sessionStorage.getItem(RELOAD_KEY);
         if (!already) {
@@ -108,7 +130,11 @@ export class DevErrorBoundary extends React.Component<Props, State> {
         <div className="max-w-2xl mx-auto space-y-4">
           <div className="rounded-xl border-2 border-destructive/60 bg-destructive/5 p-4">
             <div className="text-[10px] uppercase tracking-wider font-bold text-destructive mb-1">
-              {stale ? "Stale transform — auto-reloading" : "Runtime error"}
+              {stale
+                ? isAutoRetryEnabled()
+                  ? "Stale transform — auto-reloading"
+                  : "Stale transform — auto-retry disabled"
+                : "Runtime error"}
             </div>
             <div className="font-display text-xl">{error.name}</div>
             <p className="text-sm text-foreground/80 mt-1 break-words">{error.message}</p>
