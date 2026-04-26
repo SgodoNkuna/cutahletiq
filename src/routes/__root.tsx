@@ -49,6 +49,11 @@ export const Route = createRootRoute({
         name: "twitter:description",
         content: "Sport-performance app for athletes, coaches and physios at CUT.",
       },
+      { name: "description", content: "A sports team management app for coaches, athletes, and physios." },
+      { property: "og:description", content: "A sports team management app for coaches, athletes, and physios." },
+      { name: "twitter:description", content: "A sports team management app for coaches, athletes, and physios." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e7abf0be-385d-4655-8d37-1ffff2ec471c/id-preview-6ab967c5--4de23600-c8cc-4ba5-b0fa-59af063a1f63.lovable.app-1777163208029.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e7abf0be-385d-4655-8d37-1ffff2ec471c/id-preview-6ab967c5--4de23600-c8cc-4ba5-b0fa-59af063a1f63.lovable.app-1777163208029.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
