@@ -246,14 +246,41 @@ function WorkoutPage() {
               0,
             );
             const currentPR = prs[ex.name] ?? 0;
-            const isPR = max > currentPR && max > 0;
+            const { meta } = parseExerciseNotes(ex.notes);
+            const isStrength = meta.kind === "strength";
+            const isPR = isStrength && max > currentPR && max > 0;
+            const kindLabel =
+              meta.kind === "running"
+                ? "Running drill"
+                : meta.kind === "time"
+                  ? "Timed set"
+                  : null;
             return (
               <div key={ex.id} className="bg-card rounded-2xl border shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between p-4 border-b bg-secondary/40">
                   <div>
                     <div className="font-display text-lg leading-none">{ex.name}</div>
-                    <div className="text-[11px] text-muted-foreground mt-1">
-                      Current PR: <span className="font-bold">{currentPR || "—"} kg</span>
+                    <div className="text-[11px] text-muted-foreground mt-1 flex flex-wrap gap-x-2">
+                      {isStrength ? (
+                        <span>
+                          Current PR: <span className="font-bold">{currentPR || "—"} kg</span>
+                        </span>
+                      ) : (
+                        <span className="font-bold uppercase tracking-wider text-navy">
+                          {kindLabel}
+                        </span>
+                      )}
+                      {meta.duration_sec ? (
+                        <span>
+                          Duration:{" "}
+                          <span className="font-bold">{formatDuration(meta.duration_sec)}</span>
+                        </span>
+                      ) : null}
+                      {meta.rep_step ? (
+                        <span>
+                          Step-down: <span className="font-bold">−{meta.rep_step}/set</span>
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                   {isPR && <PRBadge />}
@@ -272,18 +299,29 @@ function WorkoutPage() {
                         {si + 1}
                       </div>
                       <NumStepper
-                        label="reps"
+                        label={isStrength ? "reps" : "reps"}
                         value={s.reps}
                         onChange={(v) => updateSet(ei, si, { reps: v })}
                         disabled={s.done}
                       />
-                      <NumStepper
-                        label="kg"
-                        value={s.weight}
-                        step={2.5}
-                        onChange={(v) => updateSet(ei, si, { weight: v })}
-                        disabled={s.done}
-                      />
+                      {isStrength ? (
+                        <NumStepper
+                          label="kg"
+                          value={s.weight}
+                          step={2.5}
+                          onChange={(v) => updateSet(ei, si, { weight: v })}
+                          disabled={s.done}
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center px-2">
+                          <div className="font-bold text-sm tabular-nums">
+                            {formatDuration(meta.duration_sec)}
+                          </div>
+                          <div className="text-[9px] uppercase tracking-wider text-muted-foreground">
+                            time
+                          </div>
+                        </div>
+                      )}
                       <button
                         onClick={() => updateSet(ei, si, { done: !s.done })}
                         className={cn(
