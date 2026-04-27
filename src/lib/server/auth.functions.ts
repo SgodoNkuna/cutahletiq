@@ -40,17 +40,30 @@ export const signupUser = createServerFn({ method: "POST" })
       return { ok: false, error: "Please accept both consent checkboxes to continue." };
     }
 
-    if (data.role === "admin") {
-      const ip = "global"; // Worker-friendly fallback; per-IP rate limiting needs request context
-      if (!checkRate(`admin:${ip}`)) {
+    if (data.role === "admin" || data.role === "coach" || data.role === "physio") {
+      const ip = "global";
+      if (!checkRate(`${data.role}:${ip}`)) {
         return { ok: false, error: "Too many attempts. Please wait a minute and try again." };
       }
-      const expected = process.env.ADMIN_INVITE_CODE;
-      if (!expected) {
-        return { ok: false, error: "Admin signup is not currently available." };
+      const supplied = (data.admin_invite_code ?? "").trim().toUpperCase();
+      if (!supplied) {
+        return { ok: false, error: `An invite code is required to sign up as ${data.role}.` };
       }
-      if (!data.admin_invite_code || data.admin_invite_code !== expected) {
-        return { ok: false, error: "Invalid admin invite code." };
+      if (data.role === "admin") {
+        const expected = (process.env.ADMIN_INVITE_CODE ?? "").trim().toUpperCase();
+        if (!expected || supplied !== expected) {
+          return { ok: false, error: "Invalid admin invite code." };
+        }
+      } else {
+        // coach / physio — validate against invite_codes table
+        const { data: row, error: rpcErr } = await supabaseAdmin
+          .from("invite_codes")
+          .select("code")
+          .eq("role", data.role)
+          .maybeSingle();
+        if (rpcErr || !row || row.code.toUpperCase() !== supplied) {
+          return { ok: false, error: `Invalid ${data.role} invite code.` };
+        }
       }
     }
 

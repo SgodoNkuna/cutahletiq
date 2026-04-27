@@ -197,24 +197,27 @@ function SignupPage() {
           )}
 
           {role === "coach" && (
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                Sport
-              </label>
-              <Input value={sport} onChange={(e) => setSport(e.target.value)} placeholder="Rugby" />
+            <div className="space-y-2">
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Sport
+                </label>
+                <Input value={sport} onChange={(e) => setSport(e.target.value)} placeholder="Rugby" />
+              </div>
             </div>
           )}
 
-          {role === "admin" && (
+          {(role === "coach" || role === "physio" || role === "admin") && (
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                Admin invite code
+                {role === "admin" ? "Admin" : role === "coach" ? "Coach" : "Physio"} invite code
               </label>
               <Input
                 value={adminCode}
-                onChange={(e) => setAdminCode(e.target.value)}
+                onChange={(e) => setAdminCode(e.target.value.toUpperCase())}
                 required
                 placeholder="From CUT Sports Dept."
+                className="uppercase tracking-widest"
               />
             </div>
           )}

@@ -27,12 +27,15 @@ import { Route as AthleteIndexRouteImport } from './routes/athlete.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as PhysioLogRouteImport } from './routes/physio.log'
 import { Route as DevDiagnosticsRouteImport } from './routes/dev.diagnostics'
+import { Route as CoachWellnessRouteImport } from './routes/coach.wellness'
 import { Route as CoachProgramRouteImport } from './routes/coach.program'
 import { Route as AthleteWorkoutRouteImport } from './routes/athlete.workout'
+import { Route as AthleteWellnessRouteImport } from './routes/athlete.wellness'
 import { Route as AthleteProgressRouteImport } from './routes/athlete.progress'
 import { Route as AthleteInjuryRouteImport } from './routes/athlete.injury'
 import { Route as AdminTeamsRouteImport } from './routes/admin.teams'
 import { Route as AdminSessionsRouteImport } from './routes/admin.sessions'
+import { Route as AdminInvitesRouteImport } from './routes/admin.invites'
 import { Route as AdminInjuriesRouteImport } from './routes/admin.injuries'
 import { Route as CoachAthleteAthleteIdRouteImport } from './routes/coach.athlete.$athleteId'
 
@@ -126,6 +129,11 @@ const DevDiagnosticsRoute = DevDiagnosticsRouteImport.update({
   path: '/dev/diagnostics',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CoachWellnessRoute = CoachWellnessRouteImport.update({
+  id: '/coach/wellness',
+  path: '/coach/wellness',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CoachProgramRoute = CoachProgramRouteImport.update({
   id: '/coach/program',
   path: '/coach/program',
@@ -134,6 +142,11 @@ const CoachProgramRoute = CoachProgramRouteImport.update({
 const AthleteWorkoutRoute = AthleteWorkoutRouteImport.update({
   id: '/athlete/workout',
   path: '/athlete/workout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AthleteWellnessRoute = AthleteWellnessRouteImport.update({
+  id: '/athlete/wellness',
+  path: '/athlete/wellness',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AthleteProgressRoute = AthleteProgressRouteImport.update({
@@ -154,6 +167,11 @@ const AdminTeamsRoute = AdminTeamsRouteImport.update({
 const AdminSessionsRoute = AdminSessionsRouteImport.update({
   id: '/admin/sessions',
   path: '/admin/sessions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminInvitesRoute = AdminInvitesRouteImport.update({
+  id: '/admin/invites',
+  path: '/admin/invites',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminInjuriesRoute = AdminInjuriesRouteImport.update({
@@ -181,12 +199,15 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin/injuries': typeof AdminInjuriesRoute
+  '/admin/invites': typeof AdminInvitesRoute
   '/admin/sessions': typeof AdminSessionsRoute
   '/admin/teams': typeof AdminTeamsRoute
   '/athlete/injury': typeof AthleteInjuryRoute
   '/athlete/progress': typeof AthleteProgressRoute
+  '/athlete/wellness': typeof AthleteWellnessRoute
   '/athlete/workout': typeof AthleteWorkoutRoute
   '/coach/program': typeof CoachProgramRoute
+  '/coach/wellness': typeof CoachWellnessRoute
   '/dev/diagnostics': typeof DevDiagnosticsRoute
   '/physio/log': typeof PhysioLogRoute
   '/admin/': typeof AdminIndexRoute
@@ -209,12 +230,15 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin/injuries': typeof AdminInjuriesRoute
+  '/admin/invites': typeof AdminInvitesRoute
   '/admin/sessions': typeof AdminSessionsRoute
   '/admin/teams': typeof AdminTeamsRoute
   '/athlete/injury': typeof AthleteInjuryRoute
   '/athlete/progress': typeof AthleteProgressRoute
+  '/athlete/wellness': typeof AthleteWellnessRoute
   '/athlete/workout': typeof AthleteWorkoutRoute
   '/coach/program': typeof CoachProgramRoute
+  '/coach/wellness': typeof CoachWellnessRoute
   '/dev/diagnostics': typeof DevDiagnosticsRoute
   '/physio/log': typeof PhysioLogRoute
   '/admin': typeof AdminIndexRoute
@@ -238,12 +262,15 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin/injuries': typeof AdminInjuriesRoute
+  '/admin/invites': typeof AdminInvitesRoute
   '/admin/sessions': typeof AdminSessionsRoute
   '/admin/teams': typeof AdminTeamsRoute
   '/athlete/injury': typeof AthleteInjuryRoute
   '/athlete/progress': typeof AthleteProgressRoute
+  '/athlete/wellness': typeof AthleteWellnessRoute
   '/athlete/workout': typeof AthleteWorkoutRoute
   '/coach/program': typeof CoachProgramRoute
+  '/coach/wellness': typeof CoachWellnessRoute
   '/dev/diagnostics': typeof DevDiagnosticsRoute
   '/physio/log': typeof PhysioLogRoute
   '/admin/': typeof AdminIndexRoute
@@ -268,12 +295,15 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin/injuries'
+    | '/admin/invites'
     | '/admin/sessions'
     | '/admin/teams'
     | '/athlete/injury'
     | '/athlete/progress'
+    | '/athlete/wellness'
     | '/athlete/workout'
     | '/coach/program'
+    | '/coach/wellness'
     | '/dev/diagnostics'
     | '/physio/log'
     | '/admin/'
@@ -296,12 +326,15 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin/injuries'
+    | '/admin/invites'
     | '/admin/sessions'
     | '/admin/teams'
     | '/athlete/injury'
     | '/athlete/progress'
+    | '/athlete/wellness'
     | '/athlete/workout'
     | '/coach/program'
+    | '/coach/wellness'
     | '/dev/diagnostics'
     | '/physio/log'
     | '/admin'
@@ -324,12 +357,15 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin/injuries'
+    | '/admin/invites'
     | '/admin/sessions'
     | '/admin/teams'
     | '/athlete/injury'
     | '/athlete/progress'
+    | '/athlete/wellness'
     | '/athlete/workout'
     | '/coach/program'
+    | '/coach/wellness'
     | '/dev/diagnostics'
     | '/physio/log'
     | '/admin/'
@@ -353,12 +389,15 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   AdminInjuriesRoute: typeof AdminInjuriesRoute
+  AdminInvitesRoute: typeof AdminInvitesRoute
   AdminSessionsRoute: typeof AdminSessionsRoute
   AdminTeamsRoute: typeof AdminTeamsRoute
   AthleteInjuryRoute: typeof AthleteInjuryRoute
   AthleteProgressRoute: typeof AthleteProgressRoute
+  AthleteWellnessRoute: typeof AthleteWellnessRoute
   AthleteWorkoutRoute: typeof AthleteWorkoutRoute
   CoachProgramRoute: typeof CoachProgramRoute
+  CoachWellnessRoute: typeof CoachWellnessRoute
   DevDiagnosticsRoute: typeof DevDiagnosticsRoute
   PhysioLogRoute: typeof PhysioLogRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -496,6 +535,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevDiagnosticsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/coach/wellness': {
+      id: '/coach/wellness'
+      path: '/coach/wellness'
+      fullPath: '/coach/wellness'
+      preLoaderRoute: typeof CoachWellnessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/coach/program': {
       id: '/coach/program'
       path: '/coach/program'
@@ -508,6 +554,13 @@ declare module '@tanstack/react-router' {
       path: '/athlete/workout'
       fullPath: '/athlete/workout'
       preLoaderRoute: typeof AthleteWorkoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/athlete/wellness': {
+      id: '/athlete/wellness'
+      path: '/athlete/wellness'
+      fullPath: '/athlete/wellness'
+      preLoaderRoute: typeof AthleteWellnessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/athlete/progress': {
@@ -536,6 +589,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/sessions'
       fullPath: '/admin/sessions'
       preLoaderRoute: typeof AdminSessionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/invites': {
+      id: '/admin/invites'
+      path: '/admin/invites'
+      fullPath: '/admin/invites'
+      preLoaderRoute: typeof AdminInvitesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/injuries': {
@@ -569,12 +629,15 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   AdminInjuriesRoute: AdminInjuriesRoute,
+  AdminInvitesRoute: AdminInvitesRoute,
   AdminSessionsRoute: AdminSessionsRoute,
   AdminTeamsRoute: AdminTeamsRoute,
   AthleteInjuryRoute: AthleteInjuryRoute,
   AthleteProgressRoute: AthleteProgressRoute,
+  AthleteWellnessRoute: AthleteWellnessRoute,
   AthleteWorkoutRoute: AthleteWorkoutRoute,
   CoachProgramRoute: CoachProgramRoute,
+  CoachWellnessRoute: CoachWellnessRoute,
   DevDiagnosticsRoute: DevDiagnosticsRoute,
   PhysioLogRoute: PhysioLogRoute,
   AdminIndexRoute: AdminIndexRoute,
@@ -586,12 +649,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

@@ -242,6 +242,80 @@ export type Database = {
           },
         ]
       }
+      game_minutes: {
+        Row: {
+          athlete_id: string
+          created_at: string
+          game_id: string
+          id: string
+          minutes_played: number
+          notes: string | null
+        }
+        Insert: {
+          athlete_id: string
+          created_at?: string
+          game_id: string
+          id?: string
+          minutes_played: number
+          notes?: string | null
+        }
+        Update: {
+          athlete_id?: string
+          created_at?: string
+          game_id?: string
+          id?: string
+          minutes_played?: number
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_minutes_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      games: {
+        Row: {
+          coach_id: string
+          created_at: string
+          game_date: string
+          game_time: string | null
+          id: string
+          location: string | null
+          notes: string | null
+          opponent: string
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string
+          game_date: string
+          game_time?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          opponent: string
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string
+          game_date?: string
+          game_time?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          opponent?: string
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       injury_checkins: {
         Row: {
           athlete_id: string
@@ -360,6 +434,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      invite_codes: {
+        Row: {
+          code: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          code: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          code?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
       }
       nudges: {
         Row: {
@@ -731,6 +826,39 @@ export type Database = {
           },
         ]
       }
+      wellness_checkins: {
+        Row: {
+          athlete_id: string
+          checkin_date: string
+          created_at: string
+          id: string
+          notes: string | null
+          readiness: number
+          sleep_hours: number
+          sleep_quality: number
+        }
+        Insert: {
+          athlete_id: string
+          checkin_date?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          readiness: number
+          sleep_hours: number
+          sleep_quality: number
+        }
+        Update: {
+          athlete_id?: string
+          checkin_date?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          readiness?: number
+          sleep_hours?: number
+          sleep_quality?: number
+        }
+        Relationships: []
+      }
       workout_logs: {
         Row: {
           actual_reps: number
@@ -899,6 +1027,10 @@ export type Database = {
         }[]
       }
       user_team_id: { Args: { _user_id: string }; Returns: string }
+      validate_invite_code: {
+        Args: { _code: string; _role: Database["public"]["Enums"]["app_role"] }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "athlete" | "coach" | "physio" | "admin"

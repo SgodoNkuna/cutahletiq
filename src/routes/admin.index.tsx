@@ -4,7 +4,7 @@ import { MobileFrame } from "@/components/MobileFrame";
 import { SectionHeader } from "@/components/primitives";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
-import { ShieldCheck, Loader2, Users, ChevronRight } from "lucide-react";
+import { ShieldCheck, Loader2, Users, ChevronRight, KeyRound } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({
@@ -120,6 +120,14 @@ function AdminHome() {
             className="bg-card rounded-xl border p-3 flex items-center gap-2 hover:border-gold transition-colors"
           >
             <div className="text-sm font-bold flex-1">Sessions</div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
+          <Link
+            to="/admin/invites"
+            className="bg-card rounded-xl border p-3 flex items-center gap-2 hover:border-gold transition-colors"
+          >
+            <KeyRound className="h-4 w-4" />
+            <div className="text-sm font-bold flex-1">Invite codes</div>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
           <Link
