@@ -156,7 +156,21 @@ function ProgramPage() {
                         text,
                       ),
                     });
+                  const setInstructions = (val: string) =>
+                    updateExercise(x.id, s.id, {
+                      notes: serializeExerciseNotes(
+                        { ...meta, instructions: val.slice(0, 240) },
+                        text,
+                      ),
+                    });
                   const isStrength = meta.kind === "strength";
+                  const errors = validateExercise({
+                    name: x.name,
+                    sets: x.sets,
+                    reps: x.reps,
+                    meta,
+                  });
+                  const preview = previewReps(x.sets, x.reps, meta);
                   return (
                     <div key={x.id} className="rounded-lg border bg-background p-2 space-y-1.5">
                       <div className="flex items-center gap-1.5">
@@ -252,6 +266,50 @@ function ProgramPage() {
                           />
                         </Field>
                       </div>
+
+                      {!isStrength && (
+                        <div className="pl-5">
+                          <input
+                            value={meta.instructions ?? ""}
+                            onChange={(e) => setInstructions(e.target.value)}
+                            maxLength={240}
+                            placeholder="Instructions for athlete (e.g. 80% pace, 30s recovery)"
+                            className="w-full text-[11px] bg-secondary/60 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-gold"
+                          />
+                        </div>
+                      )}
+
+                      <div className="pl-5 flex items-center gap-1 flex-wrap">
+                        <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold">
+                          Preview:
+                        </span>
+                        {preview.map((r, i) => (
+                          <span
+                            key={i}
+                            className="text-[10px] font-bold bg-navy/10 text-navy rounded px-1.5 py-0.5 tabular-nums"
+                            title={`Set ${i + 1}`}
+                          >
+                            {r}
+                            {!isStrength && meta.duration_sec
+                              ? `×${formatDuration(meta.duration_sec)}`
+                              : ""}
+                          </span>
+                        ))}
+                      </div>
+
+                      {errors.length > 0 && (
+                        <ul className="pl-5 space-y-0.5">
+                          {errors.map((err) => (
+                            <li
+                              key={err}
+                              className="text-[10px] text-destructive font-bold flex items-center gap-1"
+                            >
+                              <span aria-hidden>⚠</span>
+                              {err}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
                   );
                 })}
