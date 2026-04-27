@@ -154,81 +154,188 @@ function LoginPage() {
           </div>
         </div>
 
-        <div className="px-6 -mt-6 flex-1 overflow-y-auto pb-8">
-          <form onSubmit={submit} className="bg-card rounded-2xl shadow-lg p-5 border space-y-3">
-            <div>
-              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                Email
-              </label>
-              <Input
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@cut.ac.za"
-                className="mt-1"
-                required
-              />
-            </div>
-            <div>
-              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                Password
-              </label>
-              <Input
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1"
-                required
-                minLength={8}
-              />
-            </div>
+        <div className="px-6 -mt-6 flex-1 overflow-y-auto pb-8 space-y-3">
+          {/* Social */}
+          <div className="bg-card rounded-2xl shadow-lg p-4 border space-y-2">
             <button
-              type="submit"
-              disabled={submitting}
-              className="w-full bg-navy text-primary-foreground font-bold uppercase tracking-wider rounded-full py-3 hover:bg-navy-deep transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+              type="button"
+              onClick={() => oauth("google")}
+              disabled={!!oauthBusy}
+              className="w-full bg-white text-navy-deep border-2 border-border font-bold uppercase tracking-wider rounded-full py-2.5 text-xs hover:border-navy transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
             >
-              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              Sign in
+              {oauthBusy === "google" ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleGlyph />}
+              Continue with Google
             </button>
-            <div className="text-center text-[11px] text-muted-foreground">
+            <button
+              type="button"
+              onClick={() => oauth("apple")}
+              disabled={!!oauthBusy}
+              className="w-full bg-black text-white font-bold uppercase tracking-wider rounded-full py-2.5 text-xs hover:bg-navy-deep transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {oauthBusy === "apple" ? <Loader2 className="h-4 w-4 animate-spin" /> : <AppleGlyph />}
+              Continue with Apple
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">or</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+
+          <div className="bg-card rounded-2xl shadow-lg p-5 border space-y-3">
+            <div className="flex rounded-full bg-secondary p-1 text-[11px] font-bold uppercase tracking-wider">
               <button
                 type="button"
-                onClick={() => setShowReset((v) => !v)}
-                className="hover:text-foreground underline"
+                onClick={() => setMode("email")}
+                className={`flex-1 rounded-full py-1.5 flex items-center justify-center gap-1 transition-colors ${mode === "email" ? "bg-navy text-white" : "text-muted-foreground"}`}
               >
-                Forgot password?
+                <Mail className="h-3 w-3" /> Email
               </button>
-              <span className="mx-2">·</span>
-              <Link to="/signup" className="hover:text-foreground underline font-bold">
-                Create account
-              </Link>
+              <button
+                type="button"
+                onClick={() => setMode("phone")}
+                className={`flex-1 rounded-full py-1.5 flex items-center justify-center gap-1 transition-colors ${mode === "phone" ? "bg-navy text-white" : "text-muted-foreground"}`}
+              >
+                <Phone className="h-3 w-3" /> Phone
+              </button>
             </div>
-            {showReset && (
-              <div className="rounded-lg border bg-secondary/40 p-3 mt-2 space-y-2">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Reset password
+
+            {mode === "email" ? (
+              <form onSubmit={submit} className="space-y-3">
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Email
+                  </label>
+                  <Input
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@cut.ac.za"
+                    className="mt-1"
+                    required
+                  />
                 </div>
-                <Input
-                  type="email"
-                  placeholder="email on account"
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                />
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Password
+                  </label>
+                  <Input
+                    type="password"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="mt-1"
+                    required
+                    minLength={8}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full bg-navy text-primary-foreground font-bold uppercase tracking-wider rounded-full py-3 hover:bg-navy-deep transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Sign in
+                </button>
+                <div className="text-center text-[11px] text-muted-foreground">
+                  <button
+                    type="button"
+                    onClick={() => setShowReset((v) => !v)}
+                    className="hover:text-foreground underline"
+                  >
+                    Forgot password?
+                  </button>
+                  <span className="mx-2">·</span>
+                  <Link to="/signup" className="hover:text-foreground underline font-bold">
+                    Create account
+                  </Link>
+                </div>
+                {showReset && (
+                  <div className="rounded-lg border bg-secondary/40 p-3 mt-2 space-y-2">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Reset password
+                    </div>
+                    <Input
+                      type="email"
+                      placeholder="email on account"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={sendReset}
+                      className="w-full bg-gold text-navy-deep font-bold uppercase tracking-wider rounded-full py-2 text-xs hover:scale-[1.01] transition-transform"
+                    >
+                      Send reset link
+                    </button>
+                    {import.meta.env.DEV && <DevMockResetBlock email={resetEmail} />}
+                  </div>
+                )}
+              </form>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Mobile number
+                  </label>
+                  <Input
+                    type="tel"
+                    autoComplete="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+27 82 123 4567"
+                    className="mt-1"
+                    disabled={otpSent}
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Use international format starting with +.
+                  </p>
+                </div>
+                {otpSent && (
+                  <div>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                      6-digit code
+                    </label>
+                    <Input
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                      className="mt-1 tracking-[0.5em] text-center font-bold"
+                    />
+                  </div>
+                )}
                 <button
                   type="button"
-                  onClick={sendReset}
-                  className="w-full bg-gold text-navy-deep font-bold uppercase tracking-wider rounded-full py-2 text-xs hover:scale-[1.01] transition-transform"
+                  onClick={otpSent ? verifyOtp : sendOtp}
+                  disabled={submitting}
+                  className="w-full bg-navy text-primary-foreground font-bold uppercase tracking-wider rounded-full py-3 hover:bg-navy-deep transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
                 >
-                  Send reset link
+                  {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {otpSent ? "Verify & sign in" : "Send code"}
                 </button>
-                {import.meta.env.DEV && <DevMockResetBlock email={resetEmail} />}
+                {otpSent && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOtpSent(false);
+                      setOtp("");
+                    }}
+                    className="w-full text-[11px] underline text-muted-foreground"
+                  >
+                    Use a different number
+                  </button>
+                )}
+                <p className="text-[10px] text-muted-foreground text-center">
+                  SMS may be unavailable until an SMS provider is configured.
+                </p>
               </div>
             )}
-          </form>
+          </div>
 
-          <p className="mt-4 text-center text-[10px] text-muted-foreground">
+          <p className="text-center text-[10px] text-muted-foreground">
             Phase 1 Test Build — Authorised Users Only ·{" "}
             <Link to="/privacy" className="underline hover:text-foreground">
               Privacy
