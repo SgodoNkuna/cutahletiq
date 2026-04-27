@@ -2,11 +2,12 @@ import * as React from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import logoUrl from "@/assets/cut-logo.png";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import { useAuth, ROLE_HOME } from "@/lib/auth-context";
 import { Input } from "@/components/ui/input";
 import { TestModeStamp } from "@/components/TestModeStamp";
 import { toast } from "sonner";
-import { Loader2, FlaskConical, Copy } from "lucide-react";
+import { Loader2, FlaskConical, Copy, Mail, Phone } from "lucide-react";
 import { devMockResetPassword } from "@/lib/server/dev.functions";
 
 export const Route = createFileRoute("/login")({
