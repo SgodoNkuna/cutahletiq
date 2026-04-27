@@ -276,3 +276,49 @@ function ProgramPage() {
     </MobileFrame>
   );
 }
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center">
+      {children}
+      <div className="text-[9px] uppercase tracking-wider text-muted-foreground mt-0.5">
+        {label}
+      </div>
+    </div>
+  );
+}
+
+function KindToggle({
+  kind,
+  onChange,
+}: {
+  kind: ExerciseKind;
+  onChange: (k: ExerciseKind) => void;
+}) {
+  const opts: { value: ExerciseKind; Icon: typeof Dumbbell; title: string }[] = [
+    { value: "strength", Icon: Dumbbell, title: "Strength (sets × reps × kg)" },
+    { value: "running", Icon: Footprints, title: "Running drill (reps × seconds)" },
+    { value: "time", Icon: Timer, title: "Timed set (seconds)" },
+  ];
+  return (
+    <div className="flex items-center bg-secondary rounded-md p-0.5 gap-0.5" role="group">
+      {opts.map(({ value, Icon, title }) => (
+        <button
+          key={value}
+          onClick={() => onChange(value)}
+          title={title}
+          aria-label={title}
+          aria-pressed={kind === value}
+          className={
+            "h-6 w-6 rounded flex items-center justify-center transition-colors " +
+            (kind === value
+              ? "bg-gold text-navy-deep"
+              : "text-muted-foreground hover:text-foreground")
+          }
+        >
+          <Icon className="h-3.5 w-3.5" />
+        </button>
+      ))}
+    </div>
+  );
+}
