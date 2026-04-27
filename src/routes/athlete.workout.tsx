@@ -27,7 +27,15 @@ export const Route = createFileRoute("/athlete/workout")({
   component: WorkoutPage,
 });
 
-type SetState = { reps: number; weight: number; done: boolean };
+type SetState = {
+  reps: number;
+  weight: number;
+  done: boolean;
+  /** When the athlete tapped "drill finished" (non-strength only). */
+  doneAt?: number;
+  /** Elapsed seconds since the start of this set. */
+  elapsedSec?: number;
+};
 
 function WorkoutPage() {
   const navigate = useNavigate();
