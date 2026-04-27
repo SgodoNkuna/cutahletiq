@@ -15,6 +15,7 @@ import {
   type DBSession,
   type DBExercise,
 } from "@/lib/hooks/use-coach-programme";
+import { parseExerciseNotes, repsForSet, formatDuration } from "@/lib/exercise-meta";
 
 export const Route = createFileRoute("/athlete/workout")({
   head: () => ({
