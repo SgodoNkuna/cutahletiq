@@ -138,6 +138,24 @@ function WorkoutPage() {
     );
   };
 
+  const toggleDrillDone = (ei: number, si: number) => {
+    const current = state[ei]?.[si];
+    if (!current) return;
+    if (current.done) {
+      updateSet(ei, si, { done: false, doneAt: undefined, elapsedSec: undefined });
+    } else {
+      const ex = session?.exercises[ei];
+      const { meta } = parseExerciseNotes(ex?.notes);
+      const now = Date.now();
+      // Elapsed = configured duration as a sensible default; coaches can refine later.
+      updateSet(ei, si, {
+        done: true,
+        doneAt: now,
+        elapsedSec: meta.duration_sec ?? undefined,
+      });
+    }
+  };
+
   const finish = () => {
     if (doneSets === 0) {
       toast.error("Tick at least one set first");
