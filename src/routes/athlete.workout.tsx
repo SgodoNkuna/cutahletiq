@@ -27,7 +27,15 @@ export const Route = createFileRoute("/athlete/workout")({
   component: WorkoutPage,
 });
 
-type SetState = { reps: number; weight: number; done: boolean };
+type SetState = {
+  reps: number;
+  weight: number;
+  done: boolean;
+  /** When the athlete tapped "drill finished" (non-strength only). */
+  doneAt?: number;
+  /** Elapsed seconds since the start of this set. */
+  elapsedSec?: number;
+};
 
 function WorkoutPage() {
   const navigate = useNavigate();
@@ -128,6 +136,24 @@ function WorkoutPage() {
         i === ei ? sets.map((s, j) => (j === si ? { ...s, ...patch } : s)) : sets,
       ),
     );
+  };
+
+  const toggleDrillDone = (ei: number, si: number) => {
+    const current = state[ei]?.[si];
+    if (!current) return;
+    if (current.done) {
+      updateSet(ei, si, { done: false, doneAt: undefined, elapsedSec: undefined });
+    } else {
+      const ex = session?.exercises[ei];
+      const { meta } = parseExerciseNotes(ex?.notes);
+      const now = Date.now();
+      // Elapsed = configured duration as a sensible default; coaches can refine later.
+      updateSet(ei, si, {
+        done: true,
+        doneAt: now,
+        elapsedSec: meta.duration_sec ?? undefined,
+      });
+    }
   };
 
   const finish = () => {
@@ -286,6 +312,15 @@ function WorkoutPage() {
                   {isPR && <PRBadge />}
                 </div>
 
+                {!isStrength && meta.instructions ? (
+                  <div className="px-4 py-2 bg-gold/10 border-b border-gold/30 text-[12px] text-navy-deep">
+                    <span className="font-bold uppercase tracking-wider text-[10px] mr-1.5">
+                      Coach:
+                    </span>
+                    {meta.instructions}
+                  </div>
+                ) : null}
+
                 <div className="p-3 space-y-2">
                   {(state[ei] ?? []).map((s, si) => (
                     <div
@@ -299,7 +334,7 @@ function WorkoutPage() {
                         {si + 1}
                       </div>
                       <NumStepper
-                        label={isStrength ? "reps" : "reps"}
+                        label="reps"
                         value={s.reps}
                         onChange={(v) => updateSet(ei, si, { reps: v })}
                         disabled={s.done}
@@ -315,17 +350,29 @@ function WorkoutPage() {
                       ) : (
                         <div className="flex flex-col items-center px-2">
                           <div className="font-bold text-sm tabular-nums">
-                            {formatDuration(meta.duration_sec)}
+                            {s.done && s.elapsedSec
+                              ? formatDuration(s.elapsedSec)
+                              : formatDuration(meta.duration_sec)}
                           </div>
                           <div className="text-[9px] uppercase tracking-wider text-muted-foreground">
-                            time
+                            {s.done && s.doneAt
+                              ? new Date(s.doneAt).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              : "time"}
                           </div>
                         </div>
                       )}
                       <button
-                        onClick={() => updateSet(ei, si, { done: !s.done })}
+                        onClick={() =>
+                          isStrength
+                            ? updateSet(ei, si, { done: !s.done })
+                            : toggleDrillDone(ei, si)
+                        }
                         className={cn(
-                          "ml-auto h-9 w-9 rounded-full flex items-center justify-center font-bold transition-colors",
+                          "ml-auto rounded-full flex items-center justify-center font-bold transition-colors",
+                          isStrength ? "h-9 w-9" : "h-9 px-3 gap-1 text-[11px] uppercase tracking-wider",
                           s.done
                             ? "bg-success text-white"
                             : "bg-secondary text-muted-foreground hover:bg-gold hover:text-navy-deep",
@@ -333,6 +380,9 @@ function WorkoutPage() {
                         aria-label={s.done ? "Mark incomplete" : "Mark complete"}
                       >
                         <Check className="h-4 w-4" />
+                        {!isStrength && (
+                          <span className="hidden sm:inline">{s.done ? "Done" : "Finish"}</span>
+                        )}
                       </button>
                     </div>
                   ))}
