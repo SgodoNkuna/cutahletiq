@@ -33,6 +33,7 @@ function CoachWellness() {
 
   React.useEffect(() => {
     if (!profile?.team_id) return;
+    const teamId = profile.team_id;
     let cancelled = false;
     (async () => {
       setLoading(true);
@@ -40,7 +41,7 @@ function CoachWellness() {
         supabase
           .from("profiles")
           .select("id, first_name, last_name")
-          .eq("team_id", profile.team_id)
+          .eq("team_id", teamId)
           .eq("role", "athlete"),
         supabase
           .from("wellness_checkins")

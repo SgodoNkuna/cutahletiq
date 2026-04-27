@@ -27,8 +27,10 @@ import { Route as AthleteIndexRouteImport } from './routes/athlete.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as PhysioLogRouteImport } from './routes/physio.log'
 import { Route as DevDiagnosticsRouteImport } from './routes/dev.diagnostics'
+import { Route as CoachWellnessRouteImport } from './routes/coach.wellness'
 import { Route as CoachProgramRouteImport } from './routes/coach.program'
 import { Route as AthleteWorkoutRouteImport } from './routes/athlete.workout'
+import { Route as AthleteWellnessRouteImport } from './routes/athlete.wellness'
 import { Route as AthleteProgressRouteImport } from './routes/athlete.progress'
 import { Route as AthleteInjuryRouteImport } from './routes/athlete.injury'
 import { Route as AdminTeamsRouteImport } from './routes/admin.teams'
@@ -127,6 +129,11 @@ const DevDiagnosticsRoute = DevDiagnosticsRouteImport.update({
   path: '/dev/diagnostics',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CoachWellnessRoute = CoachWellnessRouteImport.update({
+  id: '/coach/wellness',
+  path: '/coach/wellness',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CoachProgramRoute = CoachProgramRouteImport.update({
   id: '/coach/program',
   path: '/coach/program',
@@ -135,6 +142,11 @@ const CoachProgramRoute = CoachProgramRouteImport.update({
 const AthleteWorkoutRoute = AthleteWorkoutRouteImport.update({
   id: '/athlete/workout',
   path: '/athlete/workout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AthleteWellnessRoute = AthleteWellnessRouteImport.update({
+  id: '/athlete/wellness',
+  path: '/athlete/wellness',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AthleteProgressRoute = AthleteProgressRouteImport.update({
@@ -192,8 +204,10 @@ export interface FileRoutesByFullPath {
   '/admin/teams': typeof AdminTeamsRoute
   '/athlete/injury': typeof AthleteInjuryRoute
   '/athlete/progress': typeof AthleteProgressRoute
+  '/athlete/wellness': typeof AthleteWellnessRoute
   '/athlete/workout': typeof AthleteWorkoutRoute
   '/coach/program': typeof CoachProgramRoute
+  '/coach/wellness': typeof CoachWellnessRoute
   '/dev/diagnostics': typeof DevDiagnosticsRoute
   '/physio/log': typeof PhysioLogRoute
   '/admin/': typeof AdminIndexRoute
@@ -221,8 +235,10 @@ export interface FileRoutesByTo {
   '/admin/teams': typeof AdminTeamsRoute
   '/athlete/injury': typeof AthleteInjuryRoute
   '/athlete/progress': typeof AthleteProgressRoute
+  '/athlete/wellness': typeof AthleteWellnessRoute
   '/athlete/workout': typeof AthleteWorkoutRoute
   '/coach/program': typeof CoachProgramRoute
+  '/coach/wellness': typeof CoachWellnessRoute
   '/dev/diagnostics': typeof DevDiagnosticsRoute
   '/physio/log': typeof PhysioLogRoute
   '/admin': typeof AdminIndexRoute
@@ -251,8 +267,10 @@ export interface FileRoutesById {
   '/admin/teams': typeof AdminTeamsRoute
   '/athlete/injury': typeof AthleteInjuryRoute
   '/athlete/progress': typeof AthleteProgressRoute
+  '/athlete/wellness': typeof AthleteWellnessRoute
   '/athlete/workout': typeof AthleteWorkoutRoute
   '/coach/program': typeof CoachProgramRoute
+  '/coach/wellness': typeof CoachWellnessRoute
   '/dev/diagnostics': typeof DevDiagnosticsRoute
   '/physio/log': typeof PhysioLogRoute
   '/admin/': typeof AdminIndexRoute
@@ -282,8 +300,10 @@ export interface FileRouteTypes {
     | '/admin/teams'
     | '/athlete/injury'
     | '/athlete/progress'
+    | '/athlete/wellness'
     | '/athlete/workout'
     | '/coach/program'
+    | '/coach/wellness'
     | '/dev/diagnostics'
     | '/physio/log'
     | '/admin/'
@@ -311,8 +331,10 @@ export interface FileRouteTypes {
     | '/admin/teams'
     | '/athlete/injury'
     | '/athlete/progress'
+    | '/athlete/wellness'
     | '/athlete/workout'
     | '/coach/program'
+    | '/coach/wellness'
     | '/dev/diagnostics'
     | '/physio/log'
     | '/admin'
@@ -340,8 +362,10 @@ export interface FileRouteTypes {
     | '/admin/teams'
     | '/athlete/injury'
     | '/athlete/progress'
+    | '/athlete/wellness'
     | '/athlete/workout'
     | '/coach/program'
+    | '/coach/wellness'
     | '/dev/diagnostics'
     | '/physio/log'
     | '/admin/'
@@ -370,8 +394,10 @@ export interface RootRouteChildren {
   AdminTeamsRoute: typeof AdminTeamsRoute
   AthleteInjuryRoute: typeof AthleteInjuryRoute
   AthleteProgressRoute: typeof AthleteProgressRoute
+  AthleteWellnessRoute: typeof AthleteWellnessRoute
   AthleteWorkoutRoute: typeof AthleteWorkoutRoute
   CoachProgramRoute: typeof CoachProgramRoute
+  CoachWellnessRoute: typeof CoachWellnessRoute
   DevDiagnosticsRoute: typeof DevDiagnosticsRoute
   PhysioLogRoute: typeof PhysioLogRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -509,6 +535,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevDiagnosticsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/coach/wellness': {
+      id: '/coach/wellness'
+      path: '/coach/wellness'
+      fullPath: '/coach/wellness'
+      preLoaderRoute: typeof CoachWellnessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/coach/program': {
       id: '/coach/program'
       path: '/coach/program'
@@ -521,6 +554,13 @@ declare module '@tanstack/react-router' {
       path: '/athlete/workout'
       fullPath: '/athlete/workout'
       preLoaderRoute: typeof AthleteWorkoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/athlete/wellness': {
+      id: '/athlete/wellness'
+      path: '/athlete/wellness'
+      fullPath: '/athlete/wellness'
+      preLoaderRoute: typeof AthleteWellnessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/athlete/progress': {
@@ -594,8 +634,10 @@ const rootRouteChildren: RootRouteChildren = {
   AdminTeamsRoute: AdminTeamsRoute,
   AthleteInjuryRoute: AthleteInjuryRoute,
   AthleteProgressRoute: AthleteProgressRoute,
+  AthleteWellnessRoute: AthleteWellnessRoute,
   AthleteWorkoutRoute: AthleteWorkoutRoute,
   CoachProgramRoute: CoachProgramRoute,
+  CoachWellnessRoute: CoachWellnessRoute,
   DevDiagnosticsRoute: DevDiagnosticsRoute,
   PhysioLogRoute: PhysioLogRoute,
   AdminIndexRoute: AdminIndexRoute,
