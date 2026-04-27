@@ -161,7 +161,7 @@ export function useCoachProgramme(coachId: string | null, teamId: string | null)
   const updateExercise = async (
     exId: string,
     sessionId: string,
-    patch: Partial<Pick<DBExercise, "name" | "sets" | "reps" | "weight_kg">>,
+    patch: Partial<Pick<DBExercise, "name" | "sets" | "reps" | "weight_kg" | "notes">>,
   ) => {
     setProgramme((p) =>
       p
