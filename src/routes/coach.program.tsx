@@ -9,6 +9,9 @@ import { useCoachProgramme } from "@/lib/hooks/use-coach-programme";
 import {
   parseExerciseNotes,
   serializeExerciseNotes,
+  validateExercise,
+  previewReps,
+  formatDuration,
   type ExerciseKind,
 } from "@/lib/exercise-meta";
 
