@@ -79,6 +79,66 @@ function LoginPage() {
     setResetEmail("");
   };
 
+  const oauth = async (provider: "google" | "apple") => {
+    setOauthBusy(provider);
+    try {
+      const result = await lovable.auth.signInWithOAuth(provider, {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        toast.error(`Could not sign in with ${provider}.`);
+        return;
+      }
+      if (result.redirected) return;
+      toast.success("Signed in");
+    } catch {
+      toast.error(`Could not sign in with ${provider}.`);
+    } finally {
+      setOauthBusy(null);
+    }
+  };
+
+  const sendOtp = async () => {
+    const trimmed = phone.trim();
+    if (!/^\+\d{8,15}$/.test(trimmed)) {
+      toast.error("Enter your phone in international format, e.g. +27821234567");
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.auth.signInWithOtp({ phone: trimmed });
+    setSubmitting(false);
+    if (error) {
+      toast.error(
+        error.message.toLowerCase().includes("provider")
+          ? "SMS provider not configured yet. Use email or Google for now."
+          : "Could not send code. Try again.",
+      );
+      return;
+    }
+    setOtpSent(true);
+    toast.success("Code sent. Check your SMS.");
+  };
+
+  const verifyOtp = async () => {
+    const trimmed = phone.trim();
+    if (otp.length < 4) {
+      toast.error("Enter the 6-digit code");
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.auth.verifyOtp({
+      phone: trimmed,
+      token: otp.trim(),
+      type: "sms",
+    });
+    setSubmitting(false);
+    if (error) {
+      toast.error("Invalid or expired code.");
+      return;
+    }
+    toast.success("Signed in");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary via-background to-secondary/40 flex items-center justify-center py-4 px-2">
       <div className="relative w-full max-w-[430px] min-h-[calc(100vh-2rem)] sm:min-h-[860px] bg-background rounded-[2.25rem] sm:border-[10px] border-navy-deep shadow-2xl overflow-hidden flex flex-col">
