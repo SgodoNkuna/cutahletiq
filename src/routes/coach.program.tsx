@@ -2,10 +2,15 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { MobileFrame } from "@/components/MobileFrame";
 import { SectionHeader } from "@/components/primitives";
-import { Plus, Trash2, GripVertical, Loader2 } from "lucide-react";
+import { Plus, Trash2, GripVertical, Loader2, Dumbbell, Footprints, Timer } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { useCoachProgramme } from "@/lib/hooks/use-coach-programme";
+import {
+  parseExerciseNotes,
+  serializeExerciseNotes,
+  type ExerciseKind,
+} from "@/lib/exercise-meta";
 
 export const Route = createFileRoute("/coach/program")({
   head: () => ({
@@ -128,68 +133,125 @@ function ProgramPage() {
               </div>
 
               <div className="p-2 space-y-1.5">
-                {s.exercises.map((x) => (
-                  <div
-                    key={x.id}
-                    className="flex items-center gap-1.5 rounded-lg border p-2 bg-background"
-                  >
-                    <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <input
-                      value={x.name}
-                      onChange={(e) => updateExercise(x.id, s.id, { name: e.target.value })}
-                      maxLength={80}
-                      className="flex-1 min-w-0 bg-transparent text-sm focus:outline-none"
-                    />
-                    <input
-                      type="number"
-                      min={1}
-                      max={20}
-                      value={x.sets}
-                      onChange={(e) =>
-                        updateExercise(x.id, s.id, {
-                          sets: Math.max(1, Math.min(20, +e.target.value || 1)),
-                        })
-                      }
-                      className="w-10 text-center text-sm font-bold bg-secondary rounded-md py-1"
-                      title="Sets"
-                    />
-                    <span className="text-[10px] text-muted-foreground">×</span>
-                    <input
-                      type="number"
-                      min={1}
-                      max={100}
-                      value={x.reps}
-                      onChange={(e) =>
-                        updateExercise(x.id, s.id, {
-                          reps: Math.max(1, Math.min(100, +e.target.value || 1)),
-                        })
-                      }
-                      className="w-12 text-center text-sm font-bold bg-secondary rounded-md py-1"
-                      title="Reps"
-                    />
-                    <input
-                      type="number"
-                      min={0}
-                      max={500}
-                      step={2.5}
-                      value={x.weight_kg ?? 0}
-                      onChange={(e) =>
-                        updateExercise(x.id, s.id, {
-                          weight_kg: Math.max(0, Math.min(500, +e.target.value || 0)),
-                        })
-                      }
-                      className="w-14 text-center text-sm font-bold bg-secondary rounded-md py-1"
-                      title="Target kg"
-                    />
-                    <button
-                      onClick={() => removeExercise(x.id, s.id)}
-                      className="text-muted-foreground hover:text-destructive"
-                      aria-label="Remove exercise"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
+                {s.exercises.map((x) => {
+                  const { meta, text } = parseExerciseNotes(x.notes);
+                  const setKind = (kind: ExerciseKind) =>
+                    updateExercise(x.id, s.id, {
+                      notes: serializeExerciseNotes({ ...meta, kind }, text),
+                    });
+                  const setDuration = (sec: number) =>
+                    updateExercise(x.id, s.id, {
+                      notes: serializeExerciseNotes(
+                        { ...meta, duration_sec: Math.max(0, Math.min(3600, sec)) },
+                        text,
+                      ),
+                    });
+                  const setRepStep = (step: number) =>
+                    updateExercise(x.id, s.id, {
+                      notes: serializeExerciseNotes(
+                        { ...meta, rep_step: Math.max(0, Math.min(50, step)) },
+                        text,
+                      ),
+                    });
+                  const isStrength = meta.kind === "strength";
+                  return (
+                    <div key={x.id} className="rounded-lg border bg-background p-2 space-y-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <input
+                          value={x.name}
+                          onChange={(e) =>
+                            updateExercise(x.id, s.id, { name: e.target.value })
+                          }
+                          maxLength={80}
+                          className="flex-1 min-w-0 bg-transparent text-sm font-bold focus:outline-none"
+                        />
+                        <KindToggle kind={meta.kind} onChange={setKind} />
+                        <button
+                          onClick={() => removeExercise(x.id, s.id)}
+                          className="text-muted-foreground hover:text-destructive"
+                          aria-label="Remove exercise"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 flex-wrap pl-5">
+                        <Field label="Sets">
+                          <input
+                            type="number"
+                            min={1}
+                            max={20}
+                            value={x.sets}
+                            onChange={(e) =>
+                              updateExercise(x.id, s.id, {
+                                sets: Math.max(1, Math.min(20, +e.target.value || 1)),
+                              })
+                            }
+                            className="w-10 text-center text-sm font-bold bg-secondary rounded-md py-1"
+                          />
+                        </Field>
+                        <Field label={isStrength ? "Reps" : "Reps/round"}>
+                          <input
+                            type="number"
+                            min={1}
+                            max={500}
+                            value={x.reps}
+                            onChange={(e) =>
+                              updateExercise(x.id, s.id, {
+                                reps: Math.max(1, Math.min(500, +e.target.value || 1)),
+                              })
+                            }
+                            className="w-12 text-center text-sm font-bold bg-secondary rounded-md py-1"
+                          />
+                        </Field>
+                        {isStrength ? (
+                          <Field label="kg">
+                            <input
+                              type="number"
+                              min={0}
+                              max={500}
+                              step={2.5}
+                              value={x.weight_kg ?? 0}
+                              onChange={(e) =>
+                                updateExercise(x.id, s.id, {
+                                  weight_kg: Math.max(
+                                    0,
+                                    Math.min(500, +e.target.value || 0),
+                                  ),
+                                })
+                              }
+                              className="w-14 text-center text-sm font-bold bg-secondary rounded-md py-1"
+                            />
+                          </Field>
+                        ) : (
+                          <Field label={meta.kind === "running" ? "Sec/run" : "Sec/set"}>
+                            <input
+                              type="number"
+                              min={0}
+                              max={3600}
+                              step={5}
+                              value={meta.duration_sec ?? 0}
+                              onChange={(e) => setDuration(+e.target.value || 0)}
+                              className="w-14 text-center text-sm font-bold bg-secondary rounded-md py-1"
+                            />
+                          </Field>
+                        )}
+                        <Field label="Step −">
+                          <input
+                            type="number"
+                            min={0}
+                            max={50}
+                            value={meta.rep_step ?? 0}
+                            onChange={(e) => setRepStep(+e.target.value || 0)}
+                            className="w-12 text-center text-sm font-bold bg-secondary rounded-md py-1"
+                            title="Decrease reps each set (e.g. 10 → 8 → 6)"
+                          />
+                        </Field>
+                      </div>
+                    </div>
+                  );
+                })}
                 <button
                   onClick={() => addExercise(s.id)}
                   className="w-full rounded-lg border-2 border-dashed border-border py-2 text-xs font-bold text-muted-foreground hover:border-gold hover:text-gold flex items-center justify-center gap-1"
@@ -212,5 +274,51 @@ function ProgramPage() {
         </div>
       </div>
     </MobileFrame>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center">
+      {children}
+      <div className="text-[9px] uppercase tracking-wider text-muted-foreground mt-0.5">
+        {label}
+      </div>
+    </div>
+  );
+}
+
+function KindToggle({
+  kind,
+  onChange,
+}: {
+  kind: ExerciseKind;
+  onChange: (k: ExerciseKind) => void;
+}) {
+  const opts: { value: ExerciseKind; Icon: typeof Dumbbell; title: string }[] = [
+    { value: "strength", Icon: Dumbbell, title: "Strength (sets × reps × kg)" },
+    { value: "running", Icon: Footprints, title: "Running drill (reps × seconds)" },
+    { value: "time", Icon: Timer, title: "Timed set (seconds)" },
+  ];
+  return (
+    <div className="flex items-center bg-secondary rounded-md p-0.5 gap-0.5" role="group">
+      {opts.map(({ value, Icon, title }) => (
+        <button
+          key={value}
+          onClick={() => onChange(value)}
+          title={title}
+          aria-label={title}
+          aria-pressed={kind === value}
+          className={
+            "h-6 w-6 rounded flex items-center justify-center transition-colors " +
+            (kind === value
+              ? "bg-gold text-navy-deep"
+              : "text-muted-foreground hover:text-foreground")
+          }
+        >
+          <Icon className="h-3.5 w-3.5" />
+        </button>
+      ))}
+    </div>
   );
 }
