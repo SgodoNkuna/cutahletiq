@@ -2,10 +2,15 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { MobileFrame } from "@/components/MobileFrame";
 import { SectionHeader } from "@/components/primitives";
-import { Plus, Trash2, GripVertical, Loader2 } from "lucide-react";
+import { Plus, Trash2, GripVertical, Loader2, Dumbbell, Footprints, Timer } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { useCoachProgramme } from "@/lib/hooks/use-coach-programme";
+import {
+  parseExerciseNotes,
+  serializeExerciseNotes,
+  type ExerciseKind,
+} from "@/lib/exercise-meta";
 
 export const Route = createFileRoute("/coach/program")({
   head: () => ({
