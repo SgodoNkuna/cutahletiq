@@ -4,7 +4,7 @@ import { MobileFrame } from "@/components/MobileFrame";
 import { SectionHeader } from "@/components/primitives";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
-import { Dumbbell, HeartPulse, Trophy, ChevronRight, Loader2, Users } from "lucide-react";
+import { Dumbbell, HeartPulse, Trophy, ChevronRight, Loader2, Users, Moon } from "lucide-react";
 import { fetchUpcomingSessionsForAthlete } from "@/lib/hooks/use-coach-programme";
 
 export const Route = createFileRoute("/athlete/")({
@@ -196,6 +196,18 @@ function AthleteHome() {
                 <div>
                   <div className="text-sm font-bold">Body check</div>
                   <div className="text-[11px] text-muted-foreground">Log pain / injury</div>
+                </div>
+              </Link>
+              <Link
+                to="/athlete/wellness"
+                className="bg-card rounded-xl border p-3 flex items-center gap-3 hover:border-gold transition-colors"
+              >
+                <div className="bg-navy/10 text-navy rounded-lg p-2">
+                  <Moon className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-sm font-bold">Daily wellness</div>
+                  <div className="text-[11px] text-muted-foreground">Sleep & readiness</div>
                 </div>
               </Link>
               <Link
