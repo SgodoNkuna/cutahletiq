@@ -48,13 +48,14 @@ function WorkoutPage() {
       setSession(s);
       if (s) {
         setState(
-          s.exercises.map((ex) =>
-            Array.from({ length: ex.sets }, () => ({
-              reps: ex.reps,
+          s.exercises.map((ex) => {
+            const { meta } = parseExerciseNotes(ex.notes);
+            return Array.from({ length: ex.sets }, (_, i) => ({
+              reps: repsForSet(ex.reps, i, meta),
               weight: ex.weight_kg ?? 0,
               done: false,
-            })),
-          ),
+            }));
+          }),
         );
       }
       if (profile?.id) {
