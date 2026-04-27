@@ -74,7 +74,7 @@ function AdminInvites() {
   if (!profile) return null;
 
   return (
-    <MobileFrame title="Invite codes" backTo="/admin">
+    <MobileFrame title="Invite codes">
       <div className="px-5">
         <div className="bg-gradient-to-br from-navy to-navy-deep text-white rounded-2xl p-4">
           <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-white/70">
