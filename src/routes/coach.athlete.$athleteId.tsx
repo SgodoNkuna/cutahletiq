@@ -4,7 +4,7 @@ import { MobileFrame } from "@/components/MobileFrame";
 import { SectionHeader, SportTag } from "@/components/primitives";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronLeft, Loader2, Trophy, Dumbbell } from "lucide-react";
+import { ChevronLeft, Loader2, Trophy, Dumbbell, HeartPulse } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/coach/athlete/$athleteId")({
@@ -42,6 +42,15 @@ type LogRow = {
   exercises: { name: string } | null;
 };
 type Nudge = Database["public"]["Tables"]["nudges"]["Row"];
+type InjurySummary = {
+  id: string;
+  body_region: string;
+  injury_type: string;
+  severity: number;
+  rtp_status: string;
+  expected_rtp_date: string | null;
+  date_of_injury: string;
+};
 
 function CoachAthleteDetail() {
   const { profile } = useAuth();
@@ -50,13 +59,15 @@ function CoachAthleteDetail() {
   const [prs, setPrs] = React.useState<PR[]>([]);
   const [logs, setLogs] = React.useState<LogRow[]>([]);
   const [nudges, setNudges] = React.useState<Nudge[]>([]);
+  const [injuries, setInjuries] = React.useState<InjurySummary[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
     if (!profile) return;
     let cancelled = false;
     (async () => {
-      const [aRes, prRes, logRes, nudgeRes] = await Promise.all([
+      const db = supabase as any;
+      const [aRes, prRes, logRes, nudgeRes, injRes] = await Promise.all([
         supabase
           .from("team_members_safe")
           .select("id, first_name, last_name, sport, position")
@@ -83,12 +94,19 @@ function CoachAthleteDetail() {
           .in("type", ["new_programme", "pr_achieved", "missed_session", "checkin_reminder"])
           .order("created_at", { ascending: false })
           .limit(10),
+        db
+          .from("injury_summary_for_coach")
+          .select("id, body_region, injury_type, severity, rtp_status, expected_rtp_date, date_of_injury")
+          .eq("athlete_id", athleteId)
+          .order("updated_at", { ascending: false })
+          .limit(5),
       ]);
       if (cancelled) return;
       setAthlete(aRes.data ? ({ ...aRes.data, id: aRes.data.id as string } as Member) : null);
       setPrs(prRes.data ?? []);
       setLogs((logRes.data ?? []) as unknown as LogRow[]);
       setNudges(nudgeRes.data ?? []);
+      setInjuries((injRes.data ?? []) as InjurySummary[]);
       setLoading(false);
     })();
     return () => {
