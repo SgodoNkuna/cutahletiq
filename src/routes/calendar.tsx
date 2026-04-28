@@ -32,6 +32,17 @@ type TeamEvent = {
 };
 type Rsvp = { id: string; event_id: string; user_id: string; status: string };
 type Team = { id: string; name: string; sport: string };
+type Game = {
+  id: string;
+  team_id: string | null;
+  coach_id: string;
+  opponent: string;
+  game_date: string;
+  game_time: string | null;
+  location: string | null;
+  notes: string | null;
+};
+type GameRsvp = { id: string; game_id: string; user_id: string; status: string };
 
 function buildMonth(anchor: Date) {
   const first = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
@@ -59,6 +70,8 @@ function CalendarPage() {
   const [events, setEvents] = React.useState<TeamEvent[]>([]);
   const [rsvps, setRsvps] = React.useState<Rsvp[]>([]);
   const [teams, setTeams] = React.useState<Team[]>([]);
+  const [games, setGames] = React.useState<Game[]>([]);
+  const [gameRsvps, setGameRsvps] = React.useState<GameRsvp[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [selected, setSelected] = React.useState<string>(todayISO);
   const [anchor, setAnchor] = React.useState(new Date(today.getFullYear(), today.getMonth(), 1));
@@ -69,7 +82,7 @@ function CalendarPage() {
   const load = React.useCallback(async () => {
     if (!profile) return;
     const db = supabase as any;
-    const [sessRes, eventRes, rsvpRes, teamRes] = await Promise.all([
+    const [sessRes, eventRes, rsvpRes, teamRes, gameRes, gRsvpRes] = await Promise.all([
       supabase
         .from("sessions")
         .select("id, name, session_date, programmes!inner(name)")
@@ -79,6 +92,8 @@ function CalendarPage() {
       canPickAnyTeam
         ? supabase.from("teams").select("id, name, sport").order("name", { ascending: true })
         : Promise.resolve({ data: [] }),
+      db.from("games").select("*").order("game_date", { ascending: true }),
+      db.from("game_rsvps").select("*"),
     ]);
     setSessions(
       (sessRes.data ?? []).map((s) => ({
@@ -91,6 +106,8 @@ function CalendarPage() {
     setEvents((eventRes.data ?? []) as TeamEvent[]);
     setRsvps((rsvpRes.data ?? []) as Rsvp[]);
     setTeams((teamRes.data ?? []) as Team[]);
+    setGames((gameRes.data ?? []) as Game[]);
+    setGameRsvps((gRsvpRes.data ?? []) as GameRsvp[]);
     setLoading(false);
   }, [profile, canPickAnyTeam]);
 
