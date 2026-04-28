@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
 import { TestModeStamp } from "./TestModeStamp";
+import { WellnessGate } from "./WellnessGate";
 import { cn } from "@/lib/utils";
 
 type NavItem = { to: string; label: string; icon: React.ComponentType<{ className?: string }> };
@@ -174,6 +175,7 @@ export function MobileFrame({
 
         <TestModeStamp />
       </div>
+      <WellnessGate />
     </div>
   );
 }

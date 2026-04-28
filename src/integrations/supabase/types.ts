@@ -277,6 +277,30 @@ export type Database = {
           },
         ]
       }
+      game_rsvps: {
+        Row: {
+          game_id: string
+          id: string
+          responded_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          game_id: string
+          id?: string
+          responded_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          game_id?: string
+          id?: string
+          responded_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       games: {
         Row: {
           coach_id: string
@@ -926,6 +950,60 @@ export type Database = {
       }
     }
     Views: {
+      injury_summary_for_coach: {
+        Row: {
+          actual_rtp_date: string | null
+          athlete_id: string | null
+          body_region: string | null
+          date_of_injury: string | null
+          expected_rtp_date: string | null
+          id: string | null
+          injury_type: string | null
+          rtp_status: Database["public"]["Enums"]["rtp_status"] | null
+          severity: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          actual_rtp_date?: string | null
+          athlete_id?: string | null
+          body_region?: string | null
+          date_of_injury?: string | null
+          expected_rtp_date?: string | null
+          id?: string | null
+          injury_type?: string | null
+          rtp_status?: Database["public"]["Enums"]["rtp_status"] | null
+          severity?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          actual_rtp_date?: string | null
+          athlete_id?: string | null
+          body_region?: string | null
+          date_of_injury?: string | null
+          expected_rtp_date?: string | null
+          id?: string | null
+          injury_type?: string | null
+          rtp_status?: Database["public"]["Enums"]["rtp_status"] | null
+          severity?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "injury_records_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "injury_records_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "team_members_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rtp_status_view: {
         Row: {
           athlete_id: string | null

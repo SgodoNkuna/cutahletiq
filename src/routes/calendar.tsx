@@ -32,6 +32,17 @@ type TeamEvent = {
 };
 type Rsvp = { id: string; event_id: string; user_id: string; status: string };
 type Team = { id: string; name: string; sport: string };
+type Game = {
+  id: string;
+  team_id: string | null;
+  coach_id: string;
+  opponent: string;
+  game_date: string;
+  game_time: string | null;
+  location: string | null;
+  notes: string | null;
+};
+type GameRsvp = { id: string; game_id: string; user_id: string; status: string };
 
 function buildMonth(anchor: Date) {
   const first = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
@@ -59,6 +70,8 @@ function CalendarPage() {
   const [events, setEvents] = React.useState<TeamEvent[]>([]);
   const [rsvps, setRsvps] = React.useState<Rsvp[]>([]);
   const [teams, setTeams] = React.useState<Team[]>([]);
+  const [games, setGames] = React.useState<Game[]>([]);
+  const [gameRsvps, setGameRsvps] = React.useState<GameRsvp[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [selected, setSelected] = React.useState<string>(todayISO);
   const [anchor, setAnchor] = React.useState(new Date(today.getFullYear(), today.getMonth(), 1));
@@ -69,7 +82,7 @@ function CalendarPage() {
   const load = React.useCallback(async () => {
     if (!profile) return;
     const db = supabase as any;
-    const [sessRes, eventRes, rsvpRes, teamRes] = await Promise.all([
+    const [sessRes, eventRes, rsvpRes, teamRes, gameRes, gRsvpRes] = await Promise.all([
       supabase
         .from("sessions")
         .select("id, name, session_date, programmes!inner(name)")
@@ -79,6 +92,8 @@ function CalendarPage() {
       canPickAnyTeam
         ? supabase.from("teams").select("id, name, sport").order("name", { ascending: true })
         : Promise.resolve({ data: [] }),
+      db.from("games").select("*").order("game_date", { ascending: true }),
+      db.from("game_rsvps").select("*"),
     ]);
     setSessions(
       (sessRes.data ?? []).map((s) => ({
@@ -91,6 +106,8 @@ function CalendarPage() {
     setEvents((eventRes.data ?? []) as TeamEvent[]);
     setRsvps((rsvpRes.data ?? []) as Rsvp[]);
     setTeams((teamRes.data ?? []) as Team[]);
+    setGames((gameRes.data ?? []) as Game[]);
+    setGameRsvps((gRsvpRes.data ?? []) as GameRsvp[]);
     setLoading(false);
   }, [profile, canPickAnyTeam]);
 
@@ -112,6 +129,16 @@ function CalendarPage() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "event_rsvps" },
+        () => void load(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "games" },
+        () => void load(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "game_rsvps" },
         () => void load(),
       )
       .subscribe();
@@ -141,11 +168,40 @@ function CalendarPage() {
   const monthLabel = anchor.toLocaleDateString(undefined, { month: "long", year: "numeric" });
   const daySessions = sessions.filter((s) => s.session_date === selected);
   const dayEvents = events.filter((e) => e.event_date === selected);
+  const dayGames = games.filter((g) => g.game_date === selected);
+
+  const myRsvpFor = (gameId: string) =>
+    gameRsvps.find((r) => r.game_id === gameId && r.user_id === profile.id)?.status ?? "no_response";
+  const countsFor = (gameId: string) => {
+    const rs = gameRsvps.filter((r) => r.game_id === gameId);
+    return {
+      going: rs.filter((r) => r.status === "going").length,
+      not: rs.filter((r) => r.status === "not_going").length,
+      none: rs.filter((r) => r.status === "no_response").length,
+    };
+  };
+
+  const setGameRsvp = async (gameId: string, status: "going" | "not_going" | "no_response") => {
+    const { error } = await (supabase as any)
+      .from("game_rsvps")
+      .upsert(
+        { game_id: gameId, user_id: profile.id, status, responded_at: new Date().toISOString() },
+        { onConflict: "game_id,user_id" },
+      );
+    if (error) toast.error("Could not RSVP");
+    else {
+      toast.success("RSVP updated");
+      await load();
+    }
+  };
 
   return (
     <MobileFrame title="Calendar">
       <div className="px-5 pb-5">
         {isEventOwner && <EventComposer teams={teams} selected={selected} onCreated={load} />}
+        {(profile.role === "coach" || profile.role === "admin") && (
+          <GameComposer teams={teams} selected={selected} onCreated={load} />
+        )}
 
         <div className="flex items-center justify-between bg-card rounded-xl border p-2 mt-2">
           <button
@@ -176,7 +232,8 @@ function CalendarPage() {
             </div>
             <div className="grid grid-cols-7 gap-1">
               {grid.map(({ iso, date, inMonth }) => {
-                const hasItems =
+                const hasGame = games.some((g) => g.game_date === iso);
+                const hasSession =
                   sessions.some((s) => s.session_date === iso) ||
                   events.some((e) => e.event_date === iso);
                 const isToday = iso === todayISO;
@@ -195,14 +252,14 @@ function CalendarPage() {
                     <span className={cn("font-bold leading-none", isSel && "text-white")}>
                       {date.getDate()}
                     </span>
-                    {hasItems && (
-                      <span
-                        className={cn(
-                          "h-1 w-1 rounded-full mt-auto mb-0.5",
-                          isSel ? "bg-white" : "bg-gold",
-                        )}
-                      />
-                    )}
+                    <div className="mt-auto mb-0.5 flex gap-0.5">
+                      {hasGame && (
+                        <span className={cn("h-1 w-1 rounded-full", isSel ? "bg-white" : "bg-amber-500")} />
+                      )}
+                      {hasSession && (
+                        <span className={cn("h-1 w-1 rounded-full", isSel ? "bg-white" : "bg-blue-500")} />
+                      )}
+                    </div>
                   </button>
                 );
               })}
@@ -223,12 +280,75 @@ function CalendarPage() {
             })}
           </h2>
 
-          {daySessions.length === 0 && dayEvents.length === 0 ? (
+          {daySessions.length === 0 && dayEvents.length === 0 && dayGames.length === 0 ? (
             <div className="bg-card rounded-xl border p-6 text-center text-sm text-muted-foreground mt-2">
               Nothing scheduled.
             </div>
           ) : (
             <div className="space-y-2 mt-2">
+              {dayGames.map((g) => {
+                const c = countsFor(g.id);
+                const my = myRsvpFor(g.id);
+                return (
+                  <div key={g.id} className="bg-card rounded-xl border-2 border-amber-400/50 p-3">
+                    <div className="flex items-start gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-amber-500/15 text-amber-600 flex items-center justify-center font-display text-sm">
+                        VS
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[10px] uppercase tracking-wider font-bold text-amber-600">
+                          Game day
+                        </div>
+                        <div className="font-bold text-sm truncate">vs {g.opponent}</div>
+                        <div className="text-[11px] text-muted-foreground space-y-0.5 mt-1">
+                          {g.game_time && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" /> {g.game_time.slice(0, 5)}
+                            </div>
+                          )}
+                          {g.location && (
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3" /> {g.location}
+                            </div>
+                          )}
+                        </div>
+                        {g.notes && <p className="text-xs text-foreground/80 mt-2">{g.notes}</p>}
+                        <div className="text-[10px] text-muted-foreground mt-2 font-bold">
+                          {c.going} going · {c.not} not going · {c.none} no response
+                        </div>
+                      </div>
+                    </div>
+                    {profile.role === "athlete" && (
+                      <div className="grid grid-cols-2 gap-1.5 mt-3">
+                        <button
+                          onClick={() => setGameRsvp(g.id, my === "going" ? "no_response" : "going")}
+                          className={cn(
+                            "rounded-full border-2 px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors",
+                            my === "going"
+                              ? "bg-gold text-navy-deep border-gold"
+                              : "bg-background text-foreground",
+                          )}
+                        >
+                          {my === "going" ? "Going ✓" : "I'll be there"}
+                        </button>
+                        <button
+                          onClick={() =>
+                            setGameRsvp(g.id, my === "not_going" ? "no_response" : "not_going")
+                          }
+                          className={cn(
+                            "rounded-full border-2 px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors",
+                            my === "not_going"
+                              ? "bg-destructive text-destructive-foreground border-destructive"
+                              : "bg-background text-muted-foreground",
+                          )}
+                        >
+                          Can't make it
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
               {daySessions.map((s) => (
                 <Link
                   to="/athlete/workout"
@@ -546,6 +666,152 @@ function EventComposer({
           className="flex-1 rounded-full bg-gold text-navy-deep py-2 text-xs font-bold uppercase tracking-wider disabled:opacity-60"
         >
           {saving ? "Saving…" : "Create"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function GameComposer({
+  teams,
+  selected,
+  onCreated,
+}: {
+  teams: Team[];
+  selected: string;
+  onCreated: () => Promise<void>;
+}) {
+  const { profile } = useAuth();
+  const [open, setOpen] = React.useState(false);
+  const [opponent, setOpponent] = React.useState("");
+  const [date, setDate] = React.useState(selected);
+  const [time, setTime] = React.useState("");
+  const [location, setLocation] = React.useState("");
+  const [notes, setNotes] = React.useState("");
+  const [teamId, setTeamId] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
+
+  React.useEffect(() => setDate(selected), [selected]);
+
+  const create = async () => {
+    if (!profile) return;
+    const opp = cleanText(opponent);
+    if (!opp) {
+      toast.error("Opponent name required");
+      return;
+    }
+    if (date < new Date().toISOString().slice(0, 10)) {
+      toast.error("Game date can't be in the past");
+      return;
+    }
+    const resolvedTeamId =
+      profile.role === "admin" ? teamId || null : (profile.team_id ?? null);
+    if (!resolvedTeamId && profile.role === "coach") {
+      toast.error("Create a team first");
+      return;
+    }
+    setSaving(true);
+    const { error } = await (supabase as any).from("games").insert({
+      coach_id: profile.id,
+      team_id: resolvedTeamId,
+      opponent: opp.slice(0, 120),
+      game_date: date,
+      game_time: time || null,
+      location: cleanText(location).slice(0, 120) || null,
+      notes: cleanText(notes).slice(0, 1000) || null,
+    });
+    setSaving(false);
+    if (error) {
+      toast.error("Could not create game");
+      return;
+    }
+    toast.success("Game scheduled");
+    setOpponent("");
+    setLocation("");
+    setNotes("");
+    setTime("");
+    setOpen(false);
+    await onCreated();
+  };
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="w-full rounded-2xl border-2 border-dashed border-amber-400/60 bg-amber-50/40 p-3 flex items-center gap-2 text-sm font-bold text-amber-700 hover:bg-amber-100/60 transition-colors mb-2"
+      >
+        <Plus className="h-4 w-4" />
+        Schedule a game
+      </button>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border-2 border-amber-400/60 bg-card p-4 space-y-2 mb-2">
+      <input
+        value={opponent}
+        onChange={(e) => setOpponent(e.target.value)}
+        placeholder="Opponent (e.g. UFS, NWU)"
+        maxLength={120}
+        className="w-full rounded-md border bg-background px-3 py-2 text-sm font-bold"
+      />
+      <div className="grid grid-cols-2 gap-2">
+        <input
+          type="date"
+          value={date}
+          min={new Date().toISOString().slice(0, 10)}
+          onChange={(e) => setDate(e.target.value)}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        />
+        <input
+          type="time"
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        />
+      </div>
+      {profile?.role === "admin" && (
+        <select
+          value={teamId}
+          onChange={(e) => setTeamId(e.target.value)}
+          className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="">Department-wide</option>
+          {teams.map((team) => (
+            <option key={team.id} value={team.id}>
+              {team.name} · {team.sport}
+            </option>
+          ))}
+        </select>
+      )}
+      <input
+        value={location}
+        onChange={(e) => setLocation(e.target.value)}
+        placeholder="Venue"
+        maxLength={120}
+        className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+      />
+      <textarea
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        placeholder="Notes (optional)"
+        rows={2}
+        maxLength={1000}
+        className="w-full rounded-md border bg-background p-3 text-sm resize-none"
+      />
+      <div className="flex gap-2">
+        <button
+          onClick={() => setOpen(false)}
+          className="flex-1 rounded-full border py-2 text-xs font-bold uppercase tracking-wider"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={create}
+          disabled={saving}
+          className="flex-1 rounded-full bg-amber-500 text-white py-2 text-xs font-bold uppercase tracking-wider disabled:opacity-60"
+        >
+          {saving ? "Saving…" : "Create game"}
         </button>
       </div>
     </div>
