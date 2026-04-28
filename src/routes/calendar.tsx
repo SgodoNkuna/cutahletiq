@@ -232,7 +232,8 @@ function CalendarPage() {
             </div>
             <div className="grid grid-cols-7 gap-1">
               {grid.map(({ iso, date, inMonth }) => {
-                const hasItems =
+                const hasGame = games.some((g) => g.game_date === iso);
+                const hasSession =
                   sessions.some((s) => s.session_date === iso) ||
                   events.some((e) => e.event_date === iso);
                 const isToday = iso === todayISO;
@@ -251,14 +252,14 @@ function CalendarPage() {
                     <span className={cn("font-bold leading-none", isSel && "text-white")}>
                       {date.getDate()}
                     </span>
-                    {hasItems && (
-                      <span
-                        className={cn(
-                          "h-1 w-1 rounded-full mt-auto mb-0.5",
-                          isSel ? "bg-white" : "bg-gold",
-                        )}
-                      />
-                    )}
+                    <div className="mt-auto mb-0.5 flex gap-0.5">
+                      {hasGame && (
+                        <span className={cn("h-1 w-1 rounded-full", isSel ? "bg-white" : "bg-amber-500")} />
+                      )}
+                      {hasSession && (
+                        <span className={cn("h-1 w-1 rounded-full", isSel ? "bg-white" : "bg-blue-500")} />
+                      )}
+                    </div>
                   </button>
                 );
               })}
