@@ -671,3 +671,149 @@ function EventComposer({
     </div>
   );
 }
+
+function GameComposer({
+  teams,
+  selected,
+  onCreated,
+}: {
+  teams: Team[];
+  selected: string;
+  onCreated: () => Promise<void>;
+}) {
+  const { profile } = useAuth();
+  const [open, setOpen] = React.useState(false);
+  const [opponent, setOpponent] = React.useState("");
+  const [date, setDate] = React.useState(selected);
+  const [time, setTime] = React.useState("");
+  const [location, setLocation] = React.useState("");
+  const [notes, setNotes] = React.useState("");
+  const [teamId, setTeamId] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
+
+  React.useEffect(() => setDate(selected), [selected]);
+
+  const create = async () => {
+    if (!profile) return;
+    const opp = cleanText(opponent);
+    if (!opp) {
+      toast.error("Opponent name required");
+      return;
+    }
+    if (date < new Date().toISOString().slice(0, 10)) {
+      toast.error("Game date can't be in the past");
+      return;
+    }
+    const resolvedTeamId =
+      profile.role === "admin" ? teamId || null : (profile.team_id ?? null);
+    if (!resolvedTeamId && profile.role === "coach") {
+      toast.error("Create a team first");
+      return;
+    }
+    setSaving(true);
+    const { error } = await (supabase as any).from("games").insert({
+      coach_id: profile.id,
+      team_id: resolvedTeamId,
+      opponent: opp.slice(0, 120),
+      game_date: date,
+      game_time: time || null,
+      location: cleanText(location).slice(0, 120) || null,
+      notes: cleanText(notes).slice(0, 1000) || null,
+    });
+    setSaving(false);
+    if (error) {
+      toast.error("Could not create game");
+      return;
+    }
+    toast.success("Game scheduled");
+    setOpponent("");
+    setLocation("");
+    setNotes("");
+    setTime("");
+    setOpen(false);
+    await onCreated();
+  };
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="w-full rounded-2xl border-2 border-dashed border-amber-400/60 bg-amber-50/40 p-3 flex items-center gap-2 text-sm font-bold text-amber-700 hover:bg-amber-100/60 transition-colors mb-2"
+      >
+        <Plus className="h-4 w-4" />
+        Schedule a game
+      </button>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border-2 border-amber-400/60 bg-card p-4 space-y-2 mb-2">
+      <input
+        value={opponent}
+        onChange={(e) => setOpponent(e.target.value)}
+        placeholder="Opponent (e.g. UFS, NWU)"
+        maxLength={120}
+        className="w-full rounded-md border bg-background px-3 py-2 text-sm font-bold"
+      />
+      <div className="grid grid-cols-2 gap-2">
+        <input
+          type="date"
+          value={date}
+          min={new Date().toISOString().slice(0, 10)}
+          onChange={(e) => setDate(e.target.value)}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        />
+        <input
+          type="time"
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+          className="rounded-md border bg-background px-3 py-2 text-sm"
+        />
+      </div>
+      {profile?.role === "admin" && (
+        <select
+          value={teamId}
+          onChange={(e) => setTeamId(e.target.value)}
+          className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+        >
+          <option value="">Department-wide</option>
+          {teams.map((team) => (
+            <option key={team.id} value={team.id}>
+              {team.name} · {team.sport}
+            </option>
+          ))}
+        </select>
+      )}
+      <input
+        value={location}
+        onChange={(e) => setLocation(e.target.value)}
+        placeholder="Venue"
+        maxLength={120}
+        className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+      />
+      <textarea
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        placeholder="Notes (optional)"
+        rows={2}
+        maxLength={1000}
+        className="w-full rounded-md border bg-background p-3 text-sm resize-none"
+      />
+      <div className="flex gap-2">
+        <button
+          onClick={() => setOpen(false)}
+          className="flex-1 rounded-full border py-2 text-xs font-bold uppercase tracking-wider"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={create}
+          disabled={saving}
+          className="flex-1 rounded-full bg-amber-500 text-white py-2 text-xs font-bold uppercase tracking-wider disabled:opacity-60"
+        >
+          {saving ? "Saving…" : "Create game"}
+        </button>
+      </div>
+    </div>
+  );
+}
