@@ -168,11 +168,40 @@ function CalendarPage() {
   const monthLabel = anchor.toLocaleDateString(undefined, { month: "long", year: "numeric" });
   const daySessions = sessions.filter((s) => s.session_date === selected);
   const dayEvents = events.filter((e) => e.event_date === selected);
+  const dayGames = games.filter((g) => g.game_date === selected);
+
+  const myRsvpFor = (gameId: string) =>
+    gameRsvps.find((r) => r.game_id === gameId && r.user_id === profile.id)?.status ?? "no_response";
+  const countsFor = (gameId: string) => {
+    const rs = gameRsvps.filter((r) => r.game_id === gameId);
+    return {
+      going: rs.filter((r) => r.status === "going").length,
+      not: rs.filter((r) => r.status === "not_going").length,
+      none: rs.filter((r) => r.status === "no_response").length,
+    };
+  };
+
+  const setGameRsvp = async (gameId: string, status: "going" | "not_going" | "no_response") => {
+    const { error } = await (supabase as any)
+      .from("game_rsvps")
+      .upsert(
+        { game_id: gameId, user_id: profile.id, status, responded_at: new Date().toISOString() },
+        { onConflict: "game_id,user_id" },
+      );
+    if (error) toast.error("Could not RSVP");
+    else {
+      toast.success("RSVP updated");
+      await load();
+    }
+  };
 
   return (
     <MobileFrame title="Calendar">
       <div className="px-5 pb-5">
         {isEventOwner && <EventComposer teams={teams} selected={selected} onCreated={load} />}
+        {(profile.role === "coach" || profile.role === "admin") && (
+          <GameComposer teams={teams} selected={selected} onCreated={load} />
+        )}
 
         <div className="flex items-center justify-between bg-card rounded-xl border p-2 mt-2">
           <button
