@@ -280,12 +280,75 @@ function CalendarPage() {
             })}
           </h2>
 
-          {daySessions.length === 0 && dayEvents.length === 0 ? (
+          {daySessions.length === 0 && dayEvents.length === 0 && dayGames.length === 0 ? (
             <div className="bg-card rounded-xl border p-6 text-center text-sm text-muted-foreground mt-2">
               Nothing scheduled.
             </div>
           ) : (
             <div className="space-y-2 mt-2">
+              {dayGames.map((g) => {
+                const c = countsFor(g.id);
+                const my = myRsvpFor(g.id);
+                return (
+                  <div key={g.id} className="bg-card rounded-xl border-2 border-amber-400/50 p-3">
+                    <div className="flex items-start gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-amber-500/15 text-amber-600 flex items-center justify-center font-display text-sm">
+                        VS
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[10px] uppercase tracking-wider font-bold text-amber-600">
+                          Game day
+                        </div>
+                        <div className="font-bold text-sm truncate">vs {g.opponent}</div>
+                        <div className="text-[11px] text-muted-foreground space-y-0.5 mt-1">
+                          {g.game_time && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" /> {g.game_time.slice(0, 5)}
+                            </div>
+                          )}
+                          {g.location && (
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3" /> {g.location}
+                            </div>
+                          )}
+                        </div>
+                        {g.notes && <p className="text-xs text-foreground/80 mt-2">{g.notes}</p>}
+                        <div className="text-[10px] text-muted-foreground mt-2 font-bold">
+                          {c.going} going · {c.not} not going · {c.none} no response
+                        </div>
+                      </div>
+                    </div>
+                    {profile.role === "athlete" && (
+                      <div className="grid grid-cols-2 gap-1.5 mt-3">
+                        <button
+                          onClick={() => setGameRsvp(g.id, my === "going" ? "no_response" : "going")}
+                          className={cn(
+                            "rounded-full border-2 px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors",
+                            my === "going"
+                              ? "bg-gold text-navy-deep border-gold"
+                              : "bg-background text-foreground",
+                          )}
+                        >
+                          {my === "going" ? "Going ✓" : "I'll be there"}
+                        </button>
+                        <button
+                          onClick={() =>
+                            setGameRsvp(g.id, my === "not_going" ? "no_response" : "not_going")
+                          }
+                          className={cn(
+                            "rounded-full border-2 px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors",
+                            my === "not_going"
+                              ? "bg-destructive text-destructive-foreground border-destructive"
+                              : "bg-background text-muted-foreground",
+                          )}
+                        >
+                          Can't make it
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
               {daySessions.map((s) => (
                 <Link
                   to="/athlete/workout"
