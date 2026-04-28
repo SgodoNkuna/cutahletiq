@@ -131,6 +131,16 @@ function CalendarPage() {
         { event: "*", schema: "public", table: "event_rsvps" },
         () => void load(),
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "games" },
+        () => void load(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "game_rsvps" },
+        () => void load(),
+      )
       .subscribe();
     return () => {
       void supabase.removeChannel(ch);
