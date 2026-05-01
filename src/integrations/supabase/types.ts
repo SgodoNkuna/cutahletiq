@@ -198,7 +198,10 @@ export type Database = {
       exercises: {
         Row: {
           created_at: string
+          duration_seconds: number | null
           id: string
+          instructions: string | null
+          manual_finish: boolean
           name: string
           notes: string | null
           order_index: number
@@ -210,7 +213,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          duration_seconds?: number | null
           id?: string
+          instructions?: string | null
+          manual_finish?: boolean
           name: string
           notes?: string | null
           order_index?: number
@@ -222,7 +228,10 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          duration_seconds?: number | null
           id?: string
+          instructions?: string | null
+          manual_finish?: boolean
           name?: string
           notes?: string | null
           order_index?: number
@@ -1095,6 +1104,26 @@ export type Database = {
           _old: Database["public"]["Tables"]["profiles"]["Row"]
         }
         Returns: boolean
+      }
+      save_game_minutes_bulk: {
+        Args: { _game_id: string; _rows: Json }
+        Returns: number
+      }
+      team_completion_stats: {
+        Args: { _from: string; _to: string }
+        Returns: {
+          athlete_id: string
+          athlete_position: string
+          completed_sessions: number
+          first_name: string
+          has_active_injury: boolean
+          last_exercise_name: string
+          last_logged_at: string
+          last_name: string
+          scheduled_sessions: number
+          sport: string
+          total_game_minutes: number
+        }[]
       }
       team_rtp_pulse: {
         Args: never
