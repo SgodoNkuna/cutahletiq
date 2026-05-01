@@ -2,14 +2,26 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { MobileFrame } from "@/components/MobileFrame";
 import { SectionHeader } from "@/components/primitives";
-import { Plus, Trash2, GripVertical, Loader2, Dumbbell, Footprints, Timer } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  GripVertical,
+  Loader2,
+  Dumbbell,
+  Footprints,
+  Timer,
+  Hand,
+  CircleStop,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { useCoachProgramme } from "@/lib/hooks/use-coach-programme";
 import {
+  metaFromRow,
+  notesFromMeta,
   parseExerciseNotes,
-  serializeExerciseNotes,
   validateExercise,
+  validateProgrammeForPublish,
   previewReps,
   formatDuration,
   type ExerciseKind,
@@ -57,6 +69,12 @@ function ProgramPage() {
       toast.error("Create or join a team first to publish");
       return;
     }
+    if (!programme) return;
+    const { ok, errors } = validateProgrammeForPublish({ sessions: programme.sessions });
+    if (!ok) {
+      toast.error(errors[0] ?? "Programme is not ready");
+      return;
+    }
     toast.success("Programme is live for your team — athletes have been notified.");
   };
 
@@ -69,6 +87,14 @@ function ProgramPage() {
       </MobileFrame>
     );
   }
+
+  const publishCheck = validateProgrammeForPublish({ sessions: programme.sessions });
+  const canPublish = !!teamId && publishCheck.ok;
+  const publishHint = !teamId
+    ? "Create a team first"
+    : publishCheck.ok
+      ? "Send programme to your athletes"
+      : publishCheck.errors[0] ?? "Programme not ready";
 
   return (
     <MobileFrame title="Program Builder">
@@ -136,33 +162,45 @@ function ProgramPage() {
               </div>
 
               <div className="p-2 space-y-1.5">
+                {s.exercises.length === 0 && (
+                  <div className="text-[11px] text-destructive font-bold px-2 py-1">
+                    ⚠ Add at least one drill or this session can't be published.
+                  </div>
+                )}
                 {s.exercises.map((x) => {
-                  const { meta, text } = parseExerciseNotes(x.notes);
-                  const setKind = (kind: ExerciseKind) =>
-                    updateExercise(x.id, s.id, {
-                      notes: serializeExerciseNotes({ ...meta, kind }, text),
+                  const meta = metaFromRow(x);
+                  const { text: legacyText } = parseExerciseNotes(x.notes);
+                  const setKind = (kind: ExerciseKind) => {
+                    // When switching to non-strength, ensure duration default; when leaving, clear it.
+                    const patchedDuration =
+                      kind === "strength"
+                        ? null
+                        : (x.duration_seconds && x.duration_seconds > 0
+                            ? x.duration_seconds
+                            : 30);
+                    void updateExercise(x.id, s.id, {
+                      duration_seconds: patchedDuration,
+                      notes: notesFromMeta({ ...meta, kind }, legacyText),
                     });
+                  };
                   const setDuration = (sec: number) =>
                     updateExercise(x.id, s.id, {
-                      notes: serializeExerciseNotes(
-                        { ...meta, duration_sec: Math.max(0, Math.min(3600, sec)) },
-                        text,
-                      ),
+                      duration_seconds: Math.max(1, Math.min(3600, sec)),
                     });
                   const setRepStep = (step: number) =>
                     updateExercise(x.id, s.id, {
-                      notes: serializeExerciseNotes(
+                      notes: notesFromMeta(
                         { ...meta, rep_step: Math.max(0, Math.min(50, step)) },
-                        text,
+                        legacyText,
                       ),
                     });
                   const setInstructions = (val: string) =>
                     updateExercise(x.id, s.id, {
-                      notes: serializeExerciseNotes(
-                        { ...meta, instructions: val.slice(0, 240) },
-                        text,
-                      ),
+                      instructions: val.slice(0, 1000) || null,
                     });
+                  const toggleManual = () =>
+                    updateExercise(x.id, s.id, { manual_finish: !x.manual_finish });
+
                   const isStrength = meta.kind === "strength";
                   const errors = validateExercise({
                     name: x.name,
@@ -181,7 +219,13 @@ function ProgramPage() {
                             updateExercise(x.id, s.id, { name: e.target.value })
                           }
                           maxLength={80}
-                          className="flex-1 min-w-0 bg-transparent text-sm font-bold focus:outline-none"
+                          placeholder="Drill name"
+                          className={
+                            "flex-1 min-w-0 bg-transparent text-sm font-bold focus:outline-none " +
+                            (!x.name?.trim()
+                              ? "text-destructive placeholder:text-destructive/70"
+                              : "")
+                          }
                         />
                         <KindToggle kind={meta.kind} onChange={setKind} />
                         <button
@@ -211,12 +255,12 @@ function ProgramPage() {
                         <Field label={isStrength ? "Reps" : "Reps/round"}>
                           <input
                             type="number"
-                            min={1}
+                            min={isStrength ? 1 : 0}
                             max={500}
                             value={x.reps}
                             onChange={(e) =>
                               updateExercise(x.id, s.id, {
-                                reps: Math.max(1, Math.min(500, +e.target.value || 1)),
+                                reps: Math.max(0, Math.min(500, +e.target.value || 0)),
                               })
                             }
                             className="w-12 text-center text-sm font-bold bg-secondary rounded-md py-1"
@@ -245,10 +289,10 @@ function ProgramPage() {
                           <Field label={meta.kind === "running" ? "Sec/run" : "Sec/set"}>
                             <input
                               type="number"
-                              min={0}
+                              min={1}
                               max={3600}
                               step={5}
-                              value={meta.duration_sec ?? 0}
+                              value={x.duration_seconds ?? 0}
                               onChange={(e) => setDuration(+e.target.value || 0)}
                               className="w-14 text-center text-sm font-bold bg-secondary rounded-md py-1"
                             />
@@ -265,19 +309,44 @@ function ProgramPage() {
                             title="Decrease reps each set (e.g. 10 → 8 → 6)"
                           />
                         </Field>
+                        <button
+                          type="button"
+                          onClick={toggleManual}
+                          aria-pressed={x.manual_finish}
+                          title={
+                            x.manual_finish
+                              ? "Athlete must tap Finish on every set"
+                              : "Auto-completes when timer ends or last set logged"
+                          }
+                          className={
+                            "ml-auto flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider rounded-full px-2 py-1 transition-colors " +
+                            (x.manual_finish
+                              ? "bg-navy text-white"
+                              : "bg-secondary text-muted-foreground hover:text-foreground")
+                          }
+                        >
+                          {x.manual_finish ? (
+                            <Hand className="h-3 w-3" />
+                          ) : (
+                            <CircleStop className="h-3 w-3" />
+                          )}
+                          {x.manual_finish ? "Manual" : "Auto"}
+                        </button>
                       </div>
 
-                      {!isStrength && (
-                        <div className="pl-5">
-                          <input
-                            value={meta.instructions ?? ""}
-                            onChange={(e) => setInstructions(e.target.value)}
-                            maxLength={240}
-                            placeholder="Instructions for athlete (e.g. 80% pace, 30s recovery)"
-                            className="w-full text-[11px] bg-secondary/60 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-gold"
-                          />
+                      <div className="pl-5">
+                        <textarea
+                          value={x.instructions ?? ""}
+                          onChange={(e) => setInstructions(e.target.value)}
+                          maxLength={1000}
+                          rows={2}
+                          placeholder="Add coaching cues, technique notes, or setup instructions."
+                          className="w-full text-[11px] bg-secondary/60 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-gold resize-none"
+                        />
+                        <div className="text-right text-[9px] text-muted-foreground tabular-nums">
+                          {(x.instructions ?? "").length}/1000
                         </div>
-                      )}
+                      </div>
 
                       <div className="pl-5 flex items-center gap-1 flex-wrap">
                         <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold">
@@ -289,9 +358,9 @@ function ProgramPage() {
                             className="text-[10px] font-bold bg-navy/10 text-navy rounded px-1.5 py-0.5 tabular-nums"
                             title={`Set ${i + 1}`}
                           >
-                            {r}
-                            {!isStrength && meta.duration_sec
-                              ? `×${formatDuration(meta.duration_sec)}`
+                            {r > 0 ? r : "—"}
+                            {!isStrength && x.duration_seconds
+                              ? `×${formatDuration(x.duration_seconds)}`
                               : ""}
                           </span>
                         ))}
@@ -326,10 +395,17 @@ function ProgramPage() {
 
         <button
           onClick={publish}
-          className="mt-5 w-full bg-gold text-navy-deep font-bold uppercase tracking-wider rounded-full py-3 hover:scale-[1.01] transition-transform shadow-lg"
+          disabled={!canPublish}
+          title={publishHint}
+          className="mt-5 w-full bg-gold text-navy-deep font-bold uppercase tracking-wider rounded-full py-3 hover:scale-[1.01] transition-transform shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
           {teamId ? "Notify athletes" : "Create a team to publish"}
         </button>
+        {!canPublish && publishCheck.errors.length > 0 && (
+          <div className="mt-2 text-[11px] text-destructive text-center font-bold">
+            {publishCheck.errors[0]}
+          </div>
+        )}
         <div className="mt-2 mb-3 text-[10px] text-center text-muted-foreground">
           Changes save automatically as you type.
         </div>
