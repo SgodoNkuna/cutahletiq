@@ -11,6 +11,9 @@ export type DBExercise = {
   order_index: number;
   notes: string | null;
   session_id: string;
+  instructions: string | null;
+  manual_finish: boolean;
+  duration_seconds: number | null;
 };
 
 export type DBSession = {
@@ -48,7 +51,7 @@ export function useCoachProgramme(coachId: string | null, teamId: string | null)
     const { data: programmes, error } = await supabase
       .from("programmes")
       .select(
-        "id, name, sport, team_id, coach_id, start_date, end_date, sessions(id, name, session_date, notes, programme_id, exercises(id, name, sets, reps, weight_kg, order_index, notes, session_id))",
+        "id, name, sport, team_id, coach_id, start_date, end_date, sessions(id, name, session_date, notes, programme_id, exercises(id, name, sets, reps, weight_kg, order_index, notes, session_id, instructions, manual_finish, duration_seconds))",
       )
       .eq("coach_id", coachId)
       .order("created_at", { ascending: false })
@@ -140,7 +143,9 @@ export function useCoachProgramme(coachId: string | null, teamId: string | null)
     const { data, error } = await supabase
       .from("exercises")
       .insert({ session_id: sessionId, name: "New exercise", sets: 3, reps: 8, order_index: order })
-      .select("id, name, sets, reps, weight_kg, order_index, notes, session_id")
+      .select(
+        "id, name, sets, reps, weight_kg, order_index, notes, session_id, instructions, manual_finish, duration_seconds",
+      )
       .single();
     if (error || !data) {
       toast.error("Add exercise failed");
@@ -161,7 +166,19 @@ export function useCoachProgramme(coachId: string | null, teamId: string | null)
   const updateExercise = async (
     exId: string,
     sessionId: string,
-    patch: Partial<Pick<DBExercise, "name" | "sets" | "reps" | "weight_kg" | "notes">>,
+    patch: Partial<
+      Pick<
+        DBExercise,
+        | "name"
+        | "sets"
+        | "reps"
+        | "weight_kg"
+        | "notes"
+        | "instructions"
+        | "manual_finish"
+        | "duration_seconds"
+      >
+    >,
   ) => {
     setProgramme((p) =>
       p
@@ -179,7 +196,14 @@ export function useCoachProgramme(coachId: string | null, teamId: string | null)
         : p,
     );
     const { error } = await supabase.from("exercises").update(patch).eq("id", exId);
-    if (error) toast.error("Save failed");
+    if (error) {
+      // Surface DB CHECK constraint failures (Section 9) to the coach.
+      if (error.code === "23514") {
+        toast.error("Drill is invalid: needs sets > 0 and either reps > 0 or duration > 0");
+      } else {
+        toast.error("Save failed");
+      }
+    }
   };
 
   const removeExercise = async (exId: string, sessionId: string) => {
@@ -234,7 +258,7 @@ export async function fetchTodaysSessionForAthlete(): Promise<DBSession | null> 
     supabase
       .from("sessions")
       .select(
-        "id, name, session_date, notes, programme_id, programmes(name), exercises(id, name, sets, reps, weight_kg, order_index, notes, session_id)",
+        "id, name, session_date, notes, programme_id, programmes(name), exercises(id, name, sets, reps, weight_kg, order_index, notes, session_id, instructions, manual_finish, duration_seconds)",
       )
       .gte("session_date", today)
       .order("session_date", { ascending: true })
@@ -267,7 +291,7 @@ export async function fetchUpcomingSessionsForAthlete(limit = 5): Promise<DBSess
     supabase
       .from("sessions")
       .select(
-        "id, name, session_date, notes, programme_id, programmes(name), exercises(id, name, sets, reps, weight_kg, order_index, notes, session_id)",
+        "id, name, session_date, notes, programme_id, programmes(name), exercises(id, name, sets, reps, weight_kg, order_index, notes, session_id, instructions, manual_finish, duration_seconds)",
       )
       .gte("session_date", today)
       .order("session_date", { ascending: true })

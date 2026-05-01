@@ -1,8 +1,13 @@
-// Lightweight per-exercise metadata stored in the `exercises.notes` column
-// so we don't need a schema migration. Format:
-//   "@@META {json}
-// <free text notes>"
-// Older rows without the prefix are treated as plain notes (kind = "strength").
+// Per-exercise drill metadata.
+//
+// Historically packed into `exercises.notes` as a JSON prefix. We now have
+// real columns (`instructions`, `manual_finish`, `duration_seconds`) on the
+// `exercises` table — so this module exposes both the new schema mapping
+// and the legacy notes parser for backward compatibility with old rows.
+
+import type { Database } from "@/integrations/supabase/types";
+
+type ExerciseRow = Database["public"]["Tables"]["exercises"]["Row"];
 
 export type ExerciseKind = "strength" | "running" | "time";
 
@@ -12,12 +17,50 @@ export type ExerciseMeta = {
   duration_sec?: number;
   /** If > 0, decrease reps by this amount each successive set (e.g. 10, 8, 6...). */
   rep_step?: number;
-  /** Short coach instructions shown to the athlete during the set. */
+  /** Coach instructions shown to the athlete during the set. */
   instructions?: string;
+  /** When true, athlete must tap "drill finished" — no auto-complete on timer. */
+  manual_finish?: boolean;
 };
 
 const PREFIX = "@@META ";
-const MAX_INSTRUCTIONS = 240;
+const MAX_INSTRUCTIONS = 1000;
+
+/**
+ * Resolve drill metadata from a row. New columns win; legacy notes-JSON is
+ * used as fallback so older rows still render with their old kind/step config.
+ */
+export function metaFromRow(row: Partial<ExerciseRow> | null | undefined): ExerciseMeta {
+  if (!row) return { kind: "strength" };
+  const legacy = parseExerciseNotes(row.notes ?? null).meta;
+  const duration =
+    typeof row.duration_seconds === "number" && row.duration_seconds > 0
+      ? row.duration_seconds
+      : legacy.duration_sec;
+  const kind: ExerciseKind = duration ? (legacy.kind === "time" ? "time" : "running") : legacy.kind;
+  return {
+    kind,
+    duration_sec: duration,
+    rep_step: legacy.rep_step,
+    instructions: row.instructions?.trim() || legacy.instructions,
+    manual_finish: !!row.manual_finish,
+  };
+}
+
+/** Body that text part of `notes` carries in the new world (just rep_step + kind hint). */
+export function notesFromMeta(meta: ExerciseMeta, freeText: string): string {
+  const clean: ExerciseMeta = { kind: meta.kind };
+  if (meta.rep_step && meta.rep_step > 0) clean.rep_step = Math.min(50, Math.floor(meta.rep_step));
+  if (
+    clean.kind === "strength" &&
+    !clean.rep_step
+  ) {
+    return freeText ?? "";
+  }
+  return `${PREFIX}${JSON.stringify(clean)}${freeText ? `\n${freeText}` : ""}`;
+}
+
+// ---------- Legacy parser (kept for old rows that still have JSON in notes) ----------
 
 export function parseExerciseNotes(raw: string | null | undefined): {
   meta: ExerciseMeta;
@@ -50,6 +93,7 @@ export function parseExerciseNotes(raw: string | null | undefined): {
             ? Math.min(50, Math.floor(parsed.rep_step))
             : undefined,
         instructions,
+        manual_finish: !!parsed.manual_finish,
       },
       text,
     };
@@ -58,24 +102,9 @@ export function parseExerciseNotes(raw: string | null | undefined): {
   }
 }
 
+/** @deprecated Use notesFromMeta + dedicated columns. Kept for back-compat. */
 export function serializeExerciseNotes(meta: ExerciseMeta, text: string): string {
-  const clean: ExerciseMeta = { kind: meta.kind };
-  if (meta.duration_sec && meta.duration_sec > 0)
-    clean.duration_sec = Math.min(3600, Math.floor(meta.duration_sec));
-  if (meta.rep_step && meta.rep_step > 0)
-    clean.rep_step = Math.min(50, Math.floor(meta.rep_step));
-  if (meta.instructions && meta.instructions.trim())
-    clean.instructions = meta.instructions.trim().slice(0, MAX_INSTRUCTIONS);
-  // Skip prefix for default plain strength with no extras → keep notes clean.
-  if (
-    clean.kind === "strength" &&
-    !clean.duration_sec &&
-    !clean.rep_step &&
-    !clean.instructions
-  ) {
-    return text ?? "";
-  }
-  return `${PREFIX}${JSON.stringify(clean)}${text ? `\n${text}` : ""}`;
+  return notesFromMeta(meta, text);
 }
 
 /** Reps for the Nth set (0-indexed), applying rep step-down if configured. */
@@ -84,7 +113,7 @@ export function repsForSet(baseReps: number, setIndex: number, meta: ExerciseMet
   return Math.max(1, baseReps - meta.rep_step * setIndex);
 }
 
-export function formatDuration(sec?: number): string {
+export function formatDuration(sec?: number | null): string {
   if (!sec || sec <= 0) return "—";
   if (sec < 60) return `${sec}s`;
   const m = Math.floor(sec / 60);
@@ -95,6 +124,9 @@ export function formatDuration(sec?: number): string {
 /**
  * Validate an exercise + meta combination. Returns an array of
  * human-friendly error strings (empty = valid).
+ *
+ * Mirrors the DB CHECK constraints `exercises_valid_volume` and
+ * `exercises_duration_nonneg`, plus client-only UX rules.
  */
 export function validateExercise(input: {
   name?: string;
@@ -103,9 +135,8 @@ export function validateExercise(input: {
   meta: ExerciseMeta;
 }): string[] {
   const errors: string[] = [];
+  if (!input.name || !input.name.trim()) errors.push("Drill name is required");
   if (input.sets < 1) errors.push("Sets must be at least 1");
-  if (input.reps < 1) errors.push("Reps must be at least 1");
-  if (!input.meta.kind) errors.push("Drill type is required");
   if (input.meta.kind !== "strength") {
     if (!input.meta.duration_sec || input.meta.duration_sec <= 0) {
       errors.push("Duration is required for running/timed drills");
@@ -113,9 +144,14 @@ export function validateExercise(input: {
     if (input.meta.duration_sec && input.meta.duration_sec < 0) {
       errors.push("Duration cannot be negative");
     }
+  } else if (input.reps < 1) {
+    errors.push("Reps must be at least 1");
   }
   if (input.meta.rep_step && input.meta.rep_step >= input.reps) {
     errors.push("Step-down must be smaller than starting reps");
+  }
+  if (input.meta.instructions && input.meta.instructions.length > MAX_INSTRUCTIONS) {
+    errors.push(`Instructions must be ${MAX_INSTRUCTIONS} characters or fewer`);
   }
   return errors;
 }
@@ -124,4 +160,38 @@ export function validateExercise(input: {
 export function previewReps(sets: number, reps: number, meta: ExerciseMeta): number[] {
   const safeSets = Math.max(1, Math.min(20, Math.floor(sets || 1)));
   return Array.from({ length: safeSets }, (_, i) => repsForSet(reps, i, meta));
+}
+
+/**
+ * Validate a complete programme before publishing (Section 9).
+ * Returns { ok, errors }.
+ */
+export function validateProgrammeForPublish(programme: {
+  sessions: Array<{
+    name: string;
+    exercises: Array<Pick<ExerciseRow, "name" | "sets" | "reps" | "duration_seconds" | "instructions" | "manual_finish" | "notes">>;
+  }>;
+}): { ok: boolean; errors: string[] } {
+  const errors: string[] = [];
+  if (!programme.sessions.length) {
+    errors.push("Add at least one workout to publish.");
+    return { ok: false, errors };
+  }
+  programme.sessions.forEach((s, si) => {
+    if (!s.exercises.length) {
+      errors.push(`Session ${si + 1} (${s.name || "untitled"}) has no drills.`);
+      return;
+    }
+    s.exercises.forEach((ex) => {
+      const meta = metaFromRow(ex as Partial<ExerciseRow>);
+      const errs = validateExercise({
+        name: ex.name,
+        sets: ex.sets,
+        reps: ex.reps,
+        meta,
+      });
+      if (errs.length) errors.push(`${ex.name || "Drill"}: ${errs.join(", ")}`);
+    });
+  });
+  return { ok: errors.length === 0, errors };
 }
