@@ -57,7 +57,7 @@ function WorkoutPage() {
       if (s) {
         setState(
           s.exercises.map((ex) => {
-            const { meta } = parseExerciseNotes(ex.notes);
+            const meta = metaFromRow(ex);
             return Array.from({ length: ex.sets }, (_, i) => ({
               reps: repsForSet(ex.reps, i, meta),
               weight: ex.weight_kg ?? 0,
@@ -145,7 +145,7 @@ function WorkoutPage() {
       updateSet(ei, si, { done: false, doneAt: undefined, elapsedSec: undefined });
     } else {
       const ex = session?.exercises[ei];
-      const { meta } = parseExerciseNotes(ex?.notes);
+      const meta = metaFromRow(ex);
       const now = Date.now();
       // Elapsed = configured duration as a sensible default; coaches can refine later.
       updateSet(ei, si, {
@@ -272,7 +272,7 @@ function WorkoutPage() {
               0,
             );
             const currentPR = prs[ex.name] ?? 0;
-            const { meta } = parseExerciseNotes(ex.notes);
+            const meta = metaFromRow(ex);
             const isStrength = meta.kind === "strength";
             const isPR = isStrength && max > currentPR && max > 0;
             const kindLabel =
